@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyStorage — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <style>
+    :root {
+      --ink: #0f0e17;
+      --ink-2: #2e2d3d;
+      --ink-3: #6b6a80;
+      --ink-4: #a9a8b8;
+      --surface: #ffffff;
+      --bg: #f5f4fb;
+      --accent: #5c49e0;
+      --accent-2: #7b6cf0;
+      --accent-light: #eeecfd;
+      --accent-mid: #c4bef8;
+      --gold: #f0b429;
+      --radius: 18px;
+      --radius-sm: 11px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 55%;
+      background: var(--ink);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 44px 52px;
+    }
+
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      width: 520px; height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(92,73,224,0.35) 0%, transparent 70%);
+      top: -140px; right: -140px;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      width: 360px; height: 360px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(92,73,224,0.2) 0%, transparent 70%);
+      bottom: -80px; left: -60px;
+    }
+
+    .left-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 1;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .left-logo-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .left-logo-icon i { color: #fff; font-size: 20px; }
+    .left-logo-name { font-family: 'Sora', sans-serif; font-size: 18px; font-weight: 600; color: #fff; }
+
+    .left-hero {
+      z-index: 1;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .left-tagline {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent-mid);
+      margin-bottom: 20px;
+    }
+
+    .left-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(28px, 3vw, 42px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+
+    .left-title span {
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(255,255,255,0.5);
+    }
+
+    .left-desc {
+      font-size: 15px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+      max-width: 380px;
+    }
+
+    /* floating file cards */
+    .float-cards {
+      position: absolute;
+      right: -20px; top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 2;
+      animation: floatIn 0.8s 0.3s ease both;
+    }
+
+    .fcard {
+      background: rgba(255,255,255,0.07);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 210px;
+      animation: floatBob 4s ease-in-out infinite;
+    }
+
+    .fcard:nth-child(2) { animation-delay: -1.5s; transform: translateX(20px); }
+    .fcard:nth-child(3) { animation-delay: -3s; }
+
+    .fcard-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .fcard-icon i { font-size: 18px; }
+    .fcard-name { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fcard-size { font-size: 10.5px; color: rgba(255,255,255,0.4); }
+
+    .left-stats {
+      display: flex;
+      gap: 28px;
+      z-index: 1;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .stat { border-left: 2px solid rgba(255,255,255,0.12); padding-left: 14px; }
+    .stat-num { font-family: 'Sora', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
+    .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      width: 45%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .form-box {
+      width: 100%;
+      max-width: 380px;
+      animation: fadeUp 0.5s 0.2s ease both;
+    }
+
+    .form-greeting {
+      font-family: 'Sora', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .form-sub {
+      font-size: 14px;
+      color: var(--ink-3);
+      margin-bottom: 32px;
+    }
+
+    /* social login */
+    .social-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .btn-social {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      border: 1.5px solid rgba(0,0,0,0.09);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+
+    .btn-social:hover {
+      border-color: var(--accent-mid);
+      background: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-social i { font-size: 17px; }
+
+    .divider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .divider-line { flex: 1; height: 1px; background: rgba(0,0,0,0.07); }
+    .divider-text { font-size: 12px; color: var(--ink-4); }
+
+    /* form fields */
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-wrap i {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ink-4);
+      font-size: 17px;
+      pointer-events: none;
+      transition: color 0.15s;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 11px 14px 11px 38px;
+      border: 1.5px solid rgba(0,0,0,0.09);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(92,73,224,0.12);
+    }
+
+    .input-wrap input:focus + i,
+    .input-wrap:focus-within i { color: var(--accent); }
+
+    .input-wrap .eye-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--ink-4);
+      font-size: 16px;
+      transition: color 0.15s;
+      pointer-events: all;
+    }
+
+    .input-wrap .eye-btn:hover { color: var(--accent); }
+
+    .field-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--ink-3);
+      cursor: pointer;
+    }
+
+    .checkbox-label input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+    .forgot { font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 500; }
+    .forgot:hover { text-decoration: underline; }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Sora', sans-serif;
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover {
+      background: #4a39cc;
+      box-shadow: 0 6px 20px rgba(92,73,224,0.35);
+      transform: translateY(-1px);
+    }
+
+    .btn-login:active { transform: scale(0.98); }
+
+    .btn-login.loading { pointer-events: none; opacity: 0.8; }
+
+    .signup-row {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13.5px;
+      color: var(--ink-3);
+    }
+
+    .signup-row a { color: var(--accent); font-weight: 500; text-decoration: none; }
+    .signup-row a:hover { text-decoration: underline; }
+
+    /* demo badge */
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(240,180,41,0.12);
+      border: 1px solid rgba(240,180,41,0.3);
+      border-radius: 99px;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      color: #a07208;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    .demo-badge i { font-size: 13px; color: var(--gold); }
+
+    /* shake animation for error */
+    @keyframes shake {
+      0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
+    }
+
+    .shake { animation: shake 0.4s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes floatIn {
+      from { opacity: 0; transform: translateX(40px) translateY(-50%); }
+      to   { opacity: 1; transform: translateX(0) translateY(-50%); }
+    }
+
+    @keyframes floatBob {
+      0%,100% { transform: translateY(0); }
+      50%     { transform: translateY(-8px); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    .error-msg {
+      font-size: 12px;
+      color: #dc2626;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- LEFT PANEL -->
+<div class="left-panel">
+  <div class="left-logo">
+    <div class="left-logo-icon"><i class="ti ti-archive"></i></div>
+    <span class="left-logo-name">MyStorage</span>
+  </div>
+
+  <div class="left-hero">
+    <div class="left-tagline">Platform penyimpanan modern</div>
+    <h1 class="left-title">Simpan semua file<br>di satu <span>tempat</span></h1>
+    <p class="left-desc">Kelola dokumen, foto, video, dan lebih banyak lagi dengan tampilan yang bersih dan cepat.</p>
+  </div>
+
+  <!-- Floating file cards -->
+  <div class="float-cards">
+    <div class="fcard">
+      <div class="fcard-icon" style="background:rgba(239,68,68,0.15)">
+        <i class="ti ti-file-type-pdf" style="color:#ef4444"></i>
+      </div>
+      <div>
+        <div class="fcard-name">Skripsi_final.pdf</div>
+        <div class="fcard-size">2.1 GB · Kampus</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="fcard-icon" style="background:rgba(34,197,94,0.15)">
+        <i class="ti ti-photo" style="color:#22c55e"></i>
+      </div>
+      <div>
+        <div class="fcard-name">Foto_wisuda.jpg</div>
+        <div class="fcard-size">12 MB · Foto</div>
+      </div>
+    </div>
+    <div class="fcard">
+      <div class="fcard-icon" style="background:rgba(249,115,22,0.15)">
+        <i class="ti ti-video" style="color:#f97316"></i>
+      </div>
+      <div>
+        <div class="fcard-name">Vlog_liburan.mp4</div>
+        <div class="fcard-size">600 MB · Pribadi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="left-stats">
+    <div class="stat">
+      <div class="stat-num">24+</div>
+      <div class="stat-lbl">Total File</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">4</div>
+      <div class="stat-lbl">Folder</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">12 GB</div>
+      <div class="stat-lbl">Storage</div>
+    </div>
+  </div>
+</div>
+
+<!-- RIGHT PANEL -->
+<div class="right-panel">
+  <div class="form-box">
+    <div class="demo-badge">
+      <i class="ti ti-bulb"></i>
+      Demo: admin / admin123
+    </div>
+    <h2 class="form-greeting">Selamat datang!</h2>
+    <p class="form-sub">Masuk ke akun MyStorage kamu.</p>
+
+    <div class="social-row">
+      <button class="btn-social" onclick="showToast('Login Google segera hadir!')">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google
+      </button>
+      <button class="btn-social" onclick="showToast('Login GitHub segera hadir!')">
+        <i class="ti ti-brand-github"></i>
+        GitHub
+      </button>
+    </div>
+
+    <div class="divider-row">
+      <div class="divider-line"></div>
+      <span class="divider-text">atau masuk dengan email</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div id="loginForm">
+      <div class="field">
+        <label>Email / Username</label>
+        <div class="input-wrap">
+          <i class="ti ti-user"></i>
+          <input type="text" id="emailInput" placeholder="contoh@email.com" autocomplete="username"/>
+        </div>
+        <div class="error-msg" id="emailErr">Email tidak boleh kosong.</div>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i class="ti ti-lock"></i>
+          <input type="password" id="passInput" placeholder="Masukkan password" autocomplete="current-password"/>
+          <i class="ti ti-eye eye-btn" id="eyeBtn" onclick="toggleEye()"></i>
+        </div>
+        <div class="error-msg" id="passErr">Password minimal 6 karakter.</div>
+      </div>
+
+      <div class="field-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="rememberMe"/> Ingat saya
+        </label>
+        <a href="#" class="forgot">Lupa password?</a>
+      </div>
+
+      <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
+    </div>
+
+    <div class="signup-row">
+      Belum punya akun? <a href="#" onclick="showToast('Halaman daftar segera hadir!')">Daftar sekarang</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:#0f0e17;color:#fff;padding:12px 18px;border-radius:11px;font-size:13px;z-index:300;display:none;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+  <i class="ti ti-check" style="font-size:16px;color:#4ade80"></i>
+  <span id="toastMsg">OK</span>
+</div>
+
+<script>
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.style.display = 'flex';
+    setTimeout(() => t.style.display = 'none', 2800);
+  }
+
+  function toggleEye() {
+    const inp = document.getElementById('passInput');
+    const btn = document.getElementById('eyeBtn');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      btn.classList.replace('ti-eye', 'ti-eye-off');
+    } else {
+      inp.type = 'password';
+      btn.classList.replace('ti-eye-off', 'ti-eye');
+    }
+  }
+
+  function doLogin() {
+    const email = document.getElementById('emailInput').value.trim();
+    const pass  = document.getElementById('passInput').value.trim();
+    const emailErr = document.getElementById('emailErr');
+    const passErr  = document.getElementById('passErr');
+    emailErr.classList.remove('show');
+    passErr.classList.remove('show');
+
+    let valid = true;
+    if (!email) { emailErr.classList.add('show'); valid = false; }
+    if (pass.length < 6) { passErr.classList.add('show'); valid = false; }
+
+    if (!valid) {
+      document.getElementById('loginForm').classList.add('shake');
+      setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+      return;
+    }
+
+    const btn = document.getElementById('btnLogin');
+    btn.innerHTML = '<span class="spinner"></span>Memproses...';
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      if (email === 'admin' && pass === 'admin123') {
+        btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
+        btn.style.background = '#16a34a';
+        setTimeout(() => { window.location.href = 'index.html'; }, 700);
+      } else {
+        btn.innerHTML = 'Masuk';
+        btn.classList.remove('loading');
+        emailErr.textContent = 'Email atau password salah.';
+        emailErr.classList.add('show');
+        document.getElementById('loginForm').classList.add('shake');
+        setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+      }
+    }, 1200);
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyStorage — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <i class="ti ti-archive" style="color:#fff;font-size:18px"></i>
+    </div>
+    <span class="logo-text">MyStorage</span>
+  </div>
+
+  <span class="nav-label">Menu</span>
+  <div class="nav-item active" onclick="setNav(this)">
+    <i class="ti ti-layout-dashboard"></i>Dashboard
+    <span class="badge">24</span>
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-share"></i>Dibagikan
+    <span class="badge">3</span>
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-clock"></i>Terakhir Dilihat
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-star"></i>Favorit
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-trash"></i>Sampah
+  </div>
+
+  <div class="divider"></div>
+  <span class="nav-label">Tipe File</span>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-file-type-pdf"></i>Dokumen
+    <span class="badge">12</span>
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-photo"></i>Foto
+    <span class="badge">6</span>
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-video"></i>Video
+    <span class="badge">3</span>
+  </div>
+  <div class="nav-item" onclick="setNav(this)">
+    <i class="ti ti-music"></i>Audio
+    <span class="badge">3</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- User chip -->
+  <div class="user-chip">
+    <div class="user-av">RZ</div>
+    <div class="user-info">
+      <div class="user-name">Reza</div>
+      <div class="user-role">Free plan</div>
+    </div>
+    <i class="ti ti-chevron-right" style="color:var(--text-faint);font-size:14px;margin-left:auto"></i>
+  </div>
+
+  <!-- Storage box -->
+  <div class="storage-box">
+    <div class="storage-header">
+      <div class="storage-label">Penyimpanan</div>
+      <div class="storage-pct" id="storagePct">62%</div>
+    </div>
+    <div class="storage-bar"><div class="storage-fill"></div></div>
+    <div class="storage-info">
+      <span id="storageUsed">7.4 GB terpakai</span>
+      <span>12 GB</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="breadcrumb" style="margin-right:16px">
+      <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
+      <i class="ti ti-chevron-right" style="font-size:12px"></i>
+      <span>Dashboard</span>
+    </div>
+    <div class="search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" oninput="filterFiles()"/>
+    </div>
+    <div class="topbar-right">
+      <div class="btn-icon" title="Notifikasi">
+        <i class="ti ti-bell"></i>
+        <div class="notif-dot"></div>
+      </div>
+      <div class="btn-icon" title="Pengaturan">
+        <i class="ti ti-settings"></i>
+      </div>
+      <button class="btn-upload" onclick="openModal()">
+        <i class="ti ti-cloud-upload"></i>Upload File
+      </button>
+      <div class="topbar-av" title="Profil">RZ</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- STAT CARDS -->
+    <div class="stats-row">
+      <div class="stat-card" style="animation-delay:0s">
+        <div class="stat-icon" style="background:#eef2ff">
+          <i class="ti ti-files" style="color:#6366f1"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statFiles">8</div>
+          <div class="stat-label">Total File</div>
+        </div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.06s">
+        <div class="stat-icon" style="background:#dcfce7">
+          <i class="ti ti-folder" style="color:#22c55e"></i>
+        </div>
+        <div>
+          <div class="stat-value" id="statFolders">4</div>
+          <div class="stat-label">Folder</div>
+        </div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.12s">
+        <div class="stat-icon" style="background:#fff7ed">
+          <i class="ti ti-share" style="color:#f97316"></i>
+        </div>
+        <div>
+          <div class="stat-value">3</div>
+          <div class="stat-label">Dibagikan</div>
+        </div>
+      </div>
+      <div class="stat-card" style="animation-delay:0.18s">
+        <div class="stat-icon" style="background:#fffbeb">
+          <i class="ti ti-star" style="color:#f59e0b"></i>
+        </div>
+        <div>
+          <div class="stat-value">5</div>
+          <div class="stat-label">Favorit</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOLDERS -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <span class="section-title">Folders</span>
+          <span class="section-count" id="folderCount">4</span>
+        </div>
+        <button class="btn-new" onclick="addFolder()">
+          <i class="ti ti-plus" style="font-size:14px"></i>Folder baru
+        </button>
+      </div>
+      <div class="folder-grid" id="folderGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- FILES -->
+    <div>
+      <div class="section-head">
+        <div class="section-head-left">
+          <span class="section-title">File terbaru</span>
+          <span class="section-count" id="fileCount">8</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="showToast('Fitur sort segera hadir!')">
+            <i class="ti ti-arrows-sort" style="font-size:15px"></i>Urutkan
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="filter-row">
+        <button class="filter-chip active" onclick="setFilter(this,'semua')">
+          <i class="ti ti-layout-grid"></i>Semua
+        </button>
+        <button class="filter-chip" onclick="setFilter(this,'pdf')">
+          <i class="ti ti-file-type-pdf"></i>PDF
+        </button>
+        <button class="filter-chip" onclick="setFilter(this,'doc')">
+          <i class="ti ti-file-text"></i>Dokumen
+        </button>
+        <button class="filter-chip" onclick="setFilter(this,'foto')">
+          <i class="ti ti-photo"></i>Foto
+        </button>
+        <button class="filter-chip" onclick="setFilter(this,'video')">
+          <i class="ti ti-video"></i>Video
+        </button>
+        <button class="filter-chip" onclick="setFilter(this,'spreadsheet')">
+          <i class="ti ti-table"></i>Spreadsheet
+        </button>
+      </div>
+
+      <div class="file-grid" id="fileGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-title">Upload File</div>
+    <div class="modal-sub">Pilih file dan tentukan kategori folder tujuan.</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <i class="ti ti-cloud-upload"></i>
+      <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
+      <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
+    </div>
+    <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
+    <div class="modal-row">
+      <select class="modal-select" id="folderSelect">
+        <option value="">Pilih folder...</option>
+        <option value="Kampus">Kampus</option>
+        <option value="Kerja">Kerja</option>
+        <option value="Foto">Foto</option>
+        <option value="Pribadi">Pribadi</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      <button class="btn-confirm" onclick="uploadFile()">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="showToast('Download dimulai...')"><i class="ti ti-download"></i>Download</div>
+  <div class="ctx-item" onclick="showToast('Link salin berhasil!')"><i class="ti ti-share"></i>Bagikan</div>
+  <div class="ctx-item" onclick="showToast('Fitur rename segera hadir!')"><i class="ti ti-edit"></i>Rename</div>
+  <div class="ctx-item" onclick="showToast('Ditambahkan ke favorit!')"><i class="ti ti-star"></i>Tambah Favorit</div>
+  <div class="ctx-divider"></div>
+  <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
+  <span id="toastMsg">Berhasil!</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
