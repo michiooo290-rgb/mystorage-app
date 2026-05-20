@@ -46,14 +46,40 @@ async function loadFiles() {
 
 /* ── STATS ── */
 function renderStats() {
-  document.getElementById('statFiles').textContent = allFiles.length;
-  document.getElementById('statFolders').textContent = allFolders.length;
+  const totalFiles = allFiles.length;
+  const totalFolders = allFolders.length;
 
-  const usedGB = 7.4;
-  const totalGB = 12;
-  const pct = Math.round((usedGB / totalGB) * 100);
+  // Stat cards
+  document.getElementById('statFiles').textContent = totalFiles;
+  document.getElementById('statFolders').textContent = totalFolders;
+  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = 0;
+  if (document.getElementById('statFavorit')) document.getElementById('statFavorit').textContent = 0;
+
+  // Sidebar badges
+  if (document.getElementById('badgeDashboard')) document.getElementById('badgeDashboard').textContent = totalFiles;
+  if (document.getElementById('badgeDocs')) document.getElementById('badgeDocs').textContent = allFiles.filter(f => f.type === 'doc' || f.type === 'pdf').length;
+  if (document.getElementById('badgePhotos')) document.getElementById('badgePhotos').textContent = allFiles.filter(f => f.type === 'foto').length;
+  if (document.getElementById('badgeVideos')) document.getElementById('badgeVideos').textContent = allFiles.filter(f => f.type === 'video').length;
+  if (document.getElementById('badgeAudio')) document.getElementById('badgeAudio').textContent = allFiles.filter(f => f.type === 'audio').length;
+
+  // Storage: hitung dari ukuran file yang ada
+  let usedMB = 0;
+  allFiles.forEach(f => {
+    if (f.size) {
+      const num = parseFloat(f.size);
+      if (f.size.includes('MB')) usedMB += num;
+      else if (f.size.includes('KB')) usedMB += num / 1024;
+      else if (f.size.includes('GB')) usedMB += num * 1024;
+    }
+  });
+  const totalMB = 1024; // 1 GB free tier Supabase Storage
+  const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
+  const usedStr = usedMB < 1 ? (usedMB * 1024).toFixed(0) + ' KB' :
+                  usedMB < 1024 ? usedMB.toFixed(1) + ' MB' :
+                  (usedMB / 1024).toFixed(2) + ' GB';
+
   document.getElementById('storagePct').textContent = pct + '%';
-  document.getElementById('storageUsed').textContent = usedGB + ' GB terpakai';
+  document.getElementById('storageUsed').textContent = usedStr + ' terpakai';
 
   setTimeout(() => {
     const fill = document.querySelector('.storage-fill');
