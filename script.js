@@ -285,6 +285,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
 
+  // Tampilkan info user
+  const user = session.user;
+  const fullName = user.user_metadata?.full_name || user.email.split('@')[0];
+  const initials = fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const email = user.email;
+
+  document.querySelectorAll('.user-name').forEach(el => el.textContent = fullName);
+  document.querySelectorAll('.user-av, .topbar-av').forEach(el => el.textContent = initials);
+  const roleEl = document.querySelector('.user-role');
+  if (roleEl) roleEl.textContent = email;
+
+  // Tombol logout
+  const userChip = document.querySelector('.user-chip');
+  if (userChip) {
+    userChip.title = 'Klik untuk logout';
+    userChip.onclick = async () => {
+      if (confirm('Yakin ingin logout?')) {
+        await sb.auth.signOut();
+        window.location.href = 'login.html';
+      }
+    };
+  }
+
   document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });

@@ -494,65 +494,91 @@
 </div>
 
 <!-- RIGHT PANEL -->
+<!-- RIGHT PANEL -->
 <div class="right-panel">
   <div class="form-box">
-    <div class="demo-badge">
-      <i class="ti ti-bulb"></i>
-      Demo: admin / admin123
-    </div>
-    <h2 class="form-greeting">Selamat datang!</h2>
-    <p class="form-sub">Masuk ke akun MyStorage kamu.</p>
 
-    <div class="social-row">
-      <button class="btn-social" onclick="showToast('Login Google segera hadir!')">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Google
-      </button>
-      <button class="btn-social" onclick="showToast('Login GitHub segera hadir!')">
-        <i class="ti ti-brand-github"></i>
-        GitHub
-      </button>
+    <!-- MODE TOGGLE -->
+    <div style="display:flex;background:#f0effe;border-radius:12px;padding:4px;margin-bottom:28px;gap:4px;">
+      <button id="tabLogin" onclick="switchTab('login')" style="flex:1;padding:9px;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:all 0.2s;">Masuk</button>
+      <button id="tabRegister" onclick="switchTab('register')" style="flex:1;padding:9px;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;background:transparent;color:var(--ink-3);transition:all 0.2s;">Daftar</button>
     </div>
 
-    <div class="divider-row">
-      <div class="divider-line"></div>
-      <span class="divider-text">atau masuk dengan email</span>
-      <div class="divider-line"></div>
-    </div>
+    <!-- LOGIN FORM -->
+    <div id="panelLogin">
+      <h2 class="form-greeting">Selamat datang!</h2>
+      <p class="form-sub">Masuk ke akun MyStorage kamu.</p>
 
-    <div id="loginForm">
-      <div class="field">
-        <label>Email / Username</label>
-        <div class="input-wrap">
-          <i class="ti ti-user"></i>
-          <input type="text" id="emailInput" placeholder="contoh@email.com" autocomplete="username"/>
+      <div id="loginForm">
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <i class="ti ti-mail"></i>
+            <input type="email" id="emailInput" placeholder="contoh@email.com" autocomplete="email"/>
+          </div>
+          <div class="error-msg" id="emailErr">Email tidak boleh kosong.</div>
         </div>
-        <div class="error-msg" id="emailErr">Email tidak boleh kosong.</div>
-      </div>
 
-      <div class="field">
-        <label>Password</label>
-        <div class="input-wrap">
-          <i class="ti ti-lock"></i>
-          <input type="password" id="passInput" placeholder="Masukkan password" autocomplete="current-password"/>
-          <i class="ti ti-eye eye-btn" id="eyeBtn" onclick="toggleEye()"></i>
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="ti ti-lock"></i>
+            <input type="password" id="passInput" placeholder="Masukkan password" autocomplete="current-password"/>
+            <i class="ti ti-eye eye-btn" id="eyeBtn" onclick="toggleEye('passInput','eyeBtn')"></i>
+          </div>
+          <div class="error-msg" id="passErr">Password minimal 6 karakter.</div>
         </div>
-        <div class="error-msg" id="passErr">Password minimal 6 karakter.</div>
-      </div>
 
-      <div class="field-row">
-        <label class="checkbox-label">
-          <input type="checkbox" id="rememberMe"/> Ingat saya
-        </label>
-        <a href="#" class="forgot">Lupa password?</a>
-      </div>
+        <div class="field-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="rememberMe"/> Ingat saya
+          </label>
+          <a href="#" class="forgot">Lupa password?</a>
+        </div>
 
-      <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
+        <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
+      </div>
     </div>
 
-    <div class="signup-row">
-      Belum punya akun? <a href="#" onclick="showToast('Halaman daftar segera hadir!')">Daftar sekarang</a>
+    <!-- REGISTER FORM -->
+    <div id="panelRegister" style="display:none">
+      <h2 class="form-greeting">Buat akun baru</h2>
+      <p class="form-sub">Daftar dan mulai simpan file kamu.</p>
+
+      <div id="registerForm">
+        <div class="field">
+          <label>Nama Lengkap</label>
+          <div class="input-wrap">
+            <i class="ti ti-user"></i>
+            <input type="text" id="regName" placeholder="Nama kamu"/>
+          </div>
+          <div class="error-msg" id="regNameErr">Nama tidak boleh kosong.</div>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <i class="ti ti-mail"></i>
+            <input type="email" id="regEmail" placeholder="contoh@email.com"/>
+          </div>
+          <div class="error-msg" id="regEmailErr">Email tidak valid.</div>
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <i class="ti ti-lock"></i>
+            <input type="password" id="regPass" placeholder="Min. 6 karakter"/>
+            <i class="ti ti-eye eye-btn" id="regEyeBtn" onclick="toggleEye('regPass','regEyeBtn')"></i>
+          </div>
+          <div class="error-msg" id="regPassErr">Password minimal 6 karakter.</div>
+        </div>
+
+        <button class="btn-login" id="btnRegister" onclick="doRegister()" style="margin-top:4px">Daftar Sekarang</button>
+        <div class="error-msg" id="regGeneralErr" style="margin-top:8px;font-size:13px;text-align:center"></div>
+      </div>
     </div>
+
   </div>
 </div>
 
@@ -562,17 +588,37 @@
   <span id="toastMsg">OK</span>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  function showToast(msg) {
+  const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showToast(msg, isError) {
     const t = document.getElementById('toast');
+    const icon = t.querySelector('i');
     document.getElementById('toastMsg').textContent = msg;
+    icon.style.color = isError ? '#f87171' : '#4ade80';
     t.style.display = 'flex';
-    setTimeout(() => t.style.display = 'none', 2800);
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  function toggleEye() {
-    const inp = document.getElementById('passInput');
-    const btn = document.getElementById('eyeBtn');
+  function switchTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('panelLogin').style.display = isLogin ? '' : 'none';
+    document.getElementById('panelRegister').style.display = isLogin ? 'none' : '';
+    document.getElementById('tabLogin').style.background = isLogin ? 'var(--accent)' : 'transparent';
+    document.getElementById('tabLogin').style.color = isLogin ? '#fff' : 'var(--ink-3)';
+    document.getElementById('tabLogin').style.fontWeight = isLogin ? '600' : '500';
+    document.getElementById('tabRegister').style.background = isLogin ? 'transparent' : 'var(--accent)';
+    document.getElementById('tabRegister').style.color = isLogin ? 'var(--ink-3)' : '#fff';
+    document.getElementById('tabRegister').style.fontWeight = isLogin ? '500' : '600';
+  }
+
+  function toggleEye(inputId, btnId) {
+    const inp = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
     if (inp.type === 'password') {
       inp.type = 'text';
       btn.classList.replace('ti-eye', 'ti-eye-off');
@@ -581,11 +627,6 @@
       btn.classList.replace('ti-eye-off', 'ti-eye');
     }
   }
-
-
-  const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
-  // ⚠️ Ganti dengan anon key dari Supabase: Project Settings > API > anon public
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
 
   async function doLogin() {
     const email = document.getElementById('emailInput').value.trim();
@@ -596,9 +637,8 @@
     passErr.classList.remove('show');
 
     let valid = true;
-    if (!email) { emailErr.classList.add('show'); valid = false; }
+    if (!email) { emailErr.textContent = 'Email tidak boleh kosong.'; emailErr.classList.add('show'); valid = false; }
     if (pass.length < 6) { passErr.classList.add('show'); valid = false; }
-
     if (!valid) {
       document.getElementById('loginForm').classList.add('shake');
       setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
@@ -609,35 +649,79 @@
     btn.innerHTML = '<span class="spinner"></span>Memproses...';
     btn.classList.add('loading');
 
-    try {
-      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-
-      if (error) {
-        btn.innerHTML = 'Masuk';
-        btn.classList.remove('loading');
-        emailErr.textContent = 'Email atau password salah.';
-        emailErr.classList.add('show');
-        document.getElementById('loginForm').classList.add('shake');
-        setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
-        return;
-      }
-
-      btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
-      btn.style.background = '#16a34a';
-      setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 700);
-    } catch(e) {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
       btn.innerHTML = 'Masuk';
       btn.classList.remove('loading');
-      emailErr.textContent = 'Terjadi kesalahan koneksi.';
+      emailErr.textContent = 'Email atau password salah.';
       emailErr.classList.add('show');
+      document.getElementById('loginForm').classList.add('shake');
+      setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+      return;
+    }
+
+    btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
+    btn.style.background = '#16a34a';
+    setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 700);
+  }
+
+  async function doRegister() {
+    const name  = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const pass  = document.getElementById('regPass').value.trim();
+    const nameErr = document.getElementById('regNameErr');
+    const emailErr = document.getElementById('regEmailErr');
+    const passErr  = document.getElementById('regPassErr');
+    const genErr   = document.getElementById('regGeneralErr');
+    [nameErr, emailErr, passErr, genErr].forEach(e => e.classList.remove('show'));
+    genErr.style.display = 'none';
+
+    let valid = true;
+    if (!name)  { nameErr.classList.add('show'); valid = false; }
+    if (!email || !email.includes('@')) { emailErr.classList.add('show'); valid = false; }
+    if (pass.length < 6) { passErr.classList.add('show'); valid = false; }
+    if (!valid) {
+      document.getElementById('registerForm').classList.add('shake');
+      setTimeout(() => document.getElementById('registerForm').classList.remove('shake'), 400);
+      return;
+    }
+
+    const btn = document.getElementById('btnRegister');
+    btn.innerHTML = '<span class="spinner"></span>Mendaftar...';
+    btn.classList.add('loading');
+
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: name } }
+    });
+
+    btn.innerHTML = 'Daftar Sekarang';
+    btn.classList.remove('loading');
+
+    if (error) {
+      genErr.textContent = error.message;
+      genErr.style.display = 'block';
+      genErr.classList.add('show');
+      return;
+    }
+
+    // Kalau email confirmation dimatikan, langsung redirect
+    if (data.session) {
+      showToast('Akun berhasil dibuat!');
+      setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 900);
+    } else {
+      // Kalau perlu konfirmasi email
+      showToast('Cek email kamu untuk konfirmasi!');
+      switchTab('login');
     }
   }
 
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') doLogin();
+    if (e.key === 'Enter') {
+      const loginVisible = document.getElementById('panelLogin').style.display !== 'none';
+      if (loginVisible) doLogin(); else doRegister();
+    }
   });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
