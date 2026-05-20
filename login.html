@@ -582,7 +582,12 @@
     }
   }
 
-  function doLogin() {
+
+  const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
+  // ⚠️ Ganti dengan anon key dari Supabase: Project Settings > API > anon public
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
+
+  async function doLogin() {
     const email = document.getElementById('emailInput').value.trim();
     const pass  = document.getElementById('passInput').value.trim();
     const emailErr = document.getElementById('emailErr');
@@ -604,25 +609,35 @@
     btn.innerHTML = '<span class="spinner"></span>Memproses...';
     btn.classList.add('loading');
 
-    setTimeout(() => {
-      if (email === 'admin' && pass === 'admin123') {
-        btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
-        btn.style.background = '#16a34a';
-        setTimeout(() => { window.location.href = 'index.html'; }, 700);
-      } else {
+    try {
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+      if (error) {
         btn.innerHTML = 'Masuk';
         btn.classList.remove('loading');
         emailErr.textContent = 'Email atau password salah.';
         emailErr.classList.add('show');
         document.getElementById('loginForm').classList.add('shake');
         setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
+        return;
       }
-    }, 1200);
+
+      btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
+      btn.style.background = '#16a34a';
+      setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 700);
+    } catch(e) {
+      btn.innerHTML = 'Masuk';
+      btn.classList.remove('loading');
+      emailErr.textContent = 'Terjadi kesalahan koneksi.';
+      emailErr.classList.add('show');
+    }
   }
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') doLogin();
   });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>

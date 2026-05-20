@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_IpViPmYP_YfGeia5GBLR-A_7Lt9b0WR';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U'; // ⚠️ Supabase: Project Settings > API > anon public key
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FOLDER_COLORS = [
@@ -280,7 +280,11 @@ function handleFileSelect(input) {
 }
 
 /* ── INIT ── */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // Auth guard: redirect ke login jika belum login
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+
   document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
   });
