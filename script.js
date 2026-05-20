@@ -17,12 +17,22 @@ const FILE_ICONS = {
   foto:        { icon: 'ti-photo',         iconColor: '#22c55e', iconBg: '#dcfce7' },
   video:       { icon: 'ti-video',         iconColor: '#f97316', iconBg: '#fff7ed' },
   spreadsheet: { icon: 'ti-table',         iconColor: '#0ea5e9', iconBg: '#f0f9ff' },
+  audio:       { icon: 'ti-music',         iconColor: '#a855f7', iconBg: '#f3e8ff' },
 };
 
 let currentFilter = 'semua';
 let ctxTarget = null;
 let allFolders = [];
 let allFiles = [];
+let droppedFiles = null; // [BUG FIX #2] Menyimpan file dari drag & drop
+
+/* ── UTILITY: Escape HTML untuk mencegah XSS ── */
+/* [BUG FIX #1] Semua input user di-escape sebelum masuk innerHTML */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
 
 /* ── LOAD DATA ── */
 async function loadAll() {
@@ -57,6 +67,7 @@ function renderStats() {
 
   // Sidebar badges
   if (document.getElementById('badgeDashboard')) document.getElementById('badgeDashboard').textContent = totalFiles;
+  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = 0;
   if (document.getElementById('badgeDocs')) document.getElementById('badgeDocs').textContent = allFiles.filter(f => f.type === 'doc' || f.type === 'pdf').length;
   if (document.getElementById('badgePhotos')) document.getElementById('badgePhotos').textContent = allFiles.filter(f => f.type === 'foto').length;
   if (document.getElementById('badgeVideos')) document.getElementById('badgeVideos').textContent = allFiles.filter(f => f.type === 'video').length;
@@ -88,6 +99,7 @@ function renderStats() {
 }
 
 /* ── RENDER FOLDERS ── */
+/* [BUG FIX #1] Semua f.name di-escape dengan escapeHtml() */
 function renderFolders() {
   const grid = document.getElementById('folderGrid');
   if (allFolders.length === 0) {
@@ -99,8 +111,9 @@ function renderFolders() {
   grid.innerHTML = allFolders.map((f, i) => {
     const c = FOLDER_COLORS[i % FOLDER_COLORS.length];
     const fileCount = allFiles.filter(x => x.folder_name === f.name).length;
+    const safeName = escapeHtml(f.name);
     return `
-      <div class="folder-wrap" style="animation-delay:${i * 0.06}s" onclick="showToast('Membuka folder ${f.name}...')">
+      <div class="folder-wrap" style="animation-delay:${i * 0.06}s" data-folder="${safeName}" onclick="openFolder(this.dataset.folder)">
         <svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="fs${i}" x="-5%" y="-5%" width="110%" height="110%">
@@ -109,7 +122,7 @@ function renderFolders() {
           </defs>
           <path d="M6,20 Q6,14 12,14 L54,14 Q59,14 62,19 L67,26 L132,26 Q137,26 137,31 L137,82 Q137,88 131,88 L9,88 Q3,88 3,82 L3,27 Q3,20 9,20 Z" fill="${c.color1}" filter="url(#fs${i})"/>
           <path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="${c.color2}"/>
-          <text x="11" y="48" font-size="10.5" font-weight="700" fill="${c.text}" font-family="sans-serif">${f.name}</text>
+          <text x="11" y="48" font-size="10.5" font-weight="700" fill="${c.text}" font-family="sans-serif">${safeName}</text>
           <text x="11" y="61" font-size="7.5" fill="${c.sub}" font-family="sans-serif">${fileCount} file</text>
           <circle cx="10" cy="69" r="6.5" fill="${c.av}"/>
           <text x="10" y="73" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">RZ</text>
@@ -123,10 +136,27 @@ function renderFolders() {
   /* update folder select di modal */
   const sel = document.getElementById('folderSelect');
   sel.innerHTML = '<option value="">Pilih folder...</option>' +
-    allFolders.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+    allFolders.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
+}
+
+/* Klik folder — filter file berdasarkan folder */
+let currentFolderFilter = null;
+
+function openFolder(name) {
+  currentFolderFilter = name;
+  // Scroll ke section file
+  document.getElementById('fileGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  showToast('Folder ' + name + ' dibuka');
+  renderFiles();
+}
+
+function clearFolderFilter() {
+  currentFolderFilter = null;
+  renderFiles();
 }
 
 /* ── RENDER FILES ── */
+/* [BUG FIX #1] Semua data user di-escape & gunakan data-attribute */
 function renderFiles() {
   const grid = document.getElementById('fileGrid');
   const search = document.getElementById('searchInput').value.toLowerCase();
@@ -134,7 +164,8 @@ function renderFiles() {
   const filtered = allFiles.filter(f => {
     const matchType   = currentFilter === 'semua' || f.type === currentFilter;
     const matchSearch = f.name.toLowerCase().includes(search) || (f.folder_name || '').toLowerCase().includes(search);
-    return matchType && matchSearch;
+    const matchFolder = !currentFolderFilter || f.folder_name === currentFolderFilter;
+    return matchType && matchSearch && matchFolder;
   });
 
   if (filtered.length === 0) {
@@ -160,19 +191,22 @@ function renderFiles() {
     const iconColor = f.icon_color || iconInfo.iconColor;
     const iconBg = f.icon_bg || iconInfo.iconBg;
     const date = new Date(f.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    const safeId = escapeHtml(String(f.id));
+    const safeName = escapeHtml(f.name);
+    const safeFolder = escapeHtml(f.folder_name || '-');
     return `
-      <div class="file-card" style="animation-delay:${i * 0.04}s" oncontextmenu="showCtx(event,'${f.id}')">
+      <div class="file-card" style="animation-delay:${i * 0.04}s" data-file-id="${safeId}" oncontextmenu="showCtx(event, this.dataset.fileId)">
         <div class="file-top">
           <div class="file-icon-box" style="background:${iconBg}">
             <i class="ti ${icon}" style="color:${iconColor}"></i>
           </div>
-          <div class="file-menu" onclick="showCtx(event,'${f.id}')">
+          <div class="file-menu" onclick="event.stopPropagation(); showCtx(event, this.parentElement.parentElement.dataset.fileId)">
             <i class="ti ti-dots-vertical"></i>
           </div>
         </div>
-        <span class="fcat-badge" style="background:${badge.bg};color:${badge.color}">${f.folder_name || '-'}</span>
-        <div class="file-name" title="${f.name}">${f.name}</div>
-        <div class="file-info"><span>${f.size || '-'}</span><span>${date}</span></div>
+        <span class="fcat-badge" style="background:${badge.bg};color:${badge.color}">${safeFolder}</span>
+        <div class="file-name" title="${safeName}">${safeName}</div>
+        <div class="file-info"><span>${escapeHtml(f.size || '-')}</span><span>${date}</span></div>
       </div>`;
   }).join('');
   document.getElementById('fileCount').textContent = filtered.length;
@@ -197,10 +231,13 @@ function setNav(el) {
 /* ── MODAL ── */
 function openModal() { document.getElementById('modal').classList.add('show'); }
 
+/* [BUG FIX #6] Reset fileInput & droppedFiles saat modal ditutup */
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
   document.getElementById('selectedFiles').textContent = '';
   document.getElementById('folderSelect').value = '';
+  document.getElementById('fileInput').value = '';
+  droppedFiles = null;
 }
 
 /* ── ADD FOLDER ── */
@@ -218,7 +255,8 @@ async function addFolder() {
 /* ── CONTEXT MENU ── */
 function showCtx(e, id) {
   e.preventDefault();
-  ctxTarget = id;
+  e.stopPropagation();
+  ctxTarget = String(id); // [BUG FIX #5] Pastikan selalu string
   const menu = document.getElementById('ctxMenu');
   const x = Math.min(e.clientX, window.innerWidth - 190);
   const y = Math.min(e.clientY, window.innerHeight - 180);
@@ -231,10 +269,18 @@ document.addEventListener('click', () => {
   document.getElementById('ctxMenu').classList.remove('show');
 });
 
+/* [BUG FIX #3] Tambahkan konfirmasi sebelum hapus file */
+/* [BUG FIX #5] Gunakan String() pada perbandingan ID */
 async function deleteFile() {
   if (!ctxTarget) return;
-  const file = allFiles.find(f => f.id === ctxTarget);
+  const file = allFiles.find(f => String(f.id) === ctxTarget);
   if (!file) return;
+
+  // Konfirmasi sebelum hapus
+  if (!confirm(`Yakin ingin menghapus file "${file.name}"? File yang dihapus tidak bisa dikembalikan.`)) {
+    ctxTarget = null;
+    return;
+  }
 
   const { error } = await sb.from('files').delete().eq('id', ctxTarget);
   if (error) { showToast('Gagal hapus: ' + error.message); return; }
@@ -255,35 +301,48 @@ function showToast(msg) {
 }
 
 /* ── UPLOAD FILE ── */
+/* [BUG FIX #4] Cek error dari Supabase Storage upload */
 async function uploadFile() {
   const folder = document.getElementById('folderSelect').value;
   if (!folder) { showToast('Pilih folder tujuan dulu!'); return; }
 
   const fileInput = document.getElementById('fileInput');
-  const files = fileInput.files;
+  // [BUG FIX #2] Gunakan droppedFiles jika ada, fallback ke fileInput
+  const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
 
   showToast('Mengupload...');
+  let successCount = 0;
+  let failCount = 0;
 
   for (const file of files) {
     const ext = file.name.split('.').pop().toLowerCase();
     let type = 'doc';
-    if (['jpg','jpeg','png','gif','webp'].includes(ext)) type = 'foto';
-    else if (['mp4','mov','avi','mkv'].includes(ext)) type = 'video';
+    if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
+    else if (['mp4','mov','avi','mkv','webm'].includes(ext)) type = 'video';
     else if (ext === 'pdf') type = 'pdf';
     else if (['xlsx','csv','xls'].includes(ext)) type = 'spreadsheet';
+    else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
+    else if (['doc','docx','txt','odt','rtf','pptx','ppt'].includes(ext)) type = 'doc';
 
-    const iconInfo = FILE_ICONS[type];
+    const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
     const sizeStr = file.size > 1024*1024
       ? (file.size / (1024*1024)).toFixed(1) + ' MB'
       : (file.size / 1024).toFixed(0) + ' KB';
 
     /* upload file ke Supabase Storage */
     const filePath = `${folder}/${Date.now()}_${file.name}`;
-    await sb.storage.from('user-files').upload(filePath, file);
+    const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
+
+    /* [BUG FIX #4] Cek error upload sebelum simpan metadata */
+    if (uploadError) {
+      console.error('Upload error:', uploadError.message);
+      failCount++;
+      continue; // Skip metadata insert jika upload gagal
+    }
 
     /* simpan metadata ke tabel files */
-    await sb.from('files').insert({
+    const { error: insertError } = await sb.from('files').insert({
       name: file.name,
       folder_name: folder,
       type,
@@ -292,15 +351,31 @@ async function uploadFile() {
       icon_color: iconInfo.iconColor,
       icon_bg: iconInfo.iconBg,
     });
+
+    if (insertError) {
+      console.error('Insert error:', insertError.message);
+      failCount++;
+    } else {
+      successCount++;
+    }
   }
 
   closeModal();
-  showToast('File berhasil diupload ke ' + folder + '!');
+
+  if (failCount > 0 && successCount > 0) {
+    showToast(`${successCount} file berhasil, ${failCount} gagal diupload.`);
+  } else if (failCount > 0 && successCount === 0) {
+    showToast(`Gagal mengupload ${failCount} file. Cek koneksi atau storage.`);
+  } else {
+    showToast('File berhasil diupload ke ' + folder + '!');
+  }
+
   await loadFiles();
   renderStats();
 }
 
 function handleFileSelect(input) {
+  droppedFiles = null; // Reset dropped files saat user pilih via input
   const names = Array.from(input.files).map(f => f.name).join(', ');
   document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
 }
@@ -338,11 +413,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === this) closeModal();
   });
 
+  /* [BUG FIX #2] Drag & drop sekarang menyimpan file ke droppedFiles */
   const dz = document.getElementById('dropZone');
   dz.addEventListener('dragover', e => {
     e.preventDefault();
     dz.style.borderColor = 'var(--accent)';
-    dz.style.background = '#e8e5fc';
+    dz.style.background = 'rgba(124,58,237,0.15)';
   });
   dz.addEventListener('dragleave', () => {
     dz.style.borderColor = '';
@@ -352,11 +428,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     dz.style.borderColor = '';
     dz.style.background = '';
-    const names = Array.from(e.dataTransfer.files).map(f => f.name).join(', ');
+    droppedFiles = Array.from(e.dataTransfer.files); // Simpan file yang di-drop
+    const names = droppedFiles.map(f => f.name).join(', ');
     document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
   });
 
+  /* Escape untuk tutup modal */
   document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeModal();
+      document.getElementById('ctxMenu').classList.remove('show');
+    }
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
       document.getElementById('searchInput').focus();

@@ -977,7 +977,7 @@
 
   async function doLogin() {
     const email = document.getElementById('emailInput').value.trim();
-    const pass  = document.getElementById('passInput').value.trim();
+    const pass  = document.getElementById('passInput').value;
     const emailErr = document.getElementById('emailErr');
     const passErr  = document.getElementById('passErr');
     emailErr.classList.remove('show');
@@ -1015,7 +1015,7 @@
   async function doRegister() {
     const name  = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
-    const pass  = document.getElementById('regPass').value.trim();
+    const pass  = document.getElementById('regPass').value;
     const nameErr = document.getElementById('regNameErr');
     const emailErr = document.getElementById('regEmailErr');
     const passErr  = document.getElementById('regPassErr');
