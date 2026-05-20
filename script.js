@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U'; // ⚠️ Supabase: Project Settings > API > anon public key
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const FOLDER_COLORS = [
@@ -21,17 +21,24 @@ const FILE_ICONS = {
 };
 
 let currentFilter = 'semua';
+let currentFolderFilter = null;
+let currentSort = 'newest'; // Mode urut: newest, oldest, az, za
 let ctxTarget = null;
 let allFolders = [];
 let allFiles = [];
-let droppedFiles = null; // [BUG FIX #2] Menyimpan file dari drag & drop
+let droppedFiles = null; 
+let showOnlyFavorites = false; // Toggle khusus sidebar favorit
 
-/* ── UTILITY: Escape HTML untuk mencegah XSS ── */
-/* [BUG FIX #1] Semua input user di-escape sebelum masuk innerHTML */
+/* ── UTILITY ── */
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// Fitur Favorite menggunakan LocalStorage
+function getFavs() {
+  return JSON.parse(localStorage.getItem('myStorageFavs') || '[]');
 }
 
 /* ── LOAD DATA ── */
@@ -48,7 +55,7 @@ async function loadFolders() {
 }
 
 async function loadFiles() {
-  const { data, error } = await sb.from('files').select('*').order('created_at', { ascending: false });
+  const { data, error } = await sb.from('files').select('*');
   if (error) { showToast('Gagal load file: ' + error.message); return; }
   allFiles = data || [];
   renderFiles();
@@ -58,22 +65,18 @@ async function loadFiles() {
 function renderStats() {
   const totalFiles = allFiles.length;
   const totalFolders = allFolders.length;
+  const favCount = allFiles.filter(f => getFavs().includes(String(f.id))).length;
 
-  // Stat cards
   document.getElementById('statFiles').textContent = totalFiles;
   document.getElementById('statFolders').textContent = totalFolders;
-  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = 0;
-  if (document.getElementById('statFavorit')) document.getElementById('statFavorit').textContent = 0;
+  if (document.getElementById('statFavorit')) document.getElementById('statFavorit').textContent = favCount;
 
-  // Sidebar badges
   if (document.getElementById('badgeDashboard')) document.getElementById('badgeDashboard').textContent = totalFiles;
-  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = 0;
   if (document.getElementById('badgeDocs')) document.getElementById('badgeDocs').textContent = allFiles.filter(f => f.type === 'doc' || f.type === 'pdf').length;
   if (document.getElementById('badgePhotos')) document.getElementById('badgePhotos').textContent = allFiles.filter(f => f.type === 'foto').length;
   if (document.getElementById('badgeVideos')) document.getElementById('badgeVideos').textContent = allFiles.filter(f => f.type === 'video').length;
   if (document.getElementById('badgeAudio')) document.getElementById('badgeAudio').textContent = allFiles.filter(f => f.type === 'audio').length;
 
-  // Storage: hitung dari ukuran file yang ada
   let usedMB = 0;
   allFiles.forEach(f => {
     if (f.size) {
@@ -83,7 +86,7 @@ function renderStats() {
       else if (f.size.includes('GB')) usedMB += num * 1024;
     }
   });
-  const totalMB = 1024; // 1 GB free tier Supabase Storage
+  const totalMB = 1024; // 1 GB Kuota
   const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
   const usedStr = usedMB < 1 ? (usedMB * 1024).toFixed(0) + ' KB' :
                   usedMB < 1024 ? usedMB.toFixed(1) + ' MB' :
@@ -99,7 +102,6 @@ function renderStats() {
 }
 
 /* ── RENDER FOLDERS ── */
-/* [BUG FIX #1] Semua f.name di-escape dengan escapeHtml() */
 function renderFolders() {
   const grid = document.getElementById('folderGrid');
   if (allFolders.length === 0) {
@@ -133,39 +135,54 @@ function renderFolders() {
   }).join('');
   document.getElementById('folderCount').textContent = allFolders.length;
 
-  /* update folder select di modal */
   const sel = document.getElementById('folderSelect');
   sel.innerHTML = '<option value="">Pilih folder...</option>' +
     allFolders.map(f => `<option value="${escapeHtml(f.name)}">${escapeHtml(f.name)}</option>`).join('');
 }
 
-/* Klik folder — filter file berdasarkan folder */
-let currentFolderFilter = null;
-
 function openFolder(name) {
   currentFolderFilter = name;
-  // Scroll ke section file
+  showOnlyFavorites = false; // Matikan mode favorit jika buka folder
   document.getElementById('fileGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
   showToast('Folder ' + name + ' dibuka');
   renderFiles();
 }
 
-function clearFolderFilter() {
-  currentFolderFilter = null;
+/* ── FITUR SORTING FILE ── */
+function toggleSort() {
+  const modes = ['newest', 'oldest', 'az', 'za'];
+  const labels = ['Terbaru', 'Terlama', 'A-Z', 'Z-A'];
+  
+  let idx = modes.indexOf(currentSort);
+  let nextIdx = (idx + 1) % modes.length;
+  
+  currentSort = modes[nextIdx];
+  document.getElementById('sortLabel').textContent = labels[nextIdx];
+  showToast('Diurutkan berdasarkan: ' + labels[nextIdx]);
   renderFiles();
 }
 
 /* ── RENDER FILES ── */
-/* [BUG FIX #1] Semua data user di-escape & gunakan data-attribute */
 function renderFiles() {
   const grid = document.getElementById('fileGrid');
   const search = document.getElementById('searchInput').value.toLowerCase();
+  const favs = getFavs();
 
-  const filtered = allFiles.filter(f => {
+  let filtered = allFiles.filter(f => {
     const matchType   = currentFilter === 'semua' || f.type === currentFilter;
     const matchSearch = f.name.toLowerCase().includes(search) || (f.folder_name || '').toLowerCase().includes(search);
     const matchFolder = !currentFolderFilter || f.folder_name === currentFolderFilter;
-    return matchType && matchSearch && matchFolder;
+    const matchFav    = showOnlyFavorites ? favs.includes(String(f.id)) : true;
+    
+    return matchType && matchSearch && matchFolder && matchFav;
+  });
+
+  // Logika Pengurutan
+  filtered.sort((a, b) => {
+    if (currentSort === 'newest') return new Date(b.created_at) - new Date(a.created_at);
+    if (currentSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
+    if (currentSort === 'az') return a.name.localeCompare(b.name);
+    if (currentSort === 'za') return b.name.localeCompare(a.name);
   });
 
   if (filtered.length === 0) {
@@ -194,14 +211,19 @@ function renderFiles() {
     const safeId = escapeHtml(String(f.id));
     const safeName = escapeHtml(f.name);
     const safeFolder = escapeHtml(f.folder_name || '-');
+    const isFav = favs.includes(String(f.id));
+
     return `
       <div class="file-card" style="animation-delay:${i * 0.04}s" data-file-id="${safeId}" oncontextmenu="showCtx(event, this.dataset.fileId)">
         <div class="file-top">
           <div class="file-icon-box" style="background:${iconBg}">
             <i class="ti ${icon}" style="color:${iconColor}"></i>
           </div>
-          <div class="file-menu" onclick="event.stopPropagation(); showCtx(event, this.parentElement.parentElement.dataset.fileId)">
-            <i class="ti ti-dots-vertical"></i>
+          <div style="display:flex; gap:6px; align-items:center;">
+             ${isFav ? `<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>` : ''}
+             <div class="file-menu" onclick="event.stopPropagation(); showCtx(event, this.parentElement.parentElement.parentElement.dataset.fileId)">
+               <i class="ti ti-dots-vertical"></i>
+             </div>
           </div>
         </div>
         <span class="fcat-badge" style="background:${badge.bg};color:${badge.color}">${safeFolder}</span>
@@ -217,21 +239,36 @@ function setFilter(el, type) {
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   currentFilter = type;
+  showOnlyFavorites = false; // Reset favorit view
   renderFiles();
 }
 
 function filterFiles() { renderFiles(); }
 
+function filterFavorites() {
+  currentFolderFilter = null;
+  currentFilter = 'semua';
+  showOnlyFavorites = true;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector('.filter-chip').classList.add('active'); // set to "Semua"
+  showToast('Menampilkan file favorit');
+  renderFiles();
+}
+
 /* ── NAV ── */
 function setNav(el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   el.classList.add('active');
+  if(el.textContent.includes("Dashboard")) {
+     currentFolderFilter = null;
+     showOnlyFavorites = false;
+     renderFiles();
+  }
 }
 
 /* ── MODAL ── */
 function openModal() { document.getElementById('modal').classList.add('show'); }
 
-/* [BUG FIX #6] Reset fileInput & droppedFiles saat modal ditutup */
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
   document.getElementById('selectedFiles').textContent = '';
@@ -252,14 +289,14 @@ async function addFolder() {
   showToast('Folder "' + name.trim() + '" berhasil dibuat!');
 }
 
-/* ── CONTEXT MENU ── */
+/* ── CONTEXT MENU ACTION ── */
 function showCtx(e, id) {
   e.preventDefault();
   e.stopPropagation();
-  ctxTarget = String(id); // [BUG FIX #5] Pastikan selalu string
+  ctxTarget = String(id); 
   const menu = document.getElementById('ctxMenu');
   const x = Math.min(e.clientX, window.innerWidth - 190);
-  const y = Math.min(e.clientY, window.innerHeight - 180);
+  const y = Math.min(e.clientY, window.innerHeight - 250); // Sesuaikan height menu
   menu.style.top  = y + 'px';
   menu.style.left = x + 'px';
   menu.classList.add('show');
@@ -269,24 +306,127 @@ document.addEventListener('click', () => {
   document.getElementById('ctxMenu').classList.remove('show');
 });
 
-/* [BUG FIX #3] Tambahkan konfirmasi sebelum hapus file */
-/* [BUG FIX #5] Gunakan String() pada perbandingan ID */
+/* ── FITUR DOWNLOAD ── */
+async function downloadFile() {
+  if (!ctxTarget) return;
+  const file = allFiles.find(f => String(f.id) === ctxTarget);
+  if (!file) return;
+
+  document.getElementById('ctxMenu').classList.remove('show');
+  showToast('Menyiapkan file download...');
+
+  const path = file.storage_path || `${file.folder_name}/${file.name}`;
+  const { data, error } = await sb.storage.from('user-files').download(path);
+  
+  if (error) { showToast('Gagal mengunduh: ' + error.message); return; }
+
+  const url = URL.createObjectURL(data);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ── FITUR SHARE (COPY LINK) ── */
+async function shareFile() {
+  if (!ctxTarget) return;
+  const file = allFiles.find(f => String(f.id) === ctxTarget);
+  if (!file) return;
+
+  document.getElementById('ctxMenu').classList.remove('show');
+  const path = file.storage_path || `${file.folder_name}/${file.name}`;
+  
+  // Membuat Public URL / Signed URL berdurasi 7 hari (604800 detik)
+  const { data, error } = await sb.storage.from('user-files').createSignedUrl(path, 604800);
+  
+  if (error) { showToast('Gagal membuat link: ' + error.message); return; }
+
+  navigator.clipboard.writeText(data.signedUrl);
+  showToast('Link berhasil disalin ke clipboard!');
+}
+
+/* ── FITUR RENAME ── */
+async function renameFile() {
+  if (!ctxTarget) return;
+  const file = allFiles.find(f => String(f.id) === ctxTarget);
+  if (!file) return;
+  
+  document.getElementById('ctxMenu').classList.remove('show');
+  
+  const newName = prompt('Masukkan nama file baru:', file.name);
+  if (!newName || newName === file.name) return;
+
+  showToast('Mengubah nama file...');
+
+  const oldPath = file.storage_path || `${file.folder_name}/${file.name}`;
+  // Buat path baru (tetap menyimpan di folder yang sama)
+  const newPath = `${file.folder_name}/${Date.now()}_${newName}`;
+
+  // 1. Pindahkan (Rename) di Storage Supabase
+  const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
+  if (moveErr) { showToast('Gagal mengubah di Storage: ' + moveErr.message); return; }
+
+  // 2. Update di Database
+  const { error: dbErr } = await sb.from('files').update({ name: newName, storage_path: newPath }).eq('id', file.id);
+  if (dbErr) { showToast('Gagal mengubah di Database: ' + dbErr.message); return; }
+
+  showToast('Nama file berhasil diubah!');
+  await loadFiles();
+}
+
+/* ── FITUR FAVORIT ── */
+function toggleFavorite() {
+  if (!ctxTarget) return;
+  let favs = getFavs();
+  
+  if (favs.includes(ctxTarget)) {
+    favs = favs.filter(id => id !== ctxTarget);
+    showToast('Dihapus dari favorit');
+  } else {
+    favs.push(ctxTarget);
+    showToast('Ditambahkan ke favorit!');
+  }
+  
+  localStorage.setItem('myStorageFavs', JSON.stringify(favs));
+  document.getElementById('ctxMenu').classList.remove('show');
+  
+  renderFiles();
+  renderStats();
+}
+
+/* ── DELETE FILE ── */
 async function deleteFile() {
   if (!ctxTarget) return;
   const file = allFiles.find(f => String(f.id) === ctxTarget);
   if (!file) return;
 
-  // Konfirmasi sebelum hapus
   if (!confirm(`Yakin ingin menghapus file "${file.name}"? File yang dihapus tidak bisa dikembalikan.`)) {
     ctxTarget = null;
     return;
   }
 
-  const { error } = await sb.from('files').delete().eq('id', ctxTarget);
-  if (error) { showToast('Gagal hapus: ' + error.message); return; }
+  const pathToDelete = file.storage_path || `${file.folder_name}/${file.name}`;
+  const { error: storageError } = await sb.storage.from('user-files').remove([pathToDelete]);
+  
+  if (storageError) {
+    console.error('Gagal menghapus file dari Storage:', storageError.message);
+  }
 
-  showToast('File "' + file.name + '" dihapus.');
+  const { error } = await sb.from('files').delete().eq('id', ctxTarget);
+  if (error) { showToast('Gagal hapus data database: ' + error.message); return; }
+
+  // Bersihkan juga dari favorit lokal jika ada
+  let favs = getFavs();
+  if (favs.includes(ctxTarget)) {
+    favs = favs.filter(id => id !== ctxTarget);
+    localStorage.setItem('myStorageFavs', JSON.stringify(favs));
+  }
+
+  showToast('File "' + file.name + '" berhasil dihapus.');
   ctxTarget = null;
+  document.getElementById('ctxMenu').classList.remove('show');
+  
   await loadFiles();
   renderStats();
 }
@@ -301,13 +441,11 @@ function showToast(msg) {
 }
 
 /* ── UPLOAD FILE ── */
-/* [BUG FIX #4] Cek error dari Supabase Storage upload */
 async function uploadFile() {
   const folder = document.getElementById('folderSelect').value;
   if (!folder) { showToast('Pilih folder tujuan dulu!'); return; }
 
   const fileInput = document.getElementById('fileInput');
-  // [BUG FIX #2] Gunakan droppedFiles jika ada, fallback ke fileInput
   const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
 
@@ -334,14 +472,12 @@ async function uploadFile() {
     const filePath = `${folder}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
 
-    /* [BUG FIX #4] Cek error upload sebelum simpan metadata */
     if (uploadError) {
       console.error('Upload error:', uploadError.message);
       failCount++;
-      continue; // Skip metadata insert jika upload gagal
+      continue; 
     }
 
-    /* simpan metadata ke tabel files */
     const { error: insertError } = await sb.from('files').insert({
       name: file.name,
       folder_name: folder,
@@ -350,6 +486,7 @@ async function uploadFile() {
       icon: iconInfo.icon,
       icon_color: iconInfo.iconColor,
       icon_bg: iconInfo.iconBg,
+      storage_path: filePath 
     });
 
     if (insertError) {
@@ -375,18 +512,16 @@ async function uploadFile() {
 }
 
 function handleFileSelect(input) {
-  droppedFiles = null; // Reset dropped files saat user pilih via input
+  droppedFiles = null; 
   const names = Array.from(input.files).map(f => f.name).join(', ');
   document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
 }
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Auth guard: redirect ke login jika belum login
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
 
-  // Tampilkan info user
   const user = session.user;
   const fullName = user.user_metadata?.full_name || user.email.split('@')[0];
   const initials = fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -397,7 +532,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const roleEl = document.querySelector('.user-role');
   if (roleEl) roleEl.textContent = email;
 
-  // Tombol logout
   const userChip = document.querySelector('.user-chip');
   if (userChip) {
     userChip.title = 'Klik untuk logout';
@@ -413,7 +547,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.target === this) closeModal();
   });
 
-  /* [BUG FIX #2] Drag & drop sekarang menyimpan file ke droppedFiles */
   const dz = document.getElementById('dropZone');
   dz.addEventListener('dragover', e => {
     e.preventDefault();
@@ -428,12 +561,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     dz.style.borderColor = '';
     dz.style.background = '';
-    droppedFiles = Array.from(e.dataTransfer.files); // Simpan file yang di-drop
+    droppedFiles = Array.from(e.dataTransfer.files); 
     const names = droppedFiles.map(f => f.name).join(', ');
     document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
   });
 
-  /* Escape untuk tutup modal */
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeModal();

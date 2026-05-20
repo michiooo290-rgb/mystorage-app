@@ -12,11 +12,9 @@
 </head>
 <body>
 
-<!-- Animated Background -->
 <div class="bg-mesh"></div>
 <div class="particles-overlay"></div>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-icon">
@@ -26,60 +24,52 @@
   </div>
 
   <span class="nav-label">Menu</span>
-  <div class="nav-item active" onclick="setNav(this)">
+  <div class="nav-item active" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'semua')">
     <i class="ti ti-layout-dashboard"></i>Dashboard
     <span class="badge" id="badgeDashboard">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); showToast('Fitur dibagikan dalam pengembangan')">
     <i class="ti ti-share"></i>Dibagikan
     <span class="badge" id="badgeShared">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this)">
-    <i class="ti ti-clock"></i>Terakhir Dilihat
-  </div>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); filterFavorites()">
     <i class="ti ti-star"></i>Favorit
-  </div>
-  <div class="nav-item" onclick="setNav(this)">
-    <i class="ti ti-trash"></i>Sampah
   </div>
 
   <div class="divider"></div>
   <span class="nav-label">Tipe File</span>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'doc')">
     <i class="ti ti-file-type-pdf"></i>Dokumen
     <span class="badge" id="badgeDocs">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'foto')">
     <i class="ti ti-photo"></i>Foto
     <span class="badge" id="badgePhotos">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'video')">
     <i class="ti ti-video"></i>Video
     <span class="badge" id="badgeVideos">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this)">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'audio')">
     <i class="ti ti-music"></i>Audio
     <span class="badge" id="badgeAudio">0</span>
   </div>
 
   <div class="divider"></div>
 
-  <!-- User chip -->
   <div class="user-chip">
     <div class="user-av">RZ</div>
     <div class="user-info">
-      <div class="user-name">Reza</div>
+      <div class="user-name">Memuat...</div>
       <div class="user-role">Free plan</div>
     </div>
     <i class="ti ti-chevron-right" style="color:var(--text-faint);font-size:14px;margin-left:auto"></i>
   </div>
 
-  <!-- Storage box -->
   <div class="storage-box">
     <div class="storage-header">
       <div class="storage-label">Penyimpanan</div>
-      <div class="storage-pct" id="storagePct">62%</div>
+      <div class="storage-pct" id="storagePct">0%</div>
     </div>
     <div class="storage-bar"><div class="storage-fill"></div></div>
     <div class="storage-info">
@@ -89,10 +79,8 @@
   </div>
 </aside>
 
-<!-- MAIN -->
 <div class="main">
 
-  <!-- TOPBAR -->
   <header class="topbar">
     <div class="breadcrumb" style="margin-right:16px">
       <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
@@ -104,12 +92,12 @@
       <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" oninput="filterFiles()"/>
     </div>
     <div class="topbar-right">
-      <div class="btn-icon" title="Notifikasi">
+      <div class="btn-icon" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">
         <i class="ti ti-bell"></i>
         <div class="notif-dot"></div>
       </div>
-      <div class="btn-icon" title="Pengaturan">
-        <i class="ti ti-settings"></i>
+      <div class="btn-icon" title="Refresh Data" onclick="loadAll(); showToast('Data diperbarui')">
+        <i class="ti ti-refresh"></i>
       </div>
       <button class="btn-upload" onclick="openModal()">
         <i class="ti ti-cloud-upload"></i>Upload File
@@ -118,17 +106,15 @@
     </div>
   </header>
 
-  <!-- CONTENT -->
   <div class="content">
 
-    <!-- STAT CARDS -->
     <div class="stats-row">
       <div class="stat-card" style="animation-delay:0s">
         <div class="stat-icon" style="background:rgba(99,102,241,0.15)">
           <i class="ti ti-files" style="color:#818cf8"></i>
         </div>
         <div>
-          <div class="stat-value" id="statFiles">8</div>
+          <div class="stat-value" id="statFiles">0</div>
           <div class="stat-label">Total File</div>
         </div>
       </div>
@@ -137,7 +123,7 @@
           <i class="ti ti-folder" style="color:#4ade80"></i>
         </div>
         <div>
-          <div class="stat-value" id="statFolders">4</div>
+          <div class="stat-value" id="statFolders">0</div>
           <div class="stat-label">Folder</div>
         </div>
       </div>
@@ -161,37 +147,33 @@
       </div>
     </div>
 
-    <!-- FOLDERS -->
     <div>
       <div class="section-head">
         <div class="section-head-left">
           <span class="section-title">Folders</span>
-          <span class="section-count" id="folderCount">4</span>
+          <span class="section-count" id="folderCount">0</span>
         </div>
         <button class="btn-new" onclick="addFolder()">
           <i class="ti ti-plus" style="font-size:14px"></i>Folder baru
         </button>
       </div>
       <div class="folder-grid" id="folderGrid">
-        <!-- rendered by JS -->
-      </div>
+        </div>
     </div>
 
-    <!-- FILES -->
     <div>
       <div class="section-head">
         <div class="section-head-left">
-          <span class="section-title">File terbaru</span>
-          <span class="section-count" id="fileCount">8</span>
+          <span class="section-title">File Terbaru</span>
+          <span class="section-count" id="fileCount">0</span>
         </div>
         <div style="display:flex;gap:8px">
-          <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="showToast('Fitur sort segera hadir!')">
-            <i class="ti ti-arrows-sort" style="font-size:15px"></i>Urutkan
+          <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="toggleSort()">
+            <i class="ti ti-arrows-sort" style="font-size:15px"></i> <span id="sortLabel">Urutkan</span>
           </div>
         </div>
       </div>
 
-      <!-- Filter chips -->
       <div class="filter-row">
         <button class="filter-chip active" onclick="setFilter(this,'semua')">
           <i class="ti ti-layout-grid"></i>Semua
@@ -214,14 +196,12 @@
       </div>
 
       <div class="file-grid" id="fileGrid">
-        <!-- rendered by JS -->
-      </div>
+        </div>
     </div>
 
   </div>
 </div>
 
-<!-- UPLOAD MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-title">Upload File</div>
@@ -235,10 +215,6 @@
     <div class="modal-row">
       <select class="modal-select" id="folderSelect">
         <option value="">Pilih folder...</option>
-        <option value="Kampus">Kampus</option>
-        <option value="Kerja">Kerja</option>
-        <option value="Foto">Foto</option>
-        <option value="Pribadi">Pribadi</option>
       </select>
     </div>
     <div class="modal-footer">
@@ -248,17 +224,15 @@
   </div>
 </div>
 
-<!-- CONTEXT MENU -->
 <div class="ctx-menu" id="ctxMenu">
-  <div class="ctx-item" onclick="showToast('Download dimulai...')"><i class="ti ti-download"></i>Download</div>
-  <div class="ctx-item" onclick="showToast('Link salin berhasil!')"><i class="ti ti-share"></i>Bagikan</div>
-  <div class="ctx-item" onclick="showToast('Fitur rename segera hadir!')"><i class="ti ti-edit"></i>Rename</div>
-  <div class="ctx-item" onclick="showToast('Ditambahkan ke favorit!')"><i class="ti ti-star"></i>Tambah Favorit</div>
+  <div class="ctx-item" onclick="downloadFile()"><i class="ti ti-download"></i>Download</div>
+  <div class="ctx-item" onclick="shareFile()"><i class="ti ti-share"></i>Bagikan Link</div>
+  <div class="ctx-item" onclick="renameFile()"><i class="ti ti-edit"></i>Rename File</div>
+  <div class="ctx-item" onclick="toggleFavorite()"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus</div>
+  <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus Permanen</div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast">
   <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
   <span id="toastMsg">Berhasil!</span>
