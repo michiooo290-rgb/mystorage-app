@@ -3,960 +3,718 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MyStorage — Login</title>
+  <title>MyStorage — Masuk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <style>
     :root {
-      --ink: #e2e0ff;
-      --ink-2: #c4c0f0;
-      --ink-3: #8b86b0;
-      --ink-4: #5c577a;
-      --surface: rgba(255,255,255,0.04);
-      --bg: #0a0a1a;
-      --accent: #7c3aed;
-      --accent-2: #8b5cf6;
-      --accent-light: rgba(124,58,237,0.12);
-      --accent-mid: #a78bfa;
-      --cyan: #06b6d4;
-      --amber: #f59e0b;
-      --radius: 20px;
-      --radius-sm: 12px;
+      --ink: #0f0e0d;
+      --ink-2: #2a2825;
+      --ink-3: #5a5754;
+      --ink-4: #9a9693;
+      --ink-5: #c8c4c0;
+      --paper: #f7f5f2;
+      --paper-2: #efece8;
+      --paper-3: #e8e4df;
+      --white: #fdfcfb;
+      --border: rgba(15,14,13,0.08);
+      --border-2: rgba(15,14,13,0.14);
+      --border-3: rgba(15,14,13,0.22);
+      --accent-warm: #c8602a;
+      --amber: #92400e;
+      --radius-xs: 6px;
+      --radius-sm: 10px;
+      --radius: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 2px 8px rgba(15,14,13,0.08);
+      --shadow-md: 0 4px 20px rgba(15,14,13,0.1);
+      --shadow-lg: 0 12px 40px rgba(15,14,13,0.12);
+      --ease-out-expo: cubic-bezier(0.19,1,0.22,1);
+      --ease-spring: cubic-bezier(0.34,1.56,0.64,1);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', 'Instrument Sans', sans-serif;
+      background: var(--paper);
       min-height: 100vh;
       display: flex;
       overflow: hidden;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* ── ANIMATED GRADIENT MESH BACKGROUND ── */
-    .bg-mesh {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .bg-mesh::before {
+    /* Grain */
+    body::before {
       content: '';
-      position: absolute;
-      width: 150%;
-      height: 150%;
-      top: -25%;
-      left: -25%;
-      background:
-        radial-gradient(ellipse 600px 600px at 20% 30%, rgba(124,58,237,0.35) 0%, transparent 70%),
-        radial-gradient(ellipse 500px 500px at 75% 20%, rgba(99,102,241,0.25) 0%, transparent 70%),
-        radial-gradient(ellipse 400px 400px at 60% 80%, rgba(6,182,212,0.2) 0%, transparent 70%),
-        radial-gradient(ellipse 450px 450px at 30% 75%, rgba(139,92,246,0.3) 0%, transparent 70%),
-        radial-gradient(ellipse 350px 350px at 85% 60%, rgba(245,158,11,0.1) 0%, transparent 70%);
-      animation: meshShift 12s ease-in-out infinite alternate;
-    }
-
-    @keyframes meshShift {
-      0% { transform: translate(0, 0) rotate(0deg) scale(1); }
-      33% { transform: translate(3%, -2%) rotate(1deg) scale(1.02); }
-      66% { transform: translate(-2%, 3%) rotate(-0.5deg) scale(0.98); }
-      100% { transform: translate(1%, -1%) rotate(0.5deg) scale(1.01); }
-    }
-
-    /* ── ANIMATED GRID OVERLAY ── */
-    .bg-grid {
       position: fixed;
       inset: 0;
-      z-index: 1;
-      background-image:
-        linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-      animation: gridPulse 8s ease-in-out infinite;
-    }
-
-    @keyframes gridPulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
-    }
-
-    /* ── NOISE / SCANLINE TEXTURE OVERLAY ── */
-    .bg-noise {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      opacity: 0.025;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-repeat: repeat;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.022;
       pointer-events: none;
+      z-index: 0;
     }
 
-    .bg-scanlines {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.008) 2px,
-        rgba(255,255,255,0.008) 4px
-      );
-      pointer-events: none;
-    }
-
-    /* ── FLOATING PARTICLES ── */
-    .particles {
-      position: fixed;
-      inset: 0;
-      z-index: 2;
-      pointer-events: none;
-      overflow: hidden;
-    }
-
-    .particle {
-      position: absolute;
-      border-radius: 50%;
-      animation: particleDrift linear infinite;
-    }
-
-    .particle:nth-child(1) { width: 3px; height: 3px; background: rgba(124,58,237,0.6); left: 10%; top: 20%; animation-duration: 18s; animation-delay: 0s; box-shadow: 0 0 8px rgba(124,58,237,0.4); }
-    .particle:nth-child(2) { width: 2px; height: 2px; background: rgba(6,182,212,0.5); left: 25%; top: 60%; animation-duration: 22s; animation-delay: -3s; box-shadow: 0 0 6px rgba(6,182,212,0.3); }
-    .particle:nth-child(3) { width: 4px; height: 4px; background: rgba(139,92,246,0.5); left: 55%; top: 15%; animation-duration: 20s; animation-delay: -5s; box-shadow: 0 0 10px rgba(139,92,246,0.3); }
-    .particle:nth-child(4) { width: 2px; height: 2px; background: rgba(245,158,11,0.4); left: 75%; top: 45%; animation-duration: 24s; animation-delay: -8s; box-shadow: 0 0 6px rgba(245,158,11,0.3); }
-    .particle:nth-child(5) { width: 3px; height: 3px; background: rgba(6,182,212,0.6); left: 40%; top: 80%; animation-duration: 16s; animation-delay: -2s; box-shadow: 0 0 8px rgba(6,182,212,0.4); }
-    .particle:nth-child(6) { width: 2px; height: 2px; background: rgba(124,58,237,0.5); left: 85%; top: 25%; animation-duration: 19s; animation-delay: -6s; box-shadow: 0 0 6px rgba(124,58,237,0.3); }
-    .particle:nth-child(7) { width: 3px; height: 3px; background: rgba(139,92,246,0.4); left: 15%; top: 90%; animation-duration: 21s; animation-delay: -10s; box-shadow: 0 0 8px rgba(139,92,246,0.3); }
-    .particle:nth-child(8) { width: 2px; height: 2px; background: rgba(6,182,212,0.5); left: 65%; top: 70%; animation-duration: 25s; animation-delay: -4s; box-shadow: 0 0 6px rgba(6,182,212,0.3); }
-    .particle:nth-child(9) { width: 4px; height: 4px; background: rgba(245,158,11,0.3); left: 90%; top: 85%; animation-duration: 17s; animation-delay: -7s; box-shadow: 0 0 10px rgba(245,158,11,0.3); }
-    .particle:nth-child(10) { width: 2px; height: 2px; background: rgba(124,58,237,0.6); left: 50%; top: 35%; animation-duration: 23s; animation-delay: -1s; box-shadow: 0 0 6px rgba(124,58,237,0.4); }
-    .particle:nth-child(11) { width: 3px; height: 3px; background: rgba(6,182,212,0.4); left: 30%; top: 10%; animation-duration: 26s; animation-delay: -9s; box-shadow: 0 0 8px rgba(6,182,212,0.3); }
-    .particle:nth-child(12) { width: 2px; height: 2px; background: rgba(139,92,246,0.5); left: 70%; top: 55%; animation-duration: 15s; animation-delay: -12s; box-shadow: 0 0 6px rgba(139,92,246,0.3); }
-
-    @keyframes particleDrift {
-      0%   { transform: translate(0, 0) scale(1); opacity: 0; }
-      10%  { opacity: 1; }
-      50%  { transform: translate(calc(-50px + 100px * var(--drift, 0.5)), -120px) scale(1.2); opacity: 0.8; }
-      90%  { opacity: 1; }
-      100% { transform: translate(calc(30px - 60px * var(--drift, 0.5)), -240px) scale(0.8); opacity: 0; }
-    }
-
-    .particle:nth-child(odd) { --drift: 0.3; }
-    .particle:nth-child(even) { --drift: 0.7; }
-
-    /* ── LEFT PANEL ── */
+    /* ── Left Panel — Brand Side ── */
     .left-panel {
-      width: 55%;
-      position: relative;
-      overflow: hidden;
+      width: 52%;
+      background: var(--ink);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       padding: 44px 52px;
-      z-index: 10;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
     }
 
-    /* Glass panel background */
+    /* Subtle radial accent */
     .left-panel::before {
       content: '';
       position: absolute;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(200,96,42,0.18) 0%, transparent 65%);
+      pointer-events: none;
+      animation: orbDrift 14s ease-in-out infinite alternate;
+    }
+
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -100px; left: -100px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(200,96,42,0.1) 0%, transparent 65%);
+      pointer-events: none;
+      animation: orbDrift 18s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes orbDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(30px, -20px) scale(1.08); }
+    }
+
+    /* Grid pattern */
+    .grid-overlay {
+      position: absolute;
       inset: 0;
-      background: rgba(10,10,26,0.3);
-      backdrop-filter: blur(40px);
-      -webkit-backdrop-filter: blur(40px);
-      border-right: 1px solid rgba(124,58,237,0.1);
-      z-index: -1;
-    }
-
-    /* Large glow orb top-right */
-    .left-panel .glow-orb-1 {
-      position: absolute;
-      width: 520px; height: 520px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%);
-      top: -140px; right: -140px;
-      animation: orbFloat 10s ease-in-out infinite;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
       pointer-events: none;
     }
 
-    /* Smaller glow orb bottom-left */
-    .left-panel .glow-orb-2 {
-      position: absolute;
-      width: 360px; height: 360px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%);
-      bottom: -80px; left: -60px;
-      animation: orbFloat 12s ease-in-out infinite reverse;
-      pointer-events: none;
-    }
-
-    @keyframes orbFloat {
-      0%, 100% { transform: scale(1) translate(0, 0); }
-      50% { transform: scale(1.1) translate(10px, -15px); }
-    }
-
-    .left-logo {
+    /* ── Logo Area ── */
+    .brand-logo {
       display: flex;
       align-items: center;
-      gap: 14px;
-      z-index: 1;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    /* Animated gradient ring behind logo */
-    .left-logo-icon {
-      width: 46px; height: 46px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--cyan));
-      display: flex; align-items: center; justify-content: center;
+      gap: 10px;
       position: relative;
-      box-shadow: 0 0 20px rgba(124,58,237,0.3), 0 0 60px rgba(124,58,237,0.1);
-      animation: logoGlow 4s ease-in-out infinite;
+      z-index: 2;
+      animation: fadeUpIn 0.6s var(--ease-out-expo) both;
     }
 
-    .left-logo-icon::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 17px;
-      background: conic-gradient(from 0deg, var(--accent), var(--cyan), var(--amber), var(--accent));
-      z-index: -1;
-      animation: ringRotate 6s linear infinite;
-      opacity: 0.6;
-    }
-
-    .left-logo-icon::after {
-      content: '';
-      position: absolute;
-      inset: -3px;
-      border-radius: 16px;
-      background: var(--bg);
-      z-index: -1;
-    }
-
-    @keyframes ringRotate { to { transform: rotate(360deg); } }
-    @keyframes logoGlow {
-      0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,0.3), 0 0 60px rgba(124,58,237,0.1); }
-      50% { box-shadow: 0 0 30px rgba(124,58,237,0.5), 0 0 80px rgba(124,58,237,0.15); }
-    }
-
-    .left-logo-icon i { color: #fff; font-size: 22px; }
-    .left-logo-name { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
-
-    .left-hero {
-      z-index: 1;
-      animation: fadeUp 0.6s 0.1s ease both;
-    }
-
-    .left-tagline {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--cyan);
-      margin-bottom: 20px;
-      text-shadow: 0 0 20px rgba(6,182,212,0.3);
-    }
-
-    .left-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: clamp(28px, 3vw, 44px);
-      font-weight: 700;
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
       color: #fff;
-      line-height: 1.18;
+    }
+
+    .brand-name {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.92);
+      letter-spacing: -0.03em;
+    }
+
+    /* ── Main Headline ── */
+    .brand-body {
+      position: relative;
+      z-index: 2;
+      animation: fadeUpIn 0.7s 0.1s var(--ease-out-expo) both;
+    }
+
+    .brand-eyebrow {
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: var(--accent-warm);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
       margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-eyebrow::before {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent-warm);
+      opacity: 0.7;
     }
 
-    .left-title span {
-      color: transparent;
-      background: linear-gradient(135deg, var(--accent-mid), var(--cyan));
-      -webkit-background-clip: text;
-      background-clip: text;
+    .brand-headline {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: clamp(32px, 3.5vw, 46px);
+      font-weight: 600;
+      color: rgba(255,255,255,0.94);
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      margin-bottom: 20px;
     }
 
-    .left-desc {
-      font-size: 15px;
+    .brand-headline em {
+      font-style: italic;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .brand-desc {
+      font-size: 14.5px;
       color: rgba(255,255,255,0.45);
-      line-height: 1.75;
-      max-width: 400px;
+      line-height: 1.7;
+      max-width: 320px;
     }
 
-    /* ── FLOATING FILE CARDS (GLASS) ── */
-    .float-cards {
-      position: absolute;
-      right: -20px; top: 50%;
-      transform: translateY(-50%);
+    /* ── Feature Pills ── */
+    .feature-list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 10px;
+      margin-top: 36px;
+      position: relative;
       z-index: 2;
-      animation: floatIn 0.8s 0.3s ease both;
+      animation: fadeUpIn 0.7s 0.2s var(--ease-out-expo) both;
     }
 
-    .fcard {
-      background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 14px 18px;
+    .feature-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      width: 220px;
-      animation: floatBob 4s ease-in-out infinite;
-      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
     }
 
-    .fcard:hover {
-      transform: translateY(-4px) scale(1.03);
-      border-color: rgba(124,58,237,0.3);
-      box-shadow: 0 8px 32px rgba(124,58,237,0.15), 0 4px 24px rgba(0,0,0,0.3);
-    }
-
-    .fcard:nth-child(2) { animation-delay: -1.5s; transform: translateX(20px); }
-    .fcard:nth-child(3) { animation-delay: -3s; }
-
-    .fcard-icon {
-      width: 38px; height: 38px;
-      border-radius: 10px;
+    .feature-dot {
+      width: 20px; height: 20px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
       display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
       flex-shrink: 0;
     }
 
-    .fcard-icon i { font-size: 18px; }
-    .fcard-name { font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,0.88); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fcard-size { font-size: 10.5px; color: rgba(255,255,255,0.35); margin-top: 2px; }
-
-    .left-stats {
-      display: flex;
-      gap: 32px;
-      z-index: 1;
-      animation: fadeUp 0.6s 0.2s ease both;
+    /* ── Bottom Info ── */
+    .brand-foot {
+      position: relative;
+      z-index: 2;
+      font-size: 12px;
+      color: rgba(255,255,255,0.2);
+      font-family: 'DM Mono', monospace;
+      animation: fadeUpIn 0.7s 0.3s var(--ease-out-expo) both;
     }
 
-    .stat {
-      border-left: 2px solid rgba(124,58,237,0.3);
-      padding-left: 16px;
-    }
-
-    .stat-num {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 26px;
-      font-weight: 700;
-      color: #fff;
-      background: linear-gradient(135deg, #fff, var(--accent-mid));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .stat-lbl { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; letter-spacing: 0.02em; }
-
-    /* ── RIGHT PANEL ── */
+    /* ── Right Panel — Form ── */
     .right-panel {
-      width: 45%;
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px;
-      z-index: 10;
+      padding: 40px 32px;
       position: relative;
+      z-index: 1;
     }
 
     .form-box {
       width: 100%;
-      max-width: 400px;
-      background: rgba(255,255,255,0.04);
-      backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 24px;
-      padding: 40px 36px;
-      box-shadow: 0 8px 48px rgba(0,0,0,0.3), 0 0 80px rgba(124,58,237,0.05);
-      animation: formGlassIn 0.7s 0.2s ease both;
-      position: relative;
-      overflow: hidden;
+      max-width: 360px;
+      animation: fadeUpIn 0.6s 0.15s var(--ease-out-expo) both;
     }
 
-    /* Subtle gradient shine at top of card */
-    .form-box::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(124,58,237,0.5), rgba(6,182,212,0.3), transparent);
+    .form-header {
+      margin-bottom: 28px;
     }
 
-    @keyframes formGlassIn {
-      from { opacity: 0; transform: translateY(30px) scale(0.96); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    .form-greeting {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
+    .form-title {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: -0.04em;
       margin-bottom: 6px;
-      animation: staggerFadeUp 0.5s 0.3s ease both;
     }
 
     .form-sub {
-      font-size: 14px;
-      color: rgba(255,255,255,0.4);
-      margin-bottom: 32px;
-      animation: staggerFadeUp 0.5s 0.4s ease both;
-    }
-
-    /* ── TAB SWITCHER ── */
-    .tab-switcher {
-      display: flex;
-      background: rgba(124,58,237,0.08);
-      border: 1px solid rgba(124,58,237,0.12);
-      border-radius: 14px;
-      padding: 4px;
-      margin-bottom: 28px;
-      gap: 4px;
-      animation: staggerFadeUp 0.5s 0.25s ease both;
-    }
-
-    .tab-switcher button {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 11px;
-      font-family: 'Inter', sans-serif;
       font-size: 13.5px;
+      color: var(--ink-4);
+    }
+
+    /* ── Tabs ── */
+    .tab-row {
+      display: flex;
+      background: var(--paper-2);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      border-radius: 7px;
+      font-family: inherit;
+      font-size: 13px;
       cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .tab-switcher button.active {
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: #fff;
-      font-weight: 600;
-      box-shadow: 0 4px 16px rgba(124,58,237,0.3);
-    }
-
-    .tab-switcher button.inactive {
+      transition: all 0.2s var(--ease-out-expo);
+      font-weight: 400;
+      color: var(--ink-4);
       background: transparent;
-      color: var(--ink-3);
+    }
+
+    .tab-btn.active {
+      background: var(--white);
+      color: var(--ink);
       font-weight: 500;
+      box-shadow: var(--shadow-sm);
     }
 
-    .tab-switcher button.inactive:hover {
-      background: rgba(124,58,237,0.06);
-      color: var(--ink-2);
+    /* ── Form Fields ── */
+    .field-group {
+      margin-bottom: 14px;
     }
 
-    /* ── FORM FIELDS ── */
-    .field {
-      margin-bottom: 18px;
-      animation: staggerFadeUp 0.5s ease both;
-    }
-
-    .field:nth-child(1) { animation-delay: 0.35s; }
-    .field:nth-child(2) { animation-delay: 0.45s; }
-    .field:nth-child(3) { animation-delay: 0.55s; }
-
-    .field label {
+    .field-label {
       display: block;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 500;
-      color: rgba(255,255,255,0.55);
-      margin-bottom: 7px;
-      letter-spacing: 0.02em;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      letter-spacing: 0.01em;
     }
 
-    .input-wrap {
+    .field-wrap {
       position: relative;
     }
 
-    .input-wrap i {
+    .field-input {
+      width: 100%;
+      padding: 11px 14px;
+      padding-left: 40px;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 13.5px;
+      color: var(--ink);
+      background: var(--white);
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .field-input:focus {
+      border-color: var(--ink);
+      box-shadow: 0 0 0 3px rgba(15,14,13,0.06);
+    }
+
+    .field-input::placeholder { color: var(--ink-5); }
+
+    .field-icon {
       position: absolute;
-      left: 14px;
+      left: 13px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--ink-4);
-      font-size: 17px;
+      font-size: 16px;
+      color: var(--ink-5);
       pointer-events: none;
-      transition: color 0.3s, text-shadow 0.3s;
+      transition: color 0.15s;
     }
 
-    .input-wrap input {
-      width: 100%;
-      padding: 12px 14px 12px 40px;
-      border: 1.5px solid rgba(255,255,255,0.08);
-      border-radius: var(--radius-sm);
-      font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      color: #fff;
-      background: rgba(255,255,255,0.04);
-      outline: none;
-      transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
-    }
+    .field-wrap:focus-within .field-icon { color: var(--ink-3); }
 
-    .input-wrap input::placeholder {
-      color: rgba(255,255,255,0.2);
-    }
-
-    /* Neon purple glow on focus */
-    .input-wrap input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.15), 0 0 20px rgba(124,58,237,0.1);
-      background: rgba(124,58,237,0.04);
-    }
-
-    .input-wrap input:focus + i,
-    .input-wrap:focus-within i:first-child {
-      color: var(--accent-mid);
-      text-shadow: 0 0 10px rgba(124,58,237,0.5);
-    }
-
-    .input-wrap .eye-btn {
+    .eye-btn {
       position: absolute;
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
+      background: none;
+      border: none;
       cursor: pointer;
       color: var(--ink-4);
       font-size: 16px;
-      transition: color 0.3s, text-shadow 0.3s;
-      pointer-events: all;
+      padding: 2px;
+      border-radius: 4px;
+      transition: color 0.12s;
     }
+    .eye-btn:hover { color: var(--ink); }
 
-    .input-wrap .eye-btn:hover {
-      color: var(--accent-mid);
-      text-shadow: 0 0 10px rgba(124,58,237,0.5);
-    }
-
-    .field-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      animation: staggerFadeUp 0.5s 0.55s ease both;
-    }
-
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: rgba(255,255,255,0.4);
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .checkbox-label:hover { color: rgba(255,255,255,0.6); }
-    .checkbox-label input { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
-    .forgot { font-size: 13px; color: var(--accent-mid); text-decoration: none; font-weight: 500; transition: color 0.2s, text-shadow 0.2s; }
-    .forgot:hover { color: var(--cyan); text-shadow: 0 0 12px rgba(6,182,212,0.3); }
-
-    /* ── LOGIN BUTTON WITH PULSING GLOW ── */
-    .btn-login {
-      width: 100%;
-      padding: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.03em;
-      transition: transform 0.2s, box-shadow 0.3s;
-      position: relative;
-      overflow: hidden;
-      animation: staggerFadeUp 0.5s 0.6s ease both;
-    }
-
-    .btn-login::before {
-      content: '';
-      position: absolute;
-      inset: -2px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), var(--cyan), var(--accent));
-      z-index: -1;
-      animation: btnPulse 3s ease-in-out infinite;
-      opacity: 0.5;
-      filter: blur(8px);
-    }
-
-    @keyframes btnPulse {
-      0%, 100% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(1.02); }
-    }
-
-    .btn-login::after {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -60%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(
-        to right,
-        transparent 0%,
-        rgba(255,255,255,0.08) 50%,
-        transparent 100%
-      );
-      transform: rotate(25deg);
-      animation: btnShine 4s ease-in-out infinite;
-    }
-
-    @keyframes btnShine {
-      0%, 100% { left: -60%; }
-      50% { left: 60%; }
-    }
-
-    .btn-login:hover {
-      box-shadow: 0 8px 32px rgba(124,58,237,0.4), 0 0 60px rgba(124,58,237,0.15);
-      transform: translateY(-2px);
-    }
-
-    .btn-login:active { transform: scale(0.98); }
-    .btn-login.loading { pointer-events: none; opacity: 0.75; }
-
-    .signup-row {
-      text-align: center;
-      margin-top: 22px;
-      font-size: 13.5px;
-      color: rgba(255,255,255,0.35);
-      animation: staggerFadeUp 0.5s 0.65s ease both;
-    }
-
-    .signup-row a { color: var(--accent-mid); font-weight: 600; text-decoration: none; transition: color 0.2s; }
-    .signup-row a:hover { color: var(--cyan); }
-
-    /* ── DEMO BADGE ── */
-    .demo-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(245,158,11,0.08);
-      border: 1px solid rgba(245,158,11,0.2);
-      border-radius: 99px;
-      padding: 5px 14px;
+    .field-err {
       font-size: 11.5px;
-      color: var(--amber);
-      font-weight: 500;
-      margin-bottom: 20px;
-    }
-
-    .demo-badge i { font-size: 13px; color: var(--amber); }
-
-    /* ── ANIMATIONS ── */
-    @keyframes shake {
-      0%,100%{transform:translateX(0)} 20%{transform:translateX(-5px)} 40%{transform:translateX(5px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)}
-    }
-
-    .shake { animation: shake 0.4s ease; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes staggerFadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes floatIn {
-      from { opacity: 0; transform: translateX(40px) translateY(-50%); }
-      to   { opacity: 1; transform: translateX(0) translateY(-50%); }
-    }
-
-    @keyframes floatBob {
-      0%,100% { transform: translateY(0); }
-      50%     { transform: translateY(-8px); }
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 6px;
-    }
-
-    .error-msg {
-      font-size: 12px;
-      color: #f87171;
+      color: #c0392b;
       margin-top: 5px;
       display: none;
+      font-family: 'DM Mono', monospace;
+    }
+    .field-err.show { display: block; animation: errShake 0.35s; }
+
+    @keyframes errShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-3px); }
+      40%, 80% { transform: translateX(3px); }
     }
 
-    .error-msg.show { display: block; }
+    /* ── Forgot link ── */
+    .forgot-link {
+      font-size: 12px;
+      color: var(--ink-4);
+      cursor: pointer;
+      float: right;
+      margin-top: -18px;
+      margin-bottom: 18px;
+      display: block;
+      transition: color 0.12s;
+    }
+    .forgot-link:hover { color: var(--ink); }
 
-    /* ── TOAST (GLASS EFFECT, SLIDES FROM BOTTOM) ── */
-    #toast {
+    /* ── Submit Button ── */
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.18s;
+    }
+
+    .btn-submit:hover {
+      background: var(--ink-2);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-submit:active { transform: translateY(0); }
+
+    .btn-submit.loading { opacity: 0.75; pointer-events: none; }
+
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: rgba(255,255,255,0.9);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Social Divider ── */
+    .divider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: var(--border-2); }
+    .divider-text { font-size: 12px; color: var(--ink-4); white-space: nowrap; }
+
+    /* ── Terms ── */
+    .form-terms {
+      font-size: 11.5px;
+      color: var(--ink-4);
+      text-align: center;
+      margin-top: 18px;
+      line-height: 1.6;
+    }
+    .form-terms a { color: var(--ink-3); text-decoration: underline; }
+
+    /* ── Forgot Modal ── */
+    .modal-overlay-forgot {
+      display: none;
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: rgba(20,20,40,0.8);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-      color: #fff;
-      padding: 14px 20px;
-      border-radius: 14px;
+      inset: 0;
+      background: rgba(15,14,13,0.4);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay-forgot.show { display: flex; }
+
+    .modal-card {
+      background: var(--white);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      width: 400px;
+      max-width: calc(100vw - 32px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.32s var(--ease-spring) both;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-title { font-family: 'Instrument Sans', sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.03em; margin-bottom: 6px; color: var(--ink); }
+    .modal-sub { font-size: 13px; color: var(--ink-3); margin-bottom: 22px; }
+    .modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    .btn-modal-cancel {
+      padding: 9px 18px;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--ink-3);
+      transition: all 0.12s;
+    }
+    .btn-modal-cancel:hover { background: var(--paper); color: var(--ink); }
+
+    .btn-modal-confirm {
+      padding: 9px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--ink);
+      color: var(--white);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .btn-modal-confirm:hover { background: var(--ink-2); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--ink);
+      color: var(--white);
+      padding: 13px 18px;
+      border-radius: var(--radius);
       font-size: 13px;
       z-index: 300;
       display: none;
       align-items: center;
       gap: 10px;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 40px rgba(124,58,237,0.08);
-      transform: translateY(20px);
-      opacity: 0;
-      animation: toastSlideIn 0.4s ease forwards;
+      box-shadow: var(--shadow-lg);
+      max-width: 300px;
+    }
+    .toast.show { display: flex; animation: toastIn 0.4s var(--ease-spring) both; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    @keyframes toastSlideIn {
-      to { transform: translateY(0); opacity: 1; }
+    /* ── Animations ── */
+    @keyframes fadeUpIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 900px) {
-      body { flex-direction: column; overflow-y: auto; }
-      .left-panel { width: 100%; min-height: 40vh; padding: 32px; }
-      .right-panel { width: 100%; padding: 24px; }
-      .float-cards { display: none; }
-      .form-box { max-width: 100%; }
-    }
-
-    @media (max-width: 600px) {
-      .left-panel { padding: 24px; min-height: 35vh; }
-      .right-panel { padding: 16px; }
-      .form-box { padding: 28px 24px; }
-      .left-stats { gap: 16px; }
-      .stat-num { font-size: 20px; }
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .left-panel { display: none; }
+      .right-panel { padding: 32px 24px; }
     }
   </style>
 </head>
 <body>
 
-<!-- BACKGROUND EFFECTS -->
-<div class="bg-mesh"></div>
-<div class="bg-grid"></div>
-<div class="bg-noise"></div>
-<div class="bg-scanlines"></div>
-
-<!-- FLOATING PARTICLES -->
-<div class="particles">
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-</div>
-
 <!-- LEFT PANEL -->
 <div class="left-panel">
-  <div class="glow-orb-1"></div>
-  <div class="glow-orb-2"></div>
+  <div class="grid-overlay"></div>
 
-  <div class="left-logo">
-    <div class="left-logo-icon"><i class="ti ti-archive"></i></div>
-    <span class="left-logo-name">MyStorage</span>
+  <div class="brand-logo">
+    <div class="brand-icon"><i class="ti ti-archive"></i></div>
+    <span class="brand-name">MyStorage</span>
   </div>
 
-  <div class="left-hero">
-    <div class="left-tagline">Platform penyimpanan modern</div>
-    <h1 class="left-title">Simpan semua file<br>di satu <span>tempat</span></h1>
-    <p class="left-desc">Kelola dokumen, foto, video, dan lebih banyak lagi dengan tampilan yang bersih dan cepat.</p>
-  </div>
-
-  <!-- Floating file cards -->
-  <div class="float-cards">
-    <div class="fcard">
-      <div class="fcard-icon" style="background:rgba(239,68,68,0.12)">
-        <i class="ti ti-file-type-pdf" style="color:#ef4444"></i>
+  <div class="brand-body">
+    <div class="brand-eyebrow">Platform Penyimpanan</div>
+    <h1 class="brand-headline">
+      Simpan semua<br>yang <em>penting</em><br>di satu tempat.
+    </h1>
+    <p class="brand-desc">
+      Kelola file, foto, dan dokumen dengan mudah. Aman, cepat, dan bisa diakses dari mana saja.
+    </p>
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-dot"><i class="ti ti-lock"></i></div>
+        Enkripsi end-to-end
       </div>
-      <div>
-        <div class="fcard-name">Skripsi_final.pdf</div>
-        <div class="fcard-size">2.1 GB · Kampus</div>
+      <div class="feature-item">
+        <div class="feature-dot"><i class="ti ti-cloud"></i></div>
+        Sinkronisasi otomatis
       </div>
-    </div>
-    <div class="fcard">
-      <div class="fcard-icon" style="background:rgba(34,197,94,0.12)">
-        <i class="ti ti-photo" style="color:#22c55e"></i>
-      </div>
-      <div>
-        <div class="fcard-name">Foto_wisuda.jpg</div>
-        <div class="fcard-size">12 MB · Foto</div>
-      </div>
-    </div>
-    <div class="fcard">
-      <div class="fcard-icon" style="background:rgba(249,115,22,0.12)">
-        <i class="ti ti-video" style="color:#f97316"></i>
-      </div>
-      <div>
-        <div class="fcard-name">Vlog_liburan.mp4</div>
-        <div class="fcard-size">600 MB · Pribadi</div>
+      <div class="feature-item">
+        <div class="feature-dot"><i class="ti ti-share"></i></div>
+        Bagikan dengan mudah
       </div>
     </div>
   </div>
 
-  <div class="left-stats">
-    <div class="stat">
-      <div class="stat-num">24+</div>
-      <div class="stat-lbl">Total File</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">4</div>
-      <div class="stat-lbl">Folder</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">12 GB</div>
-      <div class="stat-lbl">Storage</div>
-    </div>
-  </div>
+  <div class="brand-foot">© 2026 MyStorage · v2.0</div>
 </div>
 
 <!-- RIGHT PANEL -->
 <div class="right-panel">
   <div class="form-box">
 
-    <!-- MODE TOGGLE -->
-    <div class="tab-switcher">
-      <button id="tabLogin" onclick="switchTab('login')" class="active">Masuk</button>
-      <button id="tabRegister" onclick="switchTab('register')" class="inactive">Daftar</button>
+    <div class="form-header">
+      <div class="form-title" id="formTitle">Selamat datang</div>
+      <div class="form-sub" id="formSub">Masuk untuk melanjutkan ke akun Anda.</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Masuk</button>
+      <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Daftar</button>
     </div>
 
     <!-- LOGIN FORM -->
     <div id="panelLogin">
-      <h2 class="form-greeting">Selamat datang!</h2>
-      <p class="form-sub">Masuk ke akun MyStorage kamu.</p>
-
-      <div id="loginForm">
-        <div class="field">
-          <label>Email</label>
-          <div class="input-wrap">
-            <i class="ti ti-mail"></i>
-            <input type="email" id="emailInput" placeholder="contoh@email.com" autocomplete="email"/>
-          </div>
-          <div class="error-msg" id="emailErr">Email tidak boleh kosong.</div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail field-icon"></i>
+          <input class="field-input" id="emailInput" type="email" placeholder="nama@email.com" autocomplete="email"/>
         </div>
-
-        <div class="field">
-          <label>Password</label>
-          <div class="input-wrap">
-            <i class="ti ti-lock"></i>
-            <input type="password" id="passInput" placeholder="Masukkan password" autocomplete="current-password"/>
-            <i class="ti ti-eye eye-btn" id="eyeBtn" onclick="toggleEye('passInput','eyeBtn')"></i>
-          </div>
-          <div class="error-msg" id="passErr">Password minimal 6 karakter.</div>
-        </div>
-
-        <div class="field-row">
-          <label class="checkbox-label">
-            <input type="checkbox" id="rememberMe"/> Ingat saya
-          </label>
-          <a href="#" class="forgot" onclick="event.preventDefault(); openForgotModal()">Lupa password?</a>
-        </div>
-
-        <button class="btn-login" id="btnLogin" onclick="doLogin()">Masuk</button>
+        <div class="field-err" id="emailErr">Email tidak boleh kosong.</div>
       </div>
+
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock field-icon"></i>
+          <input class="field-input" id="passInput" type="password" placeholder="Minimal 6 karakter" style="padding-right:40px" autocomplete="current-password"/>
+          <button class="eye-btn" onclick="toggleEye('passInput', 'eyeLogin')">
+            <i class="ti ti-eye" id="eyeLogin"></i>
+          </button>
+        </div>
+        <div class="field-err" id="passErr">Password minimal 6 karakter.</div>
+      </div>
+
+      <span class="forgot-link" onclick="openForgotModal()">Lupa password?</span>
+
+      <button class="btn-submit" id="btnLogin" onclick="doLogin()">
+        <i class="ti ti-arrow-right"></i>Masuk
+      </button>
     </div>
 
     <!-- REGISTER FORM -->
     <div id="panelRegister" style="display:none">
-      <h2 class="form-greeting">Buat akun baru</h2>
-      <p class="form-sub">Daftar dan mulai simpan file kamu.</p>
-
-      <div id="registerForm">
-        <div class="field">
-          <label>Nama Lengkap</label>
-          <div class="input-wrap">
-            <i class="ti ti-user"></i>
-            <input type="text" id="regName" placeholder="Nama kamu"/>
-          </div>
-          <div class="error-msg" id="regNameErr">Nama tidak boleh kosong.</div>
+      <div class="field-group">
+        <label class="field-label">Nama Lengkap</label>
+        <div class="field-wrap">
+          <i class="ti ti-user field-icon"></i>
+          <input class="field-input" id="regName" type="text" placeholder="Nama kamu" autocomplete="name"/>
         </div>
+        <div class="field-err" id="regNameErr">Nama tidak boleh kosong.</div>
+      </div>
 
-        <div class="field">
-          <label>Email</label>
-          <div class="input-wrap">
-            <i class="ti ti-mail"></i>
-            <input type="email" id="regEmail" placeholder="contoh@email.com"/>
-          </div>
-          <div class="error-msg" id="regEmailErr">Email tidak valid.</div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail field-icon"></i>
+          <input class="field-input" id="regEmail" type="email" placeholder="nama@email.com" autocomplete="email"/>
         </div>
+        <div class="field-err" id="regEmailErr">Masukkan email yang valid.</div>
+      </div>
 
-        <div class="field">
-          <label>Password</label>
-          <div class="input-wrap">
-            <i class="ti ti-lock"></i>
-            <input type="password" id="regPass" placeholder="Min. 6 karakter"/>
-            <i class="ti ti-eye eye-btn" id="regEyeBtn" onclick="toggleEye('regPass','regEyeBtn')"></i>
-          </div>
-          <div class="error-msg" id="regPassErr">Password minimal 6 karakter.</div>
+      <div class="field-group">
+        <label class="field-label">Password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock field-icon"></i>
+          <input class="field-input" id="regPass" type="password" placeholder="Minimal 6 karakter" style="padding-right:40px" autocomplete="new-password"/>
+          <button class="eye-btn" onclick="toggleEye('regPass', 'eyeReg')">
+            <i class="ti ti-eye" id="eyeReg"></i>
+          </button>
         </div>
+        <div class="field-err" id="regPassErr">Password minimal 6 karakter.</div>
+      </div>
 
-        <button class="btn-login" id="btnRegister" onclick="doRegister()" style="margin-top:4px">Daftar Sekarang</button>
-        <div class="error-msg" id="regGeneralErr" style="margin-top:8px;font-size:13px;text-align:center"></div>
+      <div class="field-err" id="regGeneralErr" style="margin-bottom:12px"></div>
+
+      <button class="btn-submit" id="btnRegister" onclick="doRegister()">
+        <i class="ti ti-user-plus"></i>Buat Akun
+      </button>
+
+      <p class="form-terms">
+        Dengan mendaftar, kamu menyetujui <a href="#">Syarat Layanan</a> dan <a href="#">Kebijakan Privasi</a> kami.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- FORGOT MODAL -->
+<div class="modal-overlay-forgot" id="forgotModal">
+  <div class="modal-card">
+    <div class="modal-title">Reset Password</div>
+    <div class="modal-sub">Masukkan email kamu dan kami akan mengirim link untuk reset password.</div>
+
+    <div id="forgotForm">
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <div class="field-wrap">
+          <i class="ti ti-mail field-icon"></i>
+          <input class="field-input" id="forgotEmail" type="email" placeholder="nama@email.com"/>
+        </div>
+        <div class="field-err" id="forgotErr" style="display:none;font-size:12px;color:#c0392b;margin-top:6px;"></div>
       </div>
     </div>
 
+    <div id="forgotSuccess" style="display:none;text-align:center;padding:16px 0">
+      <i class="ti ti-circle-check" style="font-size:36px;color:#2d6a4f;display:block;margin-bottom:10px"></i>
+      <p style="font-size:14px;color:var(--ink-2)">Link reset telah dikirim ke email kamu.</p>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-modal-cancel" onclick="closeForgotModal()">Batal</button>
+      <button class="btn-modal-confirm" id="btnForgot" onclick="doForgotPassword()">Kirim Link</button>
+    </div>
   </div>
 </div>
 
 <!-- TOAST -->
-<div id="toast">
-  <i class="ti ti-check" style="font-size:16px;color:#4ade80"></i>
-  <span id="toastMsg">OK</span>
-</div>
-
-<!-- FORGOT PASSWORD MODAL -->
-<div id="forgotModal" style="display:none; position:fixed; inset:0; z-index:999; background:rgba(10,10,26,0.85); backdrop-filter:blur(8px); align-items:center; justify-content:center;">
-  <div style="background:rgba(20,17,40,0.98); border:1px solid rgba(124,58,237,0.25); border-radius:20px; padding:36px 32px; width:100%; max-width:380px; margin:16px; position:relative; box-shadow:0 24px 80px rgba(0,0,0,0.5), 0 0 60px rgba(124,58,237,0.08);">
-    <button onclick="closeForgotModal()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:8px;width:30px;height:30px;color:rgba(255,255,255,0.4);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s" onmouseenter="this.style.background='rgba(255,255,255,0.1)'" onmouseleave="this.style.background='rgba(255,255,255,0.06)'"><i class="ti ti-x"></i></button>
-    <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
-      <i class="ti ti-lock-open" style="color:#fff;font-size:22px"></i>
-    </div>
-    <h3 style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fff;margin-bottom:6px">Reset Password</h3>
-    <p style="font-size:13.5px;color:rgba(255,255,255,0.4);margin-bottom:24px;line-height:1.6">Masukkan email kamu. Kami akan kirim link untuk reset password.</p>
-    <div id="forgotSuccess" style="display:none;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:10px;padding:14px 16px;margin-bottom:18px;font-size:13.5px;color:#4ade80;line-height:1.6">
-      <i class="ti ti-circle-check" style="margin-right:6px"></i>Link reset password sudah dikirim! Cek inbox atau folder spam kamu.
-    </div>
-    <div id="forgotForm">
-      <div style="position:relative;margin-bottom:16px">
-        <i class="ti ti-mail" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.25);font-size:17px"></i>
-        <input type="email" id="forgotEmail" placeholder="contoh@email.com" style="width:100%;padding:12px 14px 12px 42px;border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;font-size:14px;color:#fff;background:rgba(255,255,255,0.04);outline:none;font-family:'Inter',sans-serif;transition:border-color 0.3s,box-shadow 0.3s" onfocus="this.style.borderColor='#7c3aed';this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.15)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)';this.style.boxShadow='none'"/>
-      </div>
-      <div id="forgotErr" style="display:none;font-size:12.5px;color:#f87171;margin-bottom:12px;padding:10px 14px;background:rgba(248,113,113,0.08);border-radius:8px;border:1px solid rgba(248,113,113,0.2)"></div>
-      <button id="btnForgot" onclick="doForgotPassword()" style="width:100%;padding:13px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:10px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.3s;letter-spacing:0.02em" onmouseenter="this.style.transform='translateY(-1px)';this.style.boxShadow='0 8px 28px rgba(124,58,237,0.4)'" onmouseleave="this.style.transform='none';this.style.boxShadow='none'">Kirim Link Reset</button>
-    </div>
-  </div>
+<div class="toast" id="toast">
+  <i class="ti ti-check" style="font-size:16px;flex-shrink:0" id="toastIcon"></i>
+  <span id="toastMsg">Berhasil!</span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -967,34 +725,34 @@
 
   function showToast(msg, isError) {
     const t = document.getElementById('toast');
-    const icon = t.querySelector('i');
+    const icon = document.getElementById('toastIcon');
     document.getElementById('toastMsg').textContent = msg;
+    icon.className = isError ? 'ti ti-alert-circle' : 'ti ti-check';
     icon.style.color = isError ? '#f87171' : '#4ade80';
-    t.style.display = 'flex';
-    t.style.animation = 'none';
-    t.offsetHeight; // reflow
-    t.style.animation = 'toastSlideIn 0.4s ease forwards';
+    t.classList.add('show');
     clearTimeout(t._t);
-    t._t = setTimeout(() => t.style.display = 'none', 3000);
+    t._t = setTimeout(() => t.classList.remove('show'), 3200);
   }
 
   function switchTab(tab) {
     const isLogin = tab === 'login';
     document.getElementById('panelLogin').style.display = isLogin ? '' : 'none';
     document.getElementById('panelRegister').style.display = isLogin ? 'none' : '';
-    document.getElementById('tabLogin').className = isLogin ? 'active' : 'inactive';
-    document.getElementById('tabRegister').className = isLogin ? 'inactive' : 'active';
+    document.getElementById('tabLogin').className = isLogin ? 'tab-btn active' : 'tab-btn';
+    document.getElementById('tabRegister').className = isLogin ? 'tab-btn' : 'tab-btn active';
+    document.getElementById('formTitle').textContent = isLogin ? 'Selamat datang' : 'Buat akun baru';
+    document.getElementById('formSub').textContent = isLogin ? 'Masuk untuk melanjutkan ke akun Anda.' : 'Daftar gratis dan mulai simpan file kamu.';
   }
 
-  function toggleEye(inputId, btnId) {
+  function toggleEye(inputId, iconId) {
     const inp = document.getElementById(inputId);
-    const btn = document.getElementById(btnId);
+    const icon = document.getElementById(iconId);
     if (inp.type === 'password') {
       inp.type = 'text';
-      btn.classList.replace('ti-eye', 'ti-eye-off');
+      icon.className = 'ti ti-eye-off';
     } else {
       inp.type = 'password';
-      btn.classList.replace('ti-eye-off', 'ti-eye');
+      icon.className = 'ti ti-eye';
     }
   }
 
@@ -1009,11 +767,7 @@
     let valid = true;
     if (!email) { emailErr.textContent = 'Email tidak boleh kosong.'; emailErr.classList.add('show'); valid = false; }
     if (pass.length < 6) { passErr.classList.add('show'); valid = false; }
-    if (!valid) {
-      document.getElementById('loginForm').classList.add('shake');
-      setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
-      return;
-    }
+    if (!valid) return;
 
     const btn = document.getElementById('btnLogin');
     btn.innerHTML = '<span class="spinner"></span>Memproses...';
@@ -1021,17 +775,14 @@
 
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
     if (error) {
-      btn.innerHTML = 'Masuk';
+      btn.innerHTML = '<i class="ti ti-arrow-right"></i>Masuk';
       btn.classList.remove('loading');
       emailErr.textContent = 'Email atau password salah.';
       emailErr.classList.add('show');
-      document.getElementById('loginForm').classList.add('shake');
-      setTimeout(() => document.getElementById('loginForm').classList.remove('shake'), 400);
       return;
     }
 
-    btn.innerHTML = '<i class="ti ti-check" style="vertical-align:middle;margin-right:6px"></i>Berhasil!';
-    btn.style.background = '#16a34a';
+    btn.innerHTML = '<i class="ti ti-check"></i>Berhasil!';
     setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 700);
   }
 
@@ -1044,17 +795,12 @@
     const passErr  = document.getElementById('regPassErr');
     const genErr   = document.getElementById('regGeneralErr');
     [nameErr, emailErr, passErr, genErr].forEach(e => e.classList.remove('show'));
-    genErr.style.display = 'none';
 
     let valid = true;
     if (!name)  { nameErr.classList.add('show'); valid = false; }
     if (!email || !email.includes('@')) { emailErr.classList.add('show'); valid = false; }
     if (pass.length < 6) { passErr.classList.add('show'); valid = false; }
-    if (!valid) {
-      document.getElementById('registerForm').classList.add('shake');
-      setTimeout(() => document.getElementById('registerForm').classList.remove('shake'), 400);
-      return;
-    }
+    if (!valid) return;
 
     const btn = document.getElementById('btnRegister');
     btn.innerHTML = '<span class="spinner"></span>Mendaftar...';
@@ -1065,30 +811,27 @@
       options: { data: { full_name: name } }
     });
 
-    btn.innerHTML = 'Daftar Sekarang';
+    btn.innerHTML = '<i class="ti ti-user-plus"></i>Buat Akun';
     btn.classList.remove('loading');
 
     if (error) {
       genErr.textContent = error.message;
-      genErr.style.display = 'block';
       genErr.classList.add('show');
       return;
     }
 
-    // Kalau email confirmation dimatikan, langsung redirect
     if (data.session) {
       showToast('Akun berhasil dibuat!');
       setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 900);
     } else {
-      // Kalau perlu konfirmasi email
-      showToast('Cek email kamu untuk konfirmasi!');
+      showToast('Cek email untuk konfirmasi!');
       switchTab('login');
     }
   }
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
-      if (document.getElementById('forgotModal').style.display === 'flex') { doForgotPassword(); return; }
+      if (document.getElementById('forgotModal').classList.contains('show')) { doForgotPassword(); return; }
       const loginVisible = document.getElementById('panelLogin').style.display !== 'none';
       if (loginVisible) doLogin(); else doRegister();
     }
@@ -1097,7 +840,7 @@
 
   function openForgotModal() {
     const modal = document.getElementById('forgotModal');
-    modal.style.display = 'flex';
+    modal.classList.add('show');
     document.getElementById('forgotEmail').value = document.getElementById('emailInput').value || '';
     document.getElementById('forgotErr').style.display = 'none';
     document.getElementById('forgotSuccess').style.display = 'none';
@@ -1106,7 +849,7 @@
   }
 
   function closeForgotModal() {
-    document.getElementById('forgotModal').style.display = 'none';
+    document.getElementById('forgotModal').classList.remove('show');
   }
 
   document.getElementById('forgotModal').addEventListener('click', function(e) {
@@ -1123,15 +866,15 @@
       return;
     }
     const btn = document.getElementById('btnForgot');
-    btn.innerHTML = '<span class="spinner"></span>Mengirim...';
-    btn.style.pointerEvents = 'none'; btn.style.opacity = '0.75';
+    btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;width:13px;height:13px;border-width:2px;border-style:solid;border-radius:50%;animation:spin 0.7s linear infinite"></span> Mengirim...';
+    btn.style.pointerEvents = 'none';
     const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + '/Storage-dasboard.html'
     });
-    btn.innerHTML = 'Kirim Link Reset';
-    btn.style.pointerEvents = ''; btn.style.opacity = '';
+    btn.innerHTML = 'Kirim Link';
+    btn.style.pointerEvents = '';
     if (error) {
-      errEl.textContent = 'Gagal mengirim: ' + error.message;
+      errEl.textContent = 'Gagal: ' + error.message;
       errEl.style.display = 'block';
       return;
     }
