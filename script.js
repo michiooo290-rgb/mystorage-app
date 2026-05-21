@@ -143,8 +143,6 @@ function renderFolders() {
       '<text x="11" y="61" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + fileCount + ' file</text>' +
       '<circle cx="10" cy="69" r="6.5" fill="' + c.av + '"/>' +
       '<text x="10" y="73" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">' + initials + '</text>' +
-      '<circle cx="128" cy="14" r="8" fill="' + c.color1 + '"/>' +
-      '<text x="128" y="18" font-size="10" fill="' + c.text + '" text-anchor="middle" font-family="sans-serif" font-weight="600">›</text>' +
       '</svg></div>'
     );
   }).join('');
