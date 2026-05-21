@@ -443,7 +443,7 @@ function renderShared() {
       '<i class="ti ' + iconInfo.icon + '" style="color:' + iconInfo.color + ';font-size:18px"></i></div>' +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:13px;font-weight:500;color:#0f0e0d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.name) + '</div>' +
-      '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'DM Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span></div>' +
+      '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'JetBrains Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0">' +
       '<button onclick="copySharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseenter="this.style.background=\'#0f0e0d\';this.style.color=\'#fff\';this.style.borderColor=\'transparent\'" onmouseleave="this.style.background=\'#f7f5f2\';this.style.color=\'#5a5754\';this.style.borderColor=\'rgba(15,14,13,0.14)\'">' +

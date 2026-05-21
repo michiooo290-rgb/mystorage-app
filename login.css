@@ -235,7 +235,7 @@ body {
 }
 
 .left-logo-icon i { color: #fff; font-size: 22px; }
-.left-logo-name { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
+.left-logo-name { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
 
 .left-hero {
   z-index: 1;
@@ -253,7 +253,7 @@ body {
 }
 
 .left-title {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: clamp(28px, 3vw, 44px);
   font-weight: 700;
   color: #fff;
@@ -336,7 +336,7 @@ body {
 }
 
 .stat-num {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 26px;
   font-weight: 700;
   color: #fff;
@@ -391,7 +391,7 @@ body {
 }
 
 .form-greeting {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 28px;
   font-weight: 700;
   color: #fff;
@@ -561,7 +561,7 @@ body {
   color: #fff;
   border: none;
   border-radius: var(--radius-sm);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
