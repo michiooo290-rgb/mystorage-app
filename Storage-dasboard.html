@@ -89,7 +89,10 @@
     </div>
     <div class="search">
       <i class="ti ti-search"></i>
-      <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" oninput="filterFiles()"/>
+      <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" oninput="filterFiles(); toggleClearBtn()"/>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Hapus pencarian" style="display:none">
+        <i class="ti ti-x"></i>
+      </button>
     </div>
     <div class="topbar-right">
       <div class="btn-icon" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">

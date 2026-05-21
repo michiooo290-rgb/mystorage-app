@@ -360,7 +360,72 @@ function setFilter(el, type) {
   }, 80);
 }
 
-function filterFiles() { renderFiles(); }
+function toggleClearBtn() {
+  const val = document.getElementById('searchInput').value;
+  const btn = document.getElementById('searchClear');
+  if (btn) btn.style.display = val.length > 0 ? 'flex' : 'none';
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  const btn = document.getElementById('searchClear');
+  if (btn) btn.style.display = 'none';
+  renderFolders();
+  renderFiles();
+}
+
+function filterFiles() {
+  const search = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (search.length > 0) {
+    currentFolderFilter = null;
+    currentFilter = 'semua';
+    document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+    var firstChip = document.querySelector('.filter-chip');
+    if (firstChip) firstChip.classList.add('active');
+    showOnlyFavorites = false;
+    renderFoldersFiltered(search);
+  } else {
+    renderFolders();
+  }
+  renderFiles();
+}
+
+function renderFoldersFiltered(search) {
+  const grid = document.getElementById('folderGrid');
+  const filtered = allFolders.filter(function(f) {
+    return f.name.toLowerCase().includes(search);
+  });
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><i class="ti ti-folder-off"></i><p>Folder tidak ditemukan.</p></div>';
+    document.getElementById('folderCount').textContent = '0';
+    return;
+  }
+  grid.innerHTML = filtered.map(function(f, i) {
+    const origIdx = allFolders.indexOf(f);
+    const c = FOLDER_COLORS[origIdx % FOLDER_COLORS.length];
+    const fileCount = allFiles.filter(function(x) { return x.folder_name === f.name; }).length;
+    const safeName = escapeHtml(f.name);
+    const safeAttr = escapeAttr(f.name);
+    const initials = escapeHtml(userInitials);
+    return (
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder="' + safeAttr + '" onclick="openFolder(this.dataset.folder)">' +
+      '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderByName(this)">' +
+      '<i class="ti ti-trash"></i></button>' +
+      '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
+      '<defs><filter id="fsf' + i + '" x="-5%" y="-5%" width="110%" height="110%">' +
+      '<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="' + c.color1 + '" flood-opacity="0.4"/>' +
+      '</filter></defs>' +
+      '<path d="M6,20 Q6,14 12,14 L54,14 Q59,14 62,19 L67,26 L132,26 Q137,26 137,31 L137,82 Q137,88 131,88 L9,88 Q3,88 3,82 L3,27 Q3,20 9,20 Z" fill="' + c.color1 + '" filter="url(#fsf' + i + ')"/>' +
+      '<path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="' + c.color2 + '"/>' +
+      '<text x="11" y="48" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
+      '<text x="11" y="61" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + fileCount + ' file</text>' +
+      '<circle cx="10" cy="69" r="6.5" fill="' + c.av + '"/>' +
+      '<text x="10" y="73" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">' + initials + '</text>' +
+      '</svg></div>'
+    );
+  }).join('');
+  document.getElementById('folderCount').textContent = filtered.length;
+}
 
 function filterFavorites() {
   currentFolderFilter = null;
@@ -761,7 +826,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
       e.preventDefault();
-      document.getElementById('searchInput').focus();
+      const inp = document.getElementById('searchInput');
+      inp.focus();
+      inp.select();
     }
   });
 
