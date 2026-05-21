@@ -1228,3 +1228,32 @@ body {
   .stats-row { grid-template-columns: 1fr; }
   .search { display: none; }
 }
+/* ── Folder Delete Button ── */
+.folder-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  z-index: 2;
+}
+
+.folder-wrap:hover .folder-delete-btn {
+  opacity: 1;
+}
+
+.folder-delete-btn:hover {
+  background: rgba(248,113,113,0.3);
+  color: #ef4444;
+}

@@ -126,7 +126,10 @@ function renderFolders() {
     // BUG FIX #6: inisial user dinamis (bukan hardcode 'RZ')
     const initials = userInitials;
     return `
-      <div class="folder-wrap" style="animation-delay:${i * 0.06}s" data-folder="${safeName}" onclick="openFolder(this.dataset.folder)">
+      <div class="folder-wrap" style="animation-delay:${i * 0.06}s; position:relative;" data-folder="${safeName}" onclick="openFolder(this.dataset.folder)">
+        <button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolder('${safeName.replace(/'/g, \"\\'\")}')">
+          <i class="ti ti-trash"></i>
+        </button>
         <svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <filter id="fs${i}" x="-5%" y="-5%" width="110%" height="110%">
@@ -294,16 +297,41 @@ function closeModal() {
 async function addFolder() {
   const name = prompt('Nama folder baru:');
   if (!name || !name.trim()) return;
-  // BUG FIX #8: cek duplikat nama folder sebelum insert
   if (allFolders.some(f => f.name.toLowerCase() === name.trim().toLowerCase())) {
     showToast('Folder "' + name.trim() + '" sudah ada!');
     return;
   }
-  const { error } = await sb.from('folders').insert({ name: name.trim() });
+  // BUG FIX #17: sertakan user_id agar RLS mengenali kepemilikan folder
+  const { data: { session: folderSession } } = await sb.auth.getSession();
+  const { error } = await sb.from('folders').insert({
+    name: name.trim(),
+    user_id: folderSession?.user?.id
+  });
   if (error) { showToast('Gagal buat folder: ' + error.message); return; }
 
   await loadFolders();
   showToast('Folder "' + name.trim() + '" berhasil dibuat!');
+}
+
+/* ── DELETE FOLDER ── */
+async function deleteFolder(folderName) {
+  const filesInFolder = allFiles.filter(f => f.folder_name === folderName);
+  if (filesInFolder.length > 0) {
+    if (!confirm(`Folder "${folderName}" masih berisi ${filesInFolder.length} file.\nHapus semua file dan folder ini?`)) return;
+    showToast('Menghapus isi folder...');
+    for (const file of filesInFolder) {
+      const path = file.storage_path || `${file.folder_name}/${file.name}`;
+      await sb.storage.from('user-files').remove([path]);
+      await sb.from('files').delete().eq('id', file.id);
+    }
+  } else {
+    if (!confirm(`Yakin ingin menghapus folder "${folderName}"?`)) return;
+  }
+  const { error } = await sb.from('folders').delete().eq('name', folderName);
+  if (error) { showToast('Gagal hapus folder: ' + error.message); return; }
+  if (currentFolderFilter === folderName) currentFolderFilter = null;
+  showToast('Folder "' + folderName + '" berhasil dihapus!');
+  await loadAll();
 }
 
 /* ── CONTEXT MENU ACTION ── */
@@ -509,6 +537,8 @@ async function uploadFile() {
       continue;
     }
 
+    // BUG FIX #16: user_id wajib diisi agar RLS bisa mengenali kepemilikan file
+    const { data: { session: uploadSession } } = await sb.auth.getSession();
     const { error: insertError } = await sb.from('files').insert({
       name: file.name,
       folder_name: folder,
@@ -517,7 +547,8 @@ async function uploadFile() {
       icon: iconInfo.icon,
       icon_color: iconInfo.iconColor,
       icon_bg: iconInfo.iconBg,
-      storage_path: filePath
+      storage_path: filePath,
+      user_id: uploadSession?.user?.id
     });
 
     if (insertError) {
