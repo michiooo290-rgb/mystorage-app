@@ -203,6 +203,8 @@ function renderStats() {
     const fill = document.querySelector('.storage-fill');
     if (fill) fill.style.width = pct + '%';
   }, 300);
+
+  checkStorageNotif(usedBytes);
 }
 
 /* ── RENDER FOLDERS ── */
@@ -918,6 +920,31 @@ async function deleteFile() {
   ctxTarget = null;
   await loadFiles();
   renderStats();
+}
+
+/* ── STORAGE NOTIFICATION CHECK ── */
+function checkStorageNotif(usedBytes) {
+  const s = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');
+  if (s.inApp === false) return;
+
+  const threshold = s.threshold || 80;
+  const totalBytes = 1024 * 1024 * 1024;
+  const pct = (usedBytes / totalBytes) * 100;
+
+  const lastShown = parseInt(localStorage.getItem('myStorageNotifLastShown') || '0');
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
+
+  // Jangan spam — tampilkan maks sekali per jam
+  if (now - lastShown < ONE_HOUR) return;
+
+  if (pct >= 90 && s.critical !== false) {
+    showToast('🔴 Storage hampir penuh! ' + pct.toFixed(0) + '% terpakai. Segera hapus file.');
+    localStorage.setItem('myStorageNotifLastShown', now.toString());
+  } else if (pct >= threshold) {
+    showToast('⚠️ Storage mencapai ' + pct.toFixed(0) + '% (batas: ' + threshold + '%)');
+    localStorage.setItem('myStorageNotifLastShown', now.toString());
+  }
 }
 
 /* ── TOAST ── */

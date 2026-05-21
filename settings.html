@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyStorage — Pengaturan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="settings.css"/>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+<div class="bg-noise"></div>
+<div class="bg-scanlines"></div>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">
+      <i class="ti ti-archive" style="color:#fff;font-size:18px"></i>
+    </div>
+    <span class="logo-text">MyStorage</span>
+  </div>
+
+  <span class="nav-label">Menu</span>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-layout-dashboard"></i>Dashboard
+  </div>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-share"></i>Dibagikan
+  </div>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-star"></i>Favorit
+  </div>
+
+  <div class="divider"></div>
+  <span class="nav-label">Tipe File</span>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-file-type-pdf"></i>Dokumen
+  </div>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-photo"></i>Foto
+  </div>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-video"></i>Video
+  </div>
+  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+    <i class="ti ti-music"></i>Audio
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="nav-item active">
+    <i class="ti ti-settings"></i>Pengaturan
+  </div>
+
+  <div class="user-chip" id="userChip">
+    <div class="user-av" id="sidebarAv">??</div>
+    <div class="user-info">
+      <div class="user-name" id="sidebarName">Memuat...</div>
+      <div class="user-role" id="sidebarEmail">—</div>
+    </div>
+    <i class="ti ti-chevron-right" style="color:var(--text-faint);font-size:14px;margin-left:auto"></i>
+  </div>
+
+  <div class="storage-box">
+    <div class="storage-header">
+      <div class="storage-label">Penyimpanan</div>
+      <div class="storage-pct" id="storagePct">0%</div>
+    </div>
+    <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+    <div class="storage-info">
+      <span id="storageUsed">0 KB terpakai</span>
+      <span>1 GB</span>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+
+  <header class="topbar">
+    <div class="breadcrumb" style="margin-right:16px">
+      <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
+      <i class="ti ti-chevron-right" style="font-size:12px"></i>
+      <a href="Storage-dasboard.html" style="color:var(--ink-4);text-decoration:none;font-size:12.5px">Dashboard</a>
+      <i class="ti ti-chevron-right" style="font-size:12px"></i>
+      <span>Pengaturan</span>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <div class="btn-icon" title="Kembali ke Dashboard" onclick="window.location.href='Storage-dasboard.html'">
+        <i class="ti ti-arrow-left"></i>
+      </div>
+      <div class="topbar-av" id="topbarAv">??</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="settings-layout">
+
+      <!-- LEFT NAV -->
+      <nav class="settings-nav">
+        <div class="settings-nav-title">Pengaturan</div>
+        <div class="settings-nav-item active" onclick="scrollToSection('sec-profil', this)">
+          <i class="ti ti-user-circle"></i>Edit Profil
+        </div>
+        <div class="settings-nav-item" onclick="scrollToSection('sec-analitik', this)">
+          <i class="ti ti-chart-pie"></i>Analitik Storage
+        </div>
+        <div class="settings-nav-item" onclick="scrollToSection('sec-notif', this)">
+          <i class="ti ti-bell-ringing"></i>Notifikasi
+        </div>
+      </nav>
+
+      <!-- RIGHT CONTENT -->
+      <div class="settings-content">
+
+        <!-- ════════════════════════
+             1. EDIT PROFIL
+             ════════════════════════ -->
+        <div class="settings-card" id="sec-profil">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:rgba(200,96,42,0.08)">
+              <i class="ti ti-user-circle" style="color:var(--accent)"></i>
+            </div>
+            <div class="settings-card-head-text">
+              <div class="settings-card-title">Edit Profil</div>
+              <div class="settings-card-desc">Ubah nama tampilan dan informasi akun kamu</div>
+            </div>
+          </div>
+          <div class="settings-card-body">
+
+            <!-- Avatar Section -->
+            <div class="avatar-section">
+              <div class="avatar-preview" id="avatarPreview">??</div>
+              <div class="avatar-info">
+                <div class="avatar-name-preview" id="avatarNamePreview">Memuat...</div>
+                <div class="avatar-email-preview" id="avatarEmailPreview">—</div>
+                <div class="avatar-actions">
+                  <button class="btn-avatar-change" onclick="triggerAvatarColor()">
+                    <i class="ti ti-palette" style="font-size:13px"></i>Warna Avatar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="field-row">
+              <div class="settings-field">
+                <label class="settings-label">Nama Depan</label>
+                <input type="text" class="settings-input" id="inputFirstName" placeholder="Nama depan"/>
+              </div>
+              <div class="settings-field">
+                <label class="settings-label">Nama Belakang</label>
+                <input type="text" class="settings-input" id="inputLastName" placeholder="Nama belakang"/>
+              </div>
+            </div>
+
+            <div class="field-row full">
+              <div class="settings-field">
+                <label class="settings-label">Email</label>
+                <input type="email" class="settings-input" id="inputEmail" disabled/>
+                <div class="settings-input-hint">Email tidak dapat diubah dari sini</div>
+              </div>
+            </div>
+
+            <div class="field-row full">
+              <div class="settings-field">
+                <label class="settings-label">Nama Tampilan</label>
+                <input type="text" class="settings-input" id="inputDisplayName" placeholder="Nama yang muncul di aplikasi"/>
+                <div class="settings-input-hint">Ini yang muncul di sidebar dan topbar</div>
+              </div>
+            </div>
+
+            <div class="settings-footer">
+              <button class="btn-settings-cancel" onclick="resetProfileForm()">Reset</button>
+              <button class="btn-settings-save" id="btnSaveProfile" onclick="saveProfile()">
+                <i class="ti ti-check" style="font-size:14px"></i>Simpan Perubahan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ════════════════════════
+             2. ANALITIK STORAGE
+             ════════════════════════ -->
+        <div class="settings-card" id="sec-analitik">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:rgba(29,78,216,0.08)">
+              <i class="ti ti-chart-pie" style="color:#1d4ed8"></i>
+            </div>
+            <div class="settings-card-head-text">
+              <div class="settings-card-title">Analitik Storage</div>
+              <div class="settings-card-desc">Ringkasan penggunaan penyimpanan kamu</div>
+            </div>
+          </div>
+          <div class="settings-card-body">
+
+            <!-- Mini Stats -->
+            <div class="analitik-grid" id="analitikGrid">
+              <div class="analitik-mini-card">
+                <div class="analitik-mini-label">TOTAL FILE</div>
+                <div class="analitik-mini-val" id="aStatFiles">—</div>
+                <div class="analitik-mini-sub">file tersimpan</div>
+              </div>
+              <div class="analitik-mini-card">
+                <div class="analitik-mini-label">TERPAKAI</div>
+                <div class="analitik-mini-val" id="aStatUsed">—</div>
+                <div class="analitik-mini-sub">dari 1 GB</div>
+              </div>
+              <div class="analitik-mini-card">
+                <div class="analitik-mini-label">TERSISA</div>
+                <div class="analitik-mini-val" id="aStatFree">—</div>
+                <div class="analitik-mini-sub">tersedia</div>
+              </div>
+              <div class="analitik-mini-card">
+                <div class="analitik-mini-label">FOLDER</div>
+                <div class="analitik-mini-val" id="aStatFolders">—</div>
+                <div class="analitik-mini-sub">folder aktif</div>
+              </div>
+            </div>
+
+            <!-- Main Progress Bar -->
+            <div class="storage-progress-main">
+              <div class="storage-progress-head">
+                <span class="storage-progress-label">Kapasitas Penyimpanan</span>
+                <span class="storage-progress-vals"><span id="aProgUsed">0 B</span> / 1 GB</span>
+              </div>
+              <div class="storage-progress-track">
+                <div class="storage-progress-fill" id="aProgFill" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Donut + Folder Bars -->
+            <div class="analitik-main">
+
+              <!-- Donut: per tipe -->
+              <div class="analitik-donut-wrap">
+                <div style="font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:16px;width:100%;font-family:'Outfit',sans-serif">Distribusi per Tipe</div>
+                <div class="donut-svg-wrap">
+                  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" id="donutSvg">
+                    <!-- Placeholder ring -->
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="var(--paper-3)" stroke-width="14"/>
+                  </svg>
+                  <div class="donut-center">
+                    <div class="donut-center-val" id="donutCenterVal">0</div>
+                    <div class="donut-center-label">total file</div>
+                  </div>
+                </div>
+                <div class="donut-legend" id="donutLegend"></div>
+              </div>
+
+              <!-- Bar: per folder -->
+              <div class="analitik-folder-wrap">
+                <div class="analitik-sub-title">Penggunaan per Folder</div>
+                <div class="folder-bar-list" id="folderBarList">
+                  <div style="font-size:12px;color:var(--ink-5);text-align:center;padding:20px 0">Memuat data...</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Upload Timeline (7 hari terakhir) -->
+            <div class="analitik-folder-wrap timeline-wrap">
+              <div class="analitik-sub-title">Upload 7 Hari Terakhir</div>
+              <div class="timeline-bars" id="timelineBars"></div>
+              <div class="timeline-labels" id="timelineLabels"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ════════════════════════
+             3. NOTIFIKASI STORAGE
+             ════════════════════════ -->
+        <div class="settings-card" id="sec-notif">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:rgba(45,106,79,0.08)">
+              <i class="ti ti-bell-ringing" style="color:var(--green)"></i>
+            </div>
+            <div class="settings-card-head-text">
+              <div class="settings-card-title">Notifikasi Storage</div>
+              <div class="settings-card-desc">Atur kapan dan bagaimana kamu diperingatkan soal penyimpanan</div>
+            </div>
+          </div>
+          <div class="settings-card-body">
+
+            <!-- Warning Banner (real-time) -->
+            <div class="storage-warning-banner" id="storageWarnBanner">
+              <i class="ti ti-alert-triangle"></i>
+              <div class="warning-text">
+                <strong id="warnBannerTitle">Peringatan Storage</strong>
+                <span id="warnBannerDesc">—</span>
+              </div>
+            </div>
+
+            <!-- Toggle Rows -->
+            <div class="notif-row">
+              <div class="notif-left">
+                <div class="notif-title">Notifikasi Dalam App</div>
+                <div class="notif-desc">Tampilkan peringatan (toast) otomatis di dalam dashboard saat storage mendekati batas yang ditentukan.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggleInApp" checked onchange="saveNotifSettings()"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="notif-row">
+              <div class="notif-left">
+                <div class="notif-title">Peringatan Mendesak</div>
+                <div class="notif-desc">Tampilkan banner merah saat storage melampaui 90% kapasitas — bahkan jika notif dalam app dimatikan.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggleCritical" checked onchange="saveNotifSettings()"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="notif-row">
+              <div class="notif-left">
+                <div class="notif-title">Peringatan Saat Upload</div>
+                <div class="notif-desc">Tampilkan peringatan sebelum upload jika file baru akan membuat storage melebihi batas threshold.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="toggleUploadWarn" checked onchange="saveNotifSettings()"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <!-- Threshold Slider -->
+            <div class="threshold-group">
+              <div class="threshold-head">
+                <span class="threshold-label">Batas Peringatan</span>
+                <span class="threshold-val-display" id="thresholdDisplay">80%</span>
+              </div>
+              <div class="threshold-desc">
+                Kirimkan peringatan pertama saat penggunaan storage mencapai persentase ini.
+              </div>
+              <input type="range" class="threshold-slider" id="thresholdSlider"
+                min="50" max="95" step="5" value="80"
+                oninput="updateThreshold(this.value)"
+                onchange="saveNotifSettings()"/>
+              <div class="threshold-marks">
+                <span>50%</span>
+                <span>60%</span>
+                <span>70%</span>
+                <span>80%</span>
+                <span>90%</span>
+                <span>95%</span>
+              </div>
+            </div>
+
+            <div class="settings-footer">
+              <button class="btn-settings-cancel" onclick="resetNotifSettings()">Reset Default</button>
+              <button class="btn-settings-save" onclick="saveNotifSettings(); showSettingsToast('Pengaturan notifikasi disimpan!')">
+                <i class="ti ti-check" style="font-size:14px"></i>Simpan
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- end settings-content -->
+    </div><!-- end settings-layout -->
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- Custom Confirm Dialog (reuse dari dashboard) -->
+<div class="custom-dialog-overlay" id="customConfirm">
+  <div class="custom-dialog">
+    <div class="custom-dialog-icon" id="confirmIcon"><i class="ti ti-alert-triangle"></i></div>
+    <div class="custom-dialog-title" id="confirmTitle">Konfirmasi</div>
+    <div class="custom-dialog-msg" id="confirmMsg">Apakah Anda yakin?</div>
+    <div class="custom-dialog-footer">
+      <button class="custom-dialog-btn cancel" id="confirmCancel">Batal</button>
+      <button class="custom-dialog-btn confirm" id="confirmOk">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Avatar Color Picker Dialog -->
+<div class="custom-dialog-overlay" id="colorPickerDialog">
+  <div class="custom-dialog" style="max-width:340px">
+    <div class="custom-dialog-icon prompt"><i class="ti ti-palette"></i></div>
+    <div class="custom-dialog-title">Warna Avatar</div>
+    <div class="custom-dialog-msg">Pilih warna untuk avatar kamu</div>
+    <div id="avatarColorOptions" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:24px"></div>
+    <div class="custom-dialog-footer">
+      <button class="custom-dialog-btn cancel" onclick="closeColorPicker()">Batal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="settingsToast">
+  <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
+  <span id="settingsToastMsg">Berhasil!</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ────────────────────────
+   INIT SUPABASE
+──────────────────────── */
+const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ────────────────────────
+   STATE
+──────────────────────── */
+let currentUser = null;
+let allFiles = [];
+let allFolders = [];
+let userInitials = '??';
+let avatarColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+
+const AVATAR_COLORS = [
+  '#c8602a','#1d4ed8','#2d6a4f','#7e22ce','#0369a1',
+  '#be123c','#92400e','#0f766e','#4338ca','#15803d'
+];
+
+const DONUT_COLORS = {
+  pdf:         '#c0392b',
+  doc:         '#1d4ed8',
+  foto:        '#2d6a4f',
+  video:       '#c8602a',
+  spreadsheet: '#0369a1',
+  audio:       '#7e22ce',
+};
+const DONUT_LABELS = {
+  pdf:'PDF', doc:'Dokumen', foto:'Foto', video:'Video', spreadsheet:'Spreadsheet', audio:'Audio'
+};
+
+/* ────────────────────────
+   TOAST
+──────────────────────── */
+function showSettingsToast(msg, isError) {
+  const t = document.getElementById('settingsToast');
+  const icon = t.querySelector('i');
+  document.getElementById('settingsToastMsg').textContent = msg;
+  icon.style.color = isError ? '#f87171' : '#4ade80';
+  icon.className = isError ? 'ti ti-alert-circle' : 'ti ti-check';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+/* ────────────────────────
+   NAVIGATION
+──────────────────────── */
+function scrollToSection(id, el) {
+  document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+  const target = document.getElementById(id);
+  if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ────────────────────────
+   LOAD DATA
+──────────────────────── */
+async function loadAll() {
+  const [filesRes, foldersRes] = await Promise.all([
+    sb.from('files').select('*').order('created_at', { ascending: false }),
+    sb.from('folders').select('*').order('created_at')
+  ]);
+  allFiles = filesRes.data || [];
+  allFolders = foldersRes.data || [];
+
+  updateSidebarStorage();
+  renderAnalitik();
+  checkStorageWarning();
+}
+
+/* ────────────────────────
+   SIDEBAR STORAGE
+──────────────────────── */
+function updateSidebarStorage() {
+  let usedBytes = calcUsedBytes();
+  const totalMB = 1024;
+  const usedMB = usedBytes / (1024 * 1024);
+  const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
+  const usedStr = formatBytes(usedBytes);
+
+  document.getElementById('storagePct').textContent = pct + '%';
+  document.getElementById('storageUsed').textContent = usedStr + ' terpakai';
+  setTimeout(() => {
+    const fill = document.getElementById('storageFill');
+    if (fill) fill.style.width = pct + '%';
+  }, 300);
+}
+
+function calcUsedBytes() {
+  let usedBytes = 0;
+  allFiles.forEach(f => {
+    if (f.size) {
+      const num = parseFloat(f.size);
+      if (f.size.includes('MB')) usedBytes += num * 1024 * 1024;
+      else if (f.size.includes('KB')) usedBytes += num * 1024;
+      else if (f.size.includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
+    }
+  });
+  return usedBytes;
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes.toFixed(0) + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
+
+/* ────────────────────────
+   EDIT PROFIL
+──────────────────────── */
+function initProfile(user) {
+  const meta = user.user_metadata || {};
+  const fullName = meta.full_name || user.email.split('@')[0];
+  const parts = fullName.trim().split(' ');
+  const firstName = parts[0] || '';
+  const lastName = parts.slice(1).join(' ') || '';
+
+  document.getElementById('inputFirstName').value = firstName;
+  document.getElementById('inputLastName').value = lastName;
+  document.getElementById('inputEmail').value = user.email;
+  document.getElementById('inputDisplayName').value = fullName;
+
+  updateAvatarPreview(fullName, user.email);
+
+  // Live preview saat mengetik
+  ['inputFirstName', 'inputLastName', 'inputDisplayName'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      const fn = document.getElementById('inputFirstName').value.trim();
+      const ln = document.getElementById('inputLastName').value.trim();
+      const dn = document.getElementById('inputDisplayName').value.trim();
+      const name = dn || (fn + (ln ? ' ' + ln : ''));
+      updateAvatarPreview(name, user.email);
+    });
+  });
+}
+
+function updateAvatarPreview(name, email) {
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '??';
+  userInitials = initials;
+
+  const avatarEl = document.getElementById('avatarPreview');
+  avatarEl.textContent = initials;
+  avatarEl.style.background = avatarColor;
+
+  document.getElementById('avatarNamePreview').textContent = name || 'Nama Kamu';
+  document.getElementById('avatarEmailPreview').textContent = email || '—';
+
+  // Update sidebar & topbar
+  document.getElementById('sidebarAv').textContent = initials;
+  document.getElementById('sidebarAv').style.background = avatarColor;
+  document.getElementById('topbarAv').textContent = initials;
+  document.getElementById('topbarAv').style.background = avatarColor;
+  document.getElementById('sidebarName').textContent = name || '—';
+}
+
+async function saveProfile() {
+  const firstName = document.getElementById('inputFirstName').value.trim();
+  const lastName  = document.getElementById('inputLastName').value.trim();
+  const displayName = document.getElementById('inputDisplayName').value.trim();
+
+  const fullName = displayName || (firstName + (lastName ? ' ' + lastName : ''));
+  if (!fullName) { showSettingsToast('Nama tidak boleh kosong!', true); return; }
+
+  const btn = document.getElementById('btnSaveProfile');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader" style="font-size:14px;animation:spin 0.7s linear infinite"></i>Menyimpan...';
+
+  const { error } = await sb.auth.updateUser({
+    data: { full_name: fullName }
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '<i class="ti ti-check" style="font-size:14px"></i>Simpan Perubahan';
+
+  if (error) {
+    showSettingsToast('Gagal menyimpan: ' + error.message, true);
+    return;
+  }
+
+  // Simpan warna avatar ke localStorage
+  localStorage.setItem('myStorageAvatarColor', avatarColor);
+
+  updateAvatarPreview(fullName, currentUser.email);
+  showSettingsToast('Profil berhasil diperbarui!');
+}
+
+function resetProfileForm() {
+  if (!currentUser) return;
+  initProfile(currentUser);
+  showSettingsToast('Form direset ke data awal');
+}
+
+/* ── Avatar Color Picker ── */
+function triggerAvatarColor() {
+  const container = document.getElementById('avatarColorOptions');
+  container.innerHTML = AVATAR_COLORS.map(c =>
+    `<div onclick="pickAvatarColor('${c}')" style="
+      width:36px;height:36px;border-radius:10px;background:${c};cursor:pointer;
+      border:3px solid ${c === avatarColor ? '#0f0e0d' : 'transparent'};
+      transition:transform 0.15s,border-color 0.15s;display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;
+    " onmouseenter="this.style.transform='scale(1.12)'" onmouseleave="this.style.transform='scale(1)'">
+      ${c === avatarColor ? '<i class="ti ti-check" style="font-size:14px"></i>' : ''}
+    </div>`
+  ).join('');
+  document.getElementById('colorPickerDialog').classList.add('show');
+}
+
+function pickAvatarColor(color) {
+  avatarColor = color;
+  localStorage.setItem('myStorageAvatarColor', color);
+  closeColorPicker();
+  const fullName = document.getElementById('inputDisplayName').value.trim() ||
+    (document.getElementById('inputFirstName').value.trim() + ' ' + document.getElementById('inputLastName').value.trim()).trim();
+  updateAvatarPreview(fullName, currentUser ? currentUser.email : '');
+  showSettingsToast('Warna avatar diperbarui!');
+}
+
+function closeColorPicker() {
+  document.getElementById('colorPickerDialog').classList.remove('show');
+}
+
+/* ────────────────────────
+   ANALITIK STORAGE
+──────────────────────── */
+function renderAnalitik() {
+  const usedBytes = calcUsedBytes();
+  const totalBytes = 1024 * 1024 * 1024;
+  const freeBytes = Math.max(0, totalBytes - usedBytes);
+  const pct = Math.min((usedBytes / totalBytes) * 100, 100);
+
+  // Mini stats
+  document.getElementById('aStatFiles').textContent = allFiles.length;
+  document.getElementById('aStatUsed').textContent = formatBytes(usedBytes);
+  document.getElementById('aStatFree').textContent = formatBytes(freeBytes);
+  document.getElementById('aStatFolders').textContent = allFolders.length;
+
+  // Main progress bar
+  document.getElementById('aProgUsed').textContent = formatBytes(usedBytes);
+  const fill = document.getElementById('aProgFill');
+  setTimeout(() => {
+    fill.style.width = pct.toFixed(1) + '%';
+    fill.className = 'storage-progress-fill' + (pct >= 90 ? ' danger' : pct >= 70 ? ' warn' : '');
+  }, 200);
+
+  // Donut per tipe
+  renderDonut();
+
+  // Bar per folder
+  renderFolderBars();
+
+  // Timeline
+  renderTimeline();
+}
+
+function renderDonut() {
+  // Hitung per tipe
+  const typeCounts = {};
+  allFiles.forEach(f => {
+    const t = f.type || 'doc';
+    typeCounts[t] = (typeCounts[t] || 0) + 1;
+  });
+
+  const total = allFiles.length;
+  document.getElementById('donutCenterVal').textContent = total;
+
+  const types = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]);
+
+  if (total === 0) {
+    document.getElementById('donutSvg').innerHTML =
+      '<circle cx="50" cy="50" r="38" fill="none" stroke="var(--paper-3)" stroke-width="14"/>';
+    document.getElementById('donutLegend').innerHTML =
+      '<div style="font-size:12px;color:var(--ink-5);text-align:center">Belum ada file</div>';
+    return;
+  }
+
+  // Build SVG arcs
+  const r = 38;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  let svgInner = '';
+
+  types.forEach(([type, count]) => {
+    const pct = count / total;
+    const dash = pct * circ;
+    const gap  = circ - dash;
+    const color = DONUT_COLORS[type] || '#888';
+    svgInner += `<circle cx="50" cy="50" r="${r}" fill="none"
+      stroke="${color}" stroke-width="14"
+      stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}"
+      stroke-dashoffset="${(-offset).toFixed(2)}"
+      style="transition:stroke-dasharray 0.8s cubic-bezier(0.19,1,0.22,1)"
+    />`;
+    offset += dash;
+  });
+
+  document.getElementById('donutSvg').innerHTML = svgInner;
+
+  // Legend
+  document.getElementById('donutLegend').innerHTML = types.map(([type, count]) => {
+    const pct = ((count / total) * 100).toFixed(0);
+    return `<div class="donut-legend-item">
+      <div class="donut-dot" style="background:${DONUT_COLORS[type] || '#888'}"></div>
+      <span class="donut-legend-name">${DONUT_LABELS[type] || type}</span>
+      <span class="donut-legend-val">${count}</span>
+      <span class="donut-legend-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderFolderBars() {
+  const list = document.getElementById('folderBarList');
+
+  if (allFolders.length === 0) {
+    list.innerHTML = '<div style="font-size:12px;color:var(--ink-5);text-align:center;padding:20px 0">Belum ada folder</div>';
+    return;
+  }
+
+  // Hitung file + bytes per folder
+  const folderData = allFolders.map(folder => {
+    const files = allFiles.filter(f => f.folder_name === folder.name);
+    let bytes = 0;
+    files.forEach(f => {
+      if (f.size) {
+        const num = parseFloat(f.size);
+        if (f.size.includes('MB')) bytes += num * 1024 * 1024;
+        else if (f.size.includes('KB')) bytes += num * 1024;
+        else if (f.size.includes('GB')) bytes += num * 1024 * 1024 * 1024;
+      }
+    });
+    return { name: folder.name, files: files.length, bytes };
+  }).sort((a, b) => b.files - a.files);
+
+  const maxFiles = Math.max(...folderData.map(f => f.files), 1);
+
+  list.innerHTML = folderData.map(fd => {
+    const pct = ((fd.files / maxFiles) * 100).toFixed(0);
+    return `<div class="folder-bar-item">
+      <div class="folder-bar-head">
+        <span class="folder-bar-name">${escHtml(fd.name)}</span>
+        <span class="folder-bar-meta">${fd.files} file · ${formatBytes(fd.bytes)}</span>
+      </div>
+      <div class="folder-bar-track">
+        <div class="folder-bar-fill" style="width:0%" data-pct="${pct}"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Animate bars after render
+  setTimeout(() => {
+    document.querySelectorAll('.folder-bar-fill').forEach(el => {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 150);
+}
+
+function renderTimeline() {
+  const barsEl   = document.getElementById('timelineBars');
+  const labelsEl = document.getElementById('timelineLabels');
+
+  // Buat data 7 hari terakhir
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+    days.push({ key, label, count: 0 });
+  }
+
+  // Hitung upload per hari
+  allFiles.forEach(f => {
+    const day = f.created_at ? f.created_at.split('T')[0] : null;
+    const found = days.find(d => d.key === day);
+    if (found) found.count++;
+  });
+
+  const maxCount = Math.max(...days.map(d => d.count), 1);
+
+  barsEl.innerHTML = days.map(d => {
+    const heightPct = ((d.count / maxCount) * 100).toFixed(0);
+    return `<div class="timeline-bar-col">
+      <div class="timeline-bar" style="height:0%" data-h="${heightPct}%" data-tooltip="${d.count} file"></div>
+    </div>`;
+  }).join('');
+
+  labelsEl.innerHTML = days.map(d =>
+    `<span class="timeline-label">${d.label}</span>`
+  ).join('');
+
+  // Animate
+  setTimeout(() => {
+    document.querySelectorAll('.timeline-bar').forEach(el => {
+      el.style.height = el.dataset.h;
+    });
+  }, 200);
+}
+
+function escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ────────────────────────
+   NOTIFIKASI SETTINGS
+──────────────────────── */
+function loadNotifSettings() {
+  const s = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');
+  document.getElementById('toggleInApp').checked   = s.inApp   !== false;
+  document.getElementById('toggleCritical').checked = s.critical !== false;
+  document.getElementById('toggleUploadWarn').checked = s.uploadWarn !== false;
+  const threshold = s.threshold || 80;
+  document.getElementById('thresholdSlider').value = threshold;
+  document.getElementById('thresholdDisplay').textContent = threshold + '%';
+}
+
+function saveNotifSettings() {
+  const s = {
+    inApp:       document.getElementById('toggleInApp').checked,
+    critical:    document.getElementById('toggleCritical').checked,
+    uploadWarn:  document.getElementById('toggleUploadWarn').checked,
+    threshold:   parseInt(document.getElementById('thresholdSlider').value),
+  };
+  localStorage.setItem('myStorageNotifSettings', JSON.stringify(s));
+  checkStorageWarning();
+}
+
+function resetNotifSettings() {
+  localStorage.removeItem('myStorageNotifSettings');
+  loadNotifSettings();
+  checkStorageWarning();
+  showSettingsToast('Pengaturan notifikasi direset ke default');
+}
+
+function updateThreshold(val) {
+  document.getElementById('thresholdDisplay').textContent = val + '%';
+}
+
+function checkStorageWarning() {
+  const usedBytes = calcUsedBytes();
+  const totalBytes = 1024 * 1024 * 1024;
+  const pct = (usedBytes / totalBytes) * 100;
+
+  const s = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');
+  const threshold = s.threshold || 80;
+  const showInApp = s.inApp !== false;
+  const showCritical = s.critical !== false;
+
+  const banner = document.getElementById('storageWarnBanner');
+  const title  = document.getElementById('warnBannerTitle');
+  const desc   = document.getElementById('warnBannerDesc');
+
+  if (pct >= 90 && showCritical) {
+    banner.className = 'storage-warning-banner show danger';
+    title.textContent = 'Storage Hampir Penuh!';
+    desc.textContent  = `Storage kamu telah mencapai ${pct.toFixed(0)}% — segera hapus file yang tidak diperlukan.`;
+  } else if (pct >= threshold && showInApp) {
+    banner.className = 'storage-warning-banner show warn';
+    title.textContent = `Storage Mencapai ${pct.toFixed(0)}%`;
+    desc.textContent  = `Kamu telah menggunakan ${pct.toFixed(0)}% dari kapasitas (batas notifikasi: ${threshold}%).`;
+  } else {
+    banner.className = 'storage-warning-banner';
+  }
+}
+
+/* ────────────────────────
+   INIT
+──────────────────────── */
+document.addEventListener('DOMContentLoaded', async function() {
+  const { data: sessionData } = await sb.auth.getSession();
+  if (!sessionData || !sessionData.session) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  currentUser = sessionData.session.user;
+
+  // Terapkan avatar color dari localStorage
+  avatarColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+
+  initProfile(currentUser);
+  loadNotifSettings();
+  await loadAll();
+
+  // Sidebar user chip → logout
+  document.getElementById('userChip').onclick = async function() {
+    if (confirm('Yakin ingin logout?')) {
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+    }
+  };
+
+  // Close color picker on overlay click
+  document.getElementById('colorPickerDialog').addEventListener('click', function(e) {
+    if (e.target === this) closeColorPicker();
+  });
+
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (event === 'SIGNED_OUT' || !session) window.location.href = 'login.html';
+  });
+});
+</script>
+
+</body>
+</html>
