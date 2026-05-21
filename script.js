@@ -347,12 +347,19 @@ function removeSharedLink(idx) {
 /* ── FILTER & SEARCH ── */
 function setFilter(el, type) {
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   currentFilter = type;
   currentFolderFilter = null;
   showOnlyFavorites = false;
   hideSharedPanel();
   renderFiles();
+  // Scroll ke section File Terbaru
+  setTimeout(function() {
+    var fileSection = document.getElementById('fileGrid');
+    if (fileSection) {
+      fileSection.closest('div') && fileSection.closest('div').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 80);
 }
 
 function filterFiles() { renderFiles(); }
@@ -362,21 +369,38 @@ function filterFavorites() {
   currentFilter = 'semua';
   showOnlyFavorites = true;
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
-  document.querySelector('.filter-chip').classList.add('active');
+  var firstChip = document.querySelector('.filter-chip');
+  if (firstChip) firstChip.classList.add('active');
   hideSharedPanel();
   showToast('Menampilkan file favorit');
   renderFiles();
+  setTimeout(function() {
+    var fileGrid = document.getElementById('fileGrid');
+    if (fileGrid) fileGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
 }
 
 /* ── NAV ── */
 function setNav(el) {
   document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
   el.classList.add('active');
-  if (el.textContent.includes('Dashboard')) {
+  var label = el.textContent.trim();
+  if (label.includes('Dashboard')) {
     currentFolderFilter = null;
     showOnlyFavorites = false;
+    currentFilter = 'semua';
+    document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+    var firstChip = document.querySelector('.filter-chip');
+    if (firstChip) firstChip.classList.add('active');
     hideSharedPanel();
     renderFiles();
+  }
+  // Scroll ke file section untuk nav tipe file
+  if (label.includes('Dokumen') || label.includes('Foto') || label.includes('Video') || label.includes('Audio')) {
+    setTimeout(function() {
+      var fileGrid = document.getElementById('fileGrid');
+      if (fileGrid) fileGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   }
 }
 

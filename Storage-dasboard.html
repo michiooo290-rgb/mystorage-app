@@ -38,15 +38,15 @@
 
   <div class="divider"></div>
   <span class="nav-label">Tipe File</span>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'doc')">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=doc]'), 'doc')">
     <i class="ti ti-file-type-pdf"></i>Dokumen
     <span class="badge" id="badgeDocs">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'foto')">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=foto]'), 'foto')">
     <i class="ti ti-photo"></i>Foto
     <span class="badge" id="badgePhotos">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'video')">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=video]'), 'video')">
     <i class="ti ti-video"></i>Video
     <span class="badge" id="badgeVideos">0</span>
   </div>
