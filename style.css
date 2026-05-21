@@ -748,6 +748,37 @@ body {
   filter: brightness(1.08) drop-shadow(0 8px 20px rgba(124,58,237,0.15));
 }
 
+.folder-wrap.active {
+  transform: translateY(-4px) scale(1.02);
+  filter: brightness(1.1) drop-shadow(0 6px 24px rgba(124,58,237,0.35));
+  outline: 2px solid rgba(124,58,237,0.6);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+.btn-back-folder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(124,58,237,0.35);
+  background: rgba(124,58,237,0.1);
+  color: #a78bfa;
+  font-size: 12.5px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-back-folder:hover {
+  background: rgba(124,58,237,0.2);
+  border-color: rgba(124,58,237,0.55);
+  color: #c4b5fd;
+}
+
 .folder-wrap svg {
   width: 100%;
   display: block;

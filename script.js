@@ -32,6 +32,14 @@ let userInitials = 'US';
 let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
 
 /* ── UTILITY ── */
+function resetFolderUI() {
+  document.querySelectorAll('.folder-wrap').forEach(function(w) { w.classList.remove('active'); });
+  var titleEl = document.getElementById('fileSectionTitle');
+  if (titleEl) titleEl.textContent = 'File Terbaru';
+  var btnBack = document.getElementById('btnBackFolder');
+  if (btnBack) btnBack.style.display = 'none';
+}
+
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
@@ -159,8 +167,47 @@ function renderFolders() {
 function openFolder(name) {
   currentFolderFilter = name;
   showOnlyFavorites = false;
-  document.getElementById('fileGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  showToast('Folder ' + name + ' dibuka');
+
+  // Highlight folder aktif
+  document.querySelectorAll('.folder-wrap').forEach(function(w) {
+    w.classList.toggle('active', w.dataset.folder === name);
+  });
+
+  // Update header section file
+  const titleEl = document.getElementById('fileSectionTitle');
+  if (titleEl) titleEl.innerHTML = '<i class="ti ti-folder-open" style="font-size:15px;color:#a78bfa;margin-right:5px;vertical-align:middle"></i>' + escapeHtml(name);
+
+  // Tampilkan tombol kembali
+  const btnBack = document.getElementById('btnBackFolder');
+  if (btnBack) btnBack.style.display = 'flex';
+
+  // Scroll ke file section
+  setTimeout(function() {
+    const fileSection = document.getElementById('fileGrid');
+    if (fileSection) fileSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+
+  showToast('📁 Folder "' + name + '" dibuka');
+  renderFiles();
+}
+
+function closeFolder() {
+  currentFolderFilter = null;
+  showOnlyFavorites = false;
+
+  // Hapus highlight folder
+  document.querySelectorAll('.folder-wrap').forEach(function(w) {
+    w.classList.remove('active');
+  });
+
+  // Reset header section
+  const titleEl = document.getElementById('fileSectionTitle');
+  if (titleEl) titleEl.textContent = 'File Terbaru';
+
+  // Sembunyikan tombol kembali
+  const btnBack = document.getElementById('btnBackFolder');
+  if (btnBack) btnBack.style.display = 'none';
+
   renderFiles();
 }
 
@@ -349,6 +396,7 @@ function setFilter(el, type) {
   currentFilter = type;
   currentFolderFilter = null;
   showOnlyFavorites = false;
+  resetFolderUI();
   hideSharedPanel();
   renderFiles();
   // Scroll ke section File Terbaru
@@ -370,6 +418,7 @@ function clearSearch() {
   document.getElementById('searchInput').value = '';
   const btn = document.getElementById('searchClear');
   if (btn) btn.style.display = 'none';
+  resetFolderUI();
   renderFolders();
   renderFiles();
 }
@@ -434,6 +483,7 @@ function filterFavorites() {
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
   var firstChip = document.querySelector('.filter-chip');
   if (firstChip) firstChip.classList.add('active');
+  resetFolderUI();
   hideSharedPanel();
   showToast('Menampilkan file favorit');
   renderFiles();
@@ -455,6 +505,7 @@ function setNav(el) {
     document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
     var firstChip = document.querySelector('.filter-chip');
     if (firstChip) firstChip.classList.add('active');
+    resetFolderUI();
     hideSharedPanel();
     renderFiles();
   }
