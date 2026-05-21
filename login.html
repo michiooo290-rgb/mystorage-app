@@ -23,6 +23,7 @@
       --border-2: rgba(15,14,13,0.14);
       --border-3: rgba(15,14,13,0.22);
       --accent-warm: #c8602a;
+      --accent-warm-2: #a84e20;
       --amber: #92400e;
       --radius-xs: 6px;
       --radius-sm: 10px;
@@ -58,7 +59,9 @@
       z-index: 0;
     }
 
-    /* ── Left Panel — Brand Side ── */
+    /* ═══════════════════════
+       LEFT PANEL — Brand Side
+       ═══════════════════════ */
     .left-panel {
       width: 52%;
       background: var(--ink);
@@ -71,7 +74,7 @@
       z-index: 1;
     }
 
-    /* Subtle radial accent */
+    /* Radial accent orbs */
     .left-panel::before {
       content: '';
       position: absolute;
@@ -106,16 +109,59 @@
         linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
       background-size: 48px 48px;
       pointer-events: none;
+      animation: gridFadeIn 1.2s 0.3s ease both;
     }
 
-    /* ── Logo Area ── */
+    @keyframes gridFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* ── Floating particles (warm theme) ── */
+    .login-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .login-particle {
+      position: absolute;
+      border-radius: 50%;
+      animation: warmParticleDrift linear infinite;
+    }
+
+    .login-particle:nth-child(1) { width: 3px; height: 3px; background: rgba(200,96,42,0.5); left: 15%; top: 25%; animation-duration: 20s; animation-delay: 0s; box-shadow: 0 0 8px rgba(200,96,42,0.3); }
+    .login-particle:nth-child(2) { width: 2px; height: 2px; background: rgba(200,150,100,0.4); left: 60%; top: 15%; animation-duration: 24s; animation-delay: -4s; box-shadow: 0 0 6px rgba(200,150,100,0.3); }
+    .login-particle:nth-child(3) { width: 4px; height: 4px; background: rgba(200,96,42,0.35); left: 80%; top: 65%; animation-duration: 18s; animation-delay: -8s; box-shadow: 0 0 10px rgba(200,96,42,0.2); }
+    .login-particle:nth-child(4) { width: 2px; height: 2px; background: rgba(255,180,120,0.4); left: 35%; top: 80%; animation-duration: 22s; animation-delay: -2s; box-shadow: 0 0 6px rgba(255,180,120,0.3); }
+    .login-particle:nth-child(5) { width: 3px; height: 3px; background: rgba(200,96,42,0.45); left: 50%; top: 45%; animation-duration: 26s; animation-delay: -6s; box-shadow: 0 0 8px rgba(200,96,42,0.25); }
+    .login-particle:nth-child(6) { width: 2px; height: 2px; background: rgba(200,150,100,0.35); left: 90%; top: 30%; animation-duration: 19s; animation-delay: -10s; box-shadow: 0 0 6px rgba(200,150,100,0.2); }
+
+    @keyframes warmParticleDrift {
+      0%   { transform: translate(0, 0) scale(1); opacity: 0; }
+      10%  { opacity: 0.8; }
+      50%  { transform: translate(-30px, -100px) scale(1.3); opacity: 0.6; }
+      90%  { opacity: 0.3; }
+      100% { transform: translate(20px, -200px) scale(0.7); opacity: 0; }
+    }
+
+    /* ══════════════════
+       LOGO AREA
+       ══════════════════ */
     .brand-logo {
       display: flex;
       align-items: center;
       gap: 10px;
       position: relative;
       z-index: 2;
-      animation: fadeUpIn 0.6s var(--ease-out-expo) both;
+      animation: slideInLeft 0.7s var(--ease-out-expo) both;
+    }
+
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-24px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
     .brand-icon {
@@ -126,6 +172,19 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 18px;
       color: #fff;
+      animation: iconFloat 4s ease-in-out infinite;
+      transition: all 0.3s;
+    }
+
+    .brand-icon:hover {
+      background: rgba(200,96,42,0.2);
+      border-color: rgba(200,96,42,0.3);
+      transform: rotate(-8deg) scale(1.08);
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-3px); }
     }
 
     .brand-name {
@@ -136,11 +195,12 @@
       letter-spacing: -0.03em;
     }
 
-    /* ── Main Headline ── */
+    /* ══════════════════
+       HEADLINE SECTION
+       ══════════════════ */
     .brand-body {
       position: relative;
       z-index: 2;
-      animation: fadeUpIn 0.7s 0.1s var(--ease-out-expo) both;
     }
 
     .brand-eyebrow {
@@ -153,14 +213,22 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      animation: slideInUp 0.6s 0.15s var(--ease-out-expo) both;
     }
+
     .brand-eyebrow::before {
       content: '';
       display: block;
-      width: 24px;
+      width: 0;
       height: 1px;
       background: var(--accent-warm);
       opacity: 0.7;
+      animation: lineExpand 0.8s 0.6s var(--ease-out-expo) forwards;
+    }
+
+    @keyframes lineExpand {
+      from { width: 0; }
+      to   { width: 24px; }
     }
 
     .brand-headline {
@@ -171,11 +239,22 @@
       line-height: 1.1;
       letter-spacing: -0.04em;
       margin-bottom: 20px;
+      animation: slideInUp 0.7s 0.25s var(--ease-out-expo) both;
     }
 
     .brand-headline em {
       font-style: italic;
-      color: rgba(255,255,255,0.5);
+      color: transparent;
+      background: linear-gradient(135deg, rgba(200,96,42,0.9), rgba(255,180,120,0.9));
+      -webkit-background-clip: text;
+      background-clip: text;
+      background-size: 200% 200%;
+      animation: gradientShimmer 4s ease-in-out infinite;
+    }
+
+    @keyframes gradientShimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50%      { background-position: 100% 50%; }
     }
 
     .brand-desc {
@@ -183,9 +262,17 @@
       color: rgba(255,255,255,0.45);
       line-height: 1.7;
       max-width: 320px;
+      animation: slideInUp 0.7s 0.35s var(--ease-out-expo) both;
     }
 
-    /* ── Feature Pills ── */
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════
+       FEATURE ITEMS
+       ══════════════════ */
     .feature-list {
       display: flex;
       flex-direction: column;
@@ -193,7 +280,6 @@
       margin-top: 36px;
       position: relative;
       z-index: 2;
-      animation: fadeUpIn 0.7s 0.2s var(--ease-out-expo) both;
     }
 
     .feature-item {
@@ -202,6 +288,20 @@
       gap: 12px;
       font-size: 13px;
       color: rgba(255,255,255,0.55);
+      transition: all 0.3s var(--ease-out-expo);
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: default;
+    }
+
+    .feature-item:nth-child(1) { animation: slideInUp 0.6s 0.45s var(--ease-out-expo) both; }
+    .feature-item:nth-child(2) { animation: slideInUp 0.6s 0.55s var(--ease-out-expo) both; }
+    .feature-item:nth-child(3) { animation: slideInUp 0.6s 0.65s var(--ease-out-expo) both; }
+
+    .feature-item:hover {
+      color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.04);
+      transform: translateX(6px);
     }
 
     .feature-dot {
@@ -213,6 +313,14 @@
       font-size: 11px;
       color: rgba(255,255,255,0.6);
       flex-shrink: 0;
+      transition: all 0.3s;
+    }
+
+    .feature-item:hover .feature-dot {
+      background: rgba(200,96,42,0.15);
+      border-color: rgba(200,96,42,0.3);
+      color: var(--accent-warm);
+      transform: scale(1.1) rotate(-5deg);
     }
 
     /* ── Bottom Info ── */
@@ -222,10 +330,12 @@
       font-size: 12px;
       color: rgba(255,255,255,0.2);
       font-family: 'JetBrains Mono', monospace;
-      animation: fadeUpIn 0.7s 0.3s var(--ease-out-expo) both;
+      animation: slideInUp 0.6s 0.75s var(--ease-out-expo) both;
     }
 
-    /* ── Right Panel — Form ── */
+    /* ═══════════════════════
+       RIGHT PANEL — Form Side
+       ═══════════════════════ */
     .right-panel {
       flex: 1;
       display: flex;
@@ -239,7 +349,13 @@
     .form-box {
       width: 100%;
       max-width: 360px;
-      animation: fadeUpIn 0.6s 0.15s var(--ease-out-expo) both;
+      animation: formEntrance 0.8s 0.2s var(--ease-out-expo) both;
+      position: relative;
+    }
+
+    @keyframes formEntrance {
+      from { opacity: 0; transform: translateY(30px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .form-header {
@@ -253,14 +369,23 @@
       color: var(--ink);
       letter-spacing: -0.04em;
       margin-bottom: 6px;
+      animation: textReveal 0.6s 0.35s var(--ease-out-expo) both;
+    }
+
+    @keyframes textReveal {
+      from { opacity: 0; transform: translateY(12px); letter-spacing: 0.02em; }
+      to   { opacity: 1; transform: translateY(0); letter-spacing: -0.04em; }
     }
 
     .form-sub {
       font-size: 13.5px;
       color: var(--ink-4);
+      animation: slideInUp 0.5s 0.45s var(--ease-out-expo) both;
     }
 
-    /* ── Tabs ── */
+    /* ══════════════════
+       TABS
+       ══════════════════ */
     .tab-row {
       display: flex;
       background: var(--paper-2);
@@ -268,6 +393,7 @@
       padding: 3px;
       margin-bottom: 24px;
       border: 1px solid var(--border);
+      animation: slideInUp 0.5s 0.5s var(--ease-out-expo) both;
     }
 
     .tab-btn {
@@ -278,10 +404,11 @@
       font-family: inherit;
       font-size: 13px;
       cursor: pointer;
-      transition: all 0.2s var(--ease-out-expo);
+      transition: all 0.35s var(--ease-out-expo);
       font-weight: 400;
       color: var(--ink-4);
       background: transparent;
+      position: relative;
     }
 
     .tab-btn.active {
@@ -289,11 +416,31 @@
       color: var(--ink);
       font-weight: 500;
       box-shadow: var(--shadow-sm);
+      transform: scale(1.02);
     }
 
-    /* ── Form Fields ── */
+    .tab-btn:not(.active):hover {
+      color: var(--ink-3);
+      background: rgba(15,14,13,0.03);
+    }
+
+    /* ══════════════════
+       FORM FIELDS
+       ══════════════════ */
     .field-group {
       margin-bottom: 14px;
+      animation: fieldSlideIn 0.5s var(--ease-out-expo) both;
+    }
+
+    #panelLogin .field-group:nth-child(1) { animation-delay: 0.55s; }
+    #panelLogin .field-group:nth-child(2) { animation-delay: 0.65s; }
+    #panelRegister .field-group:nth-child(1) { animation-delay: 0.2s; }
+    #panelRegister .field-group:nth-child(2) { animation-delay: 0.3s; }
+    #panelRegister .field-group:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes fieldSlideIn {
+      from { opacity: 0; transform: translateX(-16px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
     .field-label {
@@ -303,6 +450,7 @@
       color: var(--ink-2);
       margin-bottom: 6px;
       letter-spacing: 0.01em;
+      transition: color 0.2s;
     }
 
     .field-wrap {
@@ -320,13 +468,17 @@
       color: var(--ink);
       background: var(--white);
       outline: none;
-      transition: all 0.15s;
+      transition: all 0.25s var(--ease-out-expo);
     }
 
     .field-input:focus {
-      border-color: var(--ink);
-      box-shadow: 0 0 0 3px rgba(15,14,13,0.06);
+      border-color: var(--accent-warm);
+      box-shadow: 0 0 0 3px rgba(200,96,42,0.08), 0 2px 12px rgba(200,96,42,0.06);
+      background: #fff;
     }
+
+    .field-input:focus ~ .field-label,
+    .field-wrap:focus-within + .field-label { color: var(--accent-warm); }
 
     .field-input::placeholder { color: var(--ink-5); }
 
@@ -338,10 +490,13 @@
       font-size: 16px;
       color: var(--ink-5);
       pointer-events: none;
-      transition: color 0.15s;
+      transition: all 0.25s var(--ease-out-expo);
     }
 
-    .field-wrap:focus-within .field-icon { color: var(--ink-3); }
+    .field-wrap:focus-within .field-icon {
+      color: var(--accent-warm);
+      transform: translateY(-50%) scale(1.1);
+    }
 
     .eye-btn {
       position: absolute;
@@ -355,9 +510,9 @@
       font-size: 16px;
       padding: 2px;
       border-radius: 4px;
-      transition: color 0.12s;
+      transition: all 0.2s;
     }
-    .eye-btn:hover { color: var(--ink); }
+    .eye-btn:hover { color: var(--accent-warm); transform: translateY(-50%) scale(1.12); }
 
     .field-err {
       font-size: 11.5px;
@@ -366,12 +521,14 @@
       display: none;
       font-family: 'JetBrains Mono', monospace;
     }
-    .field-err.show { display: block; animation: errShake 0.35s; }
+    .field-err.show { display: block; animation: errShake 0.4s var(--ease-spring); }
 
     @keyframes errShake {
       0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-3px); }
-      40%, 80% { transform: translateX(3px); }
+      20%      { transform: translateX(-4px); }
+      40%      { transform: translateX(4px); }
+      60%      { transform: translateX(-3px); }
+      80%      { transform: translateX(3px); }
     }
 
     /* ── Forgot link ── */
@@ -383,11 +540,14 @@
       margin-top: -18px;
       margin-bottom: 18px;
       display: block;
-      transition: color 0.12s;
+      transition: all 0.2s;
+      animation: slideInUp 0.5s 0.7s var(--ease-out-expo) both;
     }
-    .forgot-link:hover { color: var(--ink); }
+    .forgot-link:hover { color: var(--accent-warm); transform: translateX(2px); }
 
-    /* ── Submit Button ── */
+    /* ═══════════════════════
+       SUBMIT BUTTON
+       ═══════════════════════ */
     .btn-submit {
       width: 100%;
       padding: 12px;
@@ -399,7 +559,6 @@
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.18s;
       letter-spacing: -0.01em;
       display: flex;
       align-items: center;
@@ -407,23 +566,56 @@
       gap: 8px;
       position: relative;
       overflow: hidden;
+      animation: slideInUp 0.5s 0.75s var(--ease-out-expo) both;
+      transition: all 0.25s var(--ease-out-expo);
     }
 
+    /* Shimmer effect */
     .btn-submit::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: rgba(255,255,255,0);
-      transition: background 0.18s;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.06) 50%,
+        transparent 100%
+      );
+      animation: btnShimmer 3s ease-in-out infinite;
+    }
+
+    @keyframes btnShimmer {
+      0%   { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    /* Bottom glow */
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 20%;
+      right: 20%;
+      height: 12px;
+      background: rgba(200,96,42,0.2);
+      border-radius: 50%;
+      filter: blur(8px);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
 
     .btn-submit:hover {
       background: var(--ink-2);
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(15,14,13,0.18);
     }
 
-    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:hover::after { opacity: 1; }
+
+    .btn-submit:active { transform: translateY(0) scale(0.98); }
 
     .btn-submit.loading { opacity: 0.75; pointer-events: none; }
 
@@ -455,21 +647,31 @@
       text-align: center;
       margin-top: 18px;
       line-height: 1.6;
+      animation: slideInUp 0.5s 0.8s var(--ease-out-expo) both;
     }
-    .form-terms a { color: var(--ink-3); text-decoration: underline; }
+    .form-terms a { color: var(--ink-3); text-decoration: underline; transition: color 0.2s; }
+    .form-terms a:hover { color: var(--accent-warm); }
 
-    /* ── Forgot Modal ── */
+    /* ═══════════════════════
+       FORGOT MODAL
+       ═══════════════════════ */
     .modal-overlay-forgot {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(15,14,13,0.4);
-      backdrop-filter: blur(8px);
+      background: rgba(15,14,13,0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       z-index: 100;
       align-items: center;
       justify-content: center;
     }
-    .modal-overlay-forgot.show { display: flex; }
+    .modal-overlay-forgot.show { display: flex; animation: overlayFadeIn 0.25s ease both; }
+
+    @keyframes overlayFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
 
     .modal-card {
       background: var(--white);
@@ -479,11 +681,23 @@
       max-width: calc(100vw - 32px);
       border: 1px solid var(--border);
       box-shadow: var(--shadow-lg);
-      animation: modalIn 0.32s var(--ease-spring) both;
+      animation: modalBounceIn 0.4s var(--ease-spring) both;
+      position: relative;
+      overflow: hidden;
     }
 
-    @keyframes modalIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    /* Accent line on modal */
+    .modal-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-warm), #e8834a, var(--accent-warm));
+      opacity: 0.8;
+    }
+
+    @keyframes modalBounceIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.94); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
@@ -500,7 +714,7 @@
       font-size: 13px;
       cursor: pointer;
       color: var(--ink-3);
-      transition: all 0.12s;
+      transition: all 0.2s;
     }
     .btn-modal-cancel:hover { background: var(--paper); color: var(--ink); }
 
@@ -514,11 +728,13 @@
       font-size: 13px;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.12s;
+      transition: all 0.2s;
     }
-    .btn-modal-confirm:hover { background: var(--ink-2); }
+    .btn-modal-confirm:hover { background: var(--ink-2); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
-    /* ── Toast ── */
+    /* ═══════════════════════
+       TOAST
+       ═══════════════════════ */
     .toast {
       position: fixed;
       bottom: 24px; right: 24px;
@@ -540,13 +756,9 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* ── Animations ── */
-    @keyframes fadeUpIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Responsive ── */
+    /* ═══════════════════════
+       RESPONSIVE
+       ═══════════════════════ */
     @media (max-width: 768px) {
       .left-panel { display: none; }
       .right-panel { padding: 32px 24px; }
@@ -558,6 +770,14 @@
 <!-- LEFT PANEL -->
 <div class="left-panel">
   <div class="grid-overlay"></div>
+  <div class="login-particles">
+    <div class="login-particle"></div>
+    <div class="login-particle"></div>
+    <div class="login-particle"></div>
+    <div class="login-particle"></div>
+    <div class="login-particle"></div>
+    <div class="login-particle"></div>
+  </div>
 
   <div class="brand-logo">
     <div class="brand-icon"><i class="ti ti-archive"></i></div>
