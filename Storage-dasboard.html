@@ -28,7 +28,7 @@
     <i class="ti ti-layout-dashboard"></i>Dashboard
     <span class="badge" id="badgeDashboard">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); showToast('Fitur dibagikan dalam pengembangan')">
+  <div class="nav-item" onclick="setNav(this); showSharedPanel()">
     <i class="ti ti-share"></i>Dibagikan
     <span class="badge" id="badgeShared">0</span>
   </div>
@@ -50,7 +50,7 @@
     <i class="ti ti-video"></i>Video
     <span class="badge" id="badgeVideos">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'audio')">
+  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=audio]'), 'audio')">
     <i class="ti ti-music"></i>Audio
     <span class="badge" id="badgeAudio">0</span>
   </div>
@@ -147,6 +147,21 @@
       </div>
     </div>
 
+    <!-- SHARED PANEL -->
+    <div id="sharedPanel" style="display:none">
+      <div class="section-head">
+        <div class="section-head-left">
+          <span class="section-title">File Dibagikan</span>
+          <span class="section-count" id="sharedCount">0</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-faint)">Link aktif selama 7 hari setelah dibuat</div>
+      </div>
+      <div id="sharedList" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;min-height:80px"></div>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div id="mainPanel">
+
     <div>
       <div class="section-head">
         <div class="section-head-left">
@@ -193,11 +208,16 @@
         <button class="filter-chip" onclick="setFilter(this,'spreadsheet')">
           <i class="ti ti-table"></i>Spreadsheet
         </button>
+        <button class="filter-chip" onclick="setFilter(this,'audio')">
+          <i class="ti ti-music"></i>Audio
+        </button>
       </div>
 
       <div class="file-grid" id="fileGrid">
         </div>
     </div>
+
+    </div><!-- end mainPanel -->
 
   </div>
 </div>

@@ -343,7 +343,7 @@
   }
 
   /* ── Render berdasarkan tipe file ── */
-  function renderViewer(url, type, name) {
+  async function renderViewer(url, type, name) {
     const wrap = document.getElementById('viewerWrap');
 
     if (type === 'pdf') {
@@ -376,15 +376,58 @@
           </audio>
         </div>`;
     }
-    else if (type === 'spreadsheet') {
-      // Coba buka via Google Sheets Viewer
-      const gsvUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-      wrap.innerHTML = `<iframe class="pdf-viewer" src="${gsvUrl}" title="${name}"></iframe>`;
-    }
-    else if (type === 'doc') {
-      // Coba buka via Google Docs Viewer
-      const gdUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
-      wrap.innerHTML = `<iframe class="pdf-viewer" src="${gdUrl}" title="${name}"></iframe>`;
+    else if (type === 'spreadsheet' || type === 'doc') {
+      // Download file dulu sebagai blob, lalu buat object URL untuk ditampilkan
+      const ext = name.split('.').pop().toLowerCase();
+      const isPdf = (ext === 'pdf');
+      // Untuk .txt bisa langsung iframe, untuk office format perlu download
+      if (ext === 'txt') {
+        wrap.innerHTML = `<iframe class="pdf-viewer" src="${url}" title="${name}" style="background:#1a1a2e;color:#e2e8f0"></iframe>`;
+        return;
+      }
+      // Tampilkan loading sementara fetch blob
+      wrap.innerHTML = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Mengunduh file untuk preview...</p>
+        </div>`;
+      try {
+        const resp = await fetch(url);
+        const blob = await resp.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+        wrap.innerHTML = `
+          <div class="generic-viewer">
+            <div class="generic-icon-box" style="background:${iconInfo.bg}">
+              <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
+            </div>
+            <h3>${nameEsc}</h3>
+            <p>File <strong>${ext.toUpperCase()}</strong> tidak bisa ditampilkan langsung di browser.<br>
+            Gunakan tombol di bawah untuk membuka atau mengunduh file ini.</p>
+            <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center">
+              <a href="${blobUrl}" download="${name}" class="btn-action primary" style="display:flex;align-items:center;gap:6px;text-decoration:none">
+                <i class="ti ti-download"></i> Download & Buka
+              </a>
+              <button class="btn-action" onclick="window.open('${blobUrl}')">
+                <i class="ti ti-external-link"></i> Buka di Tab Baru
+              </button>
+            </div>
+            <p style="font-size:11.5px;color:var(--text-faint);margin-top:16px">Tip: Setelah download, buka dengan Microsoft Office, LibreOffice, atau Google Drive.</p>
+          </div>`;
+      } catch(e) {
+        // Fallback jika fetch gagal
+        const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+        wrap.innerHTML = `
+          <div class="generic-viewer">
+            <div class="generic-icon-box" style="background:${iconInfo.bg}">
+              <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
+            </div>
+            <h3>${nameEsc}</h3>
+            <p>File ini tidak bisa ditampilkan langsung. Gunakan tombol <strong>Download</strong> di atas.</p>
+          </div>`;
+      }
     }
     else {
       // Unsupported — tampilkan icon + tombol download

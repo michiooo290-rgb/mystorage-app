@@ -29,6 +29,7 @@ let allFiles = [];
 let droppedFiles = null;
 let showOnlyFavorites = false;
 let userInitials = 'US';
+let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
 
 /* ── UTILITY ── */
 function escapeHtml(str) {
@@ -71,9 +72,13 @@ function renderStats() {
   const totalFolders = allFolders.length;
   const favCount = allFiles.filter(f => getFavs().includes(String(f.id))).length;
 
+  const sharedCount = JSON.parse(localStorage.getItem('myStorageShared') || '[]').filter(function(s) {
+    return Date.now() - s.createdAt < 7 * 24 * 60 * 60 * 1000;
+  }).length;
+
   document.getElementById('statFiles').textContent = totalFiles;
   document.getElementById('statFolders').textContent = totalFolders;
-  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = 0;
+  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = sharedCount;
   if (document.getElementById('statFavorit')) document.getElementById('statFavorit').textContent = favCount;
 
   if (document.getElementById('badgeDashboard')) document.getElementById('badgeDashboard').textContent = totalFiles;
@@ -81,7 +86,7 @@ function renderStats() {
   if (document.getElementById('badgePhotos')) document.getElementById('badgePhotos').textContent = allFiles.filter(f => f.type === 'foto').length;
   if (document.getElementById('badgeVideos')) document.getElementById('badgeVideos').textContent = allFiles.filter(f => f.type === 'video').length;
   if (document.getElementById('badgeAudio')) document.getElementById('badgeAudio').textContent = allFiles.filter(f => f.type === 'audio').length;
-  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = 0;
+  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = sharedCount;
 
   let usedBytes = 0;
   allFiles.forEach(f => {
@@ -256,6 +261,89 @@ function openFile(id) {
   window.open('viewer.html?' + params.toString(), '_blank');
 }
 
+/* ── SHARED PANEL ── */
+function showSharedPanel() {
+  document.getElementById('sharedPanel').style.display = '';
+  document.getElementById('mainPanel').style.display = 'none';
+  renderShared();
+}
+
+function hideSharedPanel() {
+  document.getElementById('sharedPanel').style.display = 'none';
+  document.getElementById('mainPanel').style.display = '';
+}
+
+function renderShared() {
+  const list = document.getElementById('sharedList');
+  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+  // Hapus yang sudah expired (lebih dari 7 hari)
+  const now = Date.now();
+  sharedLinks = sharedLinks.filter(function(s) { return now - s.createdAt < 7 * 24 * 60 * 60 * 1000; });
+  localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+
+  if (document.getElementById('sharedCount')) document.getElementById('sharedCount').textContent = sharedLinks.length;
+  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = sharedLinks.length;
+  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = sharedLinks.length;
+
+  if (sharedLinks.length === 0) {
+    list.innerHTML = '<div class="empty-state"><i class="ti ti-share-off"></i><p>Belum ada file yang dibagikan. Klik kanan file lalu pilih "Bagikan Link".</p></div>';
+    return;
+  }
+
+  const FILE_ICONS_LOCAL = {
+    pdf: { icon: 'ti-file-type-pdf', color: '#ef4444', bg: '#fff0f0' },
+    doc: { icon: 'ti-file-text', color: '#6366f1', bg: '#eef2ff' },
+    foto: { icon: 'ti-photo', color: '#22c55e', bg: '#dcfce7' },
+    video: { icon: 'ti-video', color: '#f97316', bg: '#fff7ed' },
+    spreadsheet: { icon: 'ti-table', color: '#0ea5e9', bg: '#f0f9ff' },
+    audio: { icon: 'ti-music', color: '#a855f7', bg: '#f3e8ff' },
+  };
+
+  list.innerHTML = sharedLinks.map(function(s, i) {
+    const iconInfo = FILE_ICONS_LOCAL[s.type] || FILE_ICONS_LOCAL['doc'];
+    const created = new Date(s.createdAt);
+    const expiry  = new Date(s.createdAt + 7 * 24 * 60 * 60 * 1000);
+    const daysLeft = Math.max(0, Math.ceil((expiry - now) / (24 * 60 * 60 * 1000)));
+    const dateStr = created.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    return (
+      '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;animation-delay:' + (i*0.05) + 's" class="file-card" style="margin:0">' +
+      '<div style="width:40px;height:40px;border-radius:10px;background:' + iconInfo.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+      '<i class="ti ' + iconInfo.icon + '" style="color:' + iconInfo.color + ';font-size:18px"></i></div>' +
+      '<div style="flex:1;min-width:0">' +
+      '<div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.name) + '</div>' +
+      '<div style="font-size:11.5px;color:var(--text-faint);margin-top:3px">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#f87171' : '#fbbf24') + '">' + daysLeft + ' hari tersisa</span></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;flex-shrink:0">' +
+      '<button onclick="copySharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background=\'rgba(124,58,237,0.12)\';this.style.color=\'#e2e8f0\'" onmouseleave="this.style.background=\'rgba(255,255,255,0.05)\';this.style.color=\'var(--text-muted)\'">' +
+      '<i class="ti ti-copy" style="font-size:13px"></i>Salin Link</button>' +
+      '<button onclick="removeSharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background=\'rgba(239,68,68,0.18)\'" onmouseleave="this.style.background=\'rgba(239,68,68,0.08)\'">' +
+      '<i class="ti ti-trash" style="font-size:13px"></i>Hapus</button>' +
+      '</div></div>'
+    );
+  }).join('');
+}
+
+function copySharedLink(idx) {
+  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+  const s = sharedLinks[parseInt(idx)];
+  if (!s) return;
+  try {
+    navigator.clipboard.writeText(s.url);
+    showToast('Link berhasil disalin!');
+  } catch {
+    prompt('Salin link ini:', s.url);
+  }
+}
+
+function removeSharedLink(idx) {
+  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+  sharedLinks.splice(parseInt(idx), 1);
+  localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+  showToast('Link dihapus dari daftar.');
+  renderShared();
+}
+
 /* ── FILTER & SEARCH ── */
 function setFilter(el, type) {
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -263,6 +351,7 @@ function setFilter(el, type) {
   currentFilter = type;
   currentFolderFilter = null;
   showOnlyFavorites = false;
+  hideSharedPanel();
   renderFiles();
 }
 
@@ -274,6 +363,7 @@ function filterFavorites() {
   showOnlyFavorites = true;
   document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
   document.querySelector('.filter-chip').classList.add('active');
+  hideSharedPanel();
   showToast('Menampilkan file favorit');
   renderFiles();
 }
@@ -285,6 +375,7 @@ function setNav(el) {
   if (el.textContent.includes('Dashboard')) {
     currentFolderFilter = null;
     showOnlyFavorites = false;
+    hideSharedPanel();
     renderFiles();
   }
 }
@@ -298,6 +389,8 @@ function closeModal() {
   document.getElementById('folderSelect').value = '';
   document.getElementById('fileInput').value = '';
   droppedFiles = null;
+  const pb = document.getElementById('uploadProgressBox');
+  if (pb) pb.remove();
 }
 
 /* ── ADD FOLDER ── */
@@ -392,6 +485,19 @@ async function shareFile() {
   const path = file.storage_path || (file.folder_name + '/' + file.name);
   const { data, error } = await sb.storage.from('user-files').createSignedUrl(path, 604800);
   if (error) { showToast('Gagal membuat link: ' + error.message); return; }
+
+  // Simpan ke localStorage untuk panel Dibagikan
+  let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+  // Hindari duplikat berdasarkan file id
+  saved = saved.filter(function(s) { return s.fileId !== String(file.id); });
+  saved.unshift({ fileId: String(file.id), name: file.name, url: data.signedUrl, type: file.type || 'doc', folder: file.folder_name || '', createdAt: Date.now() });
+  if (saved.length > 50) saved = saved.slice(0, 50);
+  localStorage.setItem('myStorageShared', JSON.stringify(saved));
+
+  // Update badge
+  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = saved.length;
+  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = saved.length;
+
   try {
     await navigator.clipboard.writeText(data.signedUrl);
     showToast('Link berhasil disalin ke clipboard!');
@@ -483,18 +589,39 @@ async function uploadFile() {
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
 
   const btnConfirm = document.querySelector('.btn-confirm');
+  const btnCancel  = document.querySelector('.btn-cancel');
   btnConfirm.disabled = true;
-  btnConfirm.textContent = 'Mengupload...';
-  showToast('Mengupload ' + files.length + ' file...');
+  btnCancel.disabled  = true;
+
+  // Buat progress UI di dalam modal
+  let progressBox = document.getElementById('uploadProgressBox');
+  if (!progressBox) {
+    progressBox = document.createElement('div');
+    progressBox.id = 'uploadProgressBox';
+    progressBox.style.cssText = 'margin-bottom:14px';
+    document.getElementById('selectedFiles').after(progressBox);
+  }
+
+  let successCount = 0;
+  let failCount = 0;
+  const total = files.length;
 
   const { data: authData } = await sb.auth.getSession();
   const uid = authData && authData.session ? authData.session.user.id : null;
 
-  let successCount = 0;
-  let failCount = 0;
-
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < total; i++) {
     const file = files[i];
+    const pct = Math.round((i / total) * 100);
+
+    progressBox.innerHTML =
+      '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Mengupload ' + (i + 1) + ' dari ' + total + ': <span style="color:var(--text)">' + file.name + '</span></div>' +
+      '<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:99px;transition:width 0.3s ease"></div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text-faint);margin-top:5px;text-align:right">' + pct + '%</div>';
+
+    btnConfirm.textContent = 'Mengupload ' + (i+1) + '/' + total;
+
     const ext = file.name.split('.').pop().toLowerCase();
     let type = 'doc';
     if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
@@ -528,9 +655,19 @@ async function uploadFile() {
     else successCount++;
   }
 
+  // Progress 100%
+  progressBox.innerHTML =
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Selesai!</div>' +
+    '<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">' +
+      '<div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px"></div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:#4ade80;margin-top:5px;text-align:right">100%</div>';
+
   btnConfirm.disabled = false;
+  btnCancel.disabled  = false;
   btnConfirm.textContent = 'Upload';
-  closeModal();
+
+  setTimeout(() => { closeModal(); }, 600);
 
   if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal diupload.');
   else if (failCount > 0 && successCount === 0) showToast('Gagal mengupload ' + failCount + ' file. Cek koneksi atau storage.');
