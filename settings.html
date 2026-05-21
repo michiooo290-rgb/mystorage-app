@@ -10,6 +10,91 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="settings.css"/>
+  <style>
+    .avatar-wrapper {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .avatar-wrapper .avatar-preview {
+      width: 80px !important;
+      height: 80px !important;
+      font-size: 28px !important;
+      border-radius: 50% !important;
+      object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .avatar-photo-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      cursor: pointer;
+    }
+    .avatar-wrapper:hover .avatar-photo-overlay { opacity: 1; }
+    .btn-avatar-remove {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Outfit', sans-serif;
+      cursor: pointer;
+      border: 1px solid rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.08);
+      color: #f87171;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-avatar-remove:hover {
+      background: rgba(239,68,68,0.16);
+      border-color: rgba(239,68,68,0.6);
+    }
+    /* Crop dialog */
+    .crop-container { margin: 16px 0; }
+    .crop-viewport {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #111;
+      cursor: grab;
+      user-select: none;
+      box-shadow: 0 0 0 3px var(--accent, #c8602a);
+    }
+    .crop-viewport:active { cursor: grabbing; }
+    .crop-viewport img {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform-origin: center center;
+      pointer-events: none;
+      max-width: none;
+    }
+    .crop-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 8px;
+    }
+    .crop-controls input[type=range] {
+      flex: 1;
+      accent-color: var(--accent, #c8602a);
+    }
+  </style>
 </head>
 <body>
 
@@ -136,14 +221,50 @@
 
             <!-- Avatar Section -->
             <div class="avatar-section">
-              <div class="avatar-preview" id="avatarPreview">??</div>
+              <div class="avatar-wrapper" id="avatarWrapper">
+                <div class="avatar-preview" id="avatarPreview">??</div>
+                <div class="avatar-photo-overlay" onclick="triggerPhotoUpload()" title="Ganti foto profil">
+                  <i class="ti ti-camera" style="font-size:16px"></i>
+                </div>
+                <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)"/>
+              </div>
               <div class="avatar-info">
                 <div class="avatar-name-preview" id="avatarNamePreview">Memuat...</div>
                 <div class="avatar-email-preview" id="avatarEmailPreview">—</div>
                 <div class="avatar-actions">
-                  <button class="btn-avatar-change" onclick="triggerAvatarColor()">
+                  <button class="btn-avatar-change" onclick="triggerPhotoUpload()">
+                    <i class="ti ti-upload" style="font-size:13px"></i>Upload Foto
+                  </button>
+                  <button class="btn-avatar-change" onclick="triggerAvatarColor()" id="btnColorAvatar">
                     <i class="ti ti-palette" style="font-size:13px"></i>Warna Avatar
                   </button>
+                  <button class="btn-avatar-remove" id="btnRemovePhoto" onclick="removePhoto()" style="display:none">
+                    <i class="ti ti-trash" style="font-size:13px"></i>Hapus Foto
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Photo Crop Modal -->
+            <div class="custom-dialog-overlay" id="photoCropDialog">
+              <div class="custom-dialog" style="max-width:400px;width:90%">
+                <div class="custom-dialog-icon prompt"><i class="ti ti-crop"></i></div>
+                <div class="custom-dialog-title">Sesuaikan Foto</div>
+                <div class="custom-dialog-msg">Geser dan perbesar untuk mengatur foto profil kamu</div>
+                <div class="crop-container">
+                  <div class="crop-viewport">
+                    <div class="crop-circle-mask"></div>
+                    <img id="cropImage" src="" alt="preview" draggable="false"/>
+                  </div>
+                  <div class="crop-controls">
+                    <i class="ti ti-zoom-out" style="font-size:15px;color:var(--text-muted)"></i>
+                    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" oninput="updateCrop()"/>
+                    <i class="ti ti-zoom-in" style="font-size:15px;color:var(--text-muted)"></i>
+                  </div>
+                </div>
+                <div class="custom-dialog-footer">
+                  <button class="custom-dialog-btn cancel" onclick="closeCropDialog()">Batal</button>
+                  <button class="custom-dialog-btn confirm" onclick="applyCrop()">Simpan Foto</button>
                 </div>
               </div>
             </div>
@@ -549,19 +670,187 @@ function updateAvatarPreview(name, email) {
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '??';
   userInitials = initials;
 
+  const savedPhoto = localStorage.getItem('myStorageAvatarPhoto');
   const avatarEl = document.getElementById('avatarPreview');
-  avatarEl.textContent = initials;
-  avatarEl.style.background = avatarColor;
+
+  if (savedPhoto) {
+    // Show photo
+    avatarEl.innerHTML = '';
+    avatarEl.style.background = 'transparent';
+    avatarEl.style.backgroundImage = `url(${savedPhoto})`;
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+    document.getElementById('btnRemovePhoto').style.display = 'inline-flex';
+    document.getElementById('btnColorAvatar').style.display = 'none';
+
+    // Sidebar & topbar as image
+    const setAv = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = '';
+      el.style.backgroundImage = `url(${savedPhoto})`;
+      el.style.backgroundSize = 'cover';
+      el.style.backgroundPosition = 'center';
+      el.style.background = `url(${savedPhoto}) center/cover`;
+    };
+    setAv('sidebarAv');
+    setAv('topbarAv');
+  } else {
+    // Show initials
+    avatarEl.textContent = initials;
+    avatarEl.style.background = avatarColor;
+    avatarEl.style.backgroundImage = '';
+    document.getElementById('btnRemovePhoto').style.display = 'none';
+    document.getElementById('btnColorAvatar').style.display = 'inline-flex';
+
+    const setAvText = (id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = initials;
+      el.style.background = avatarColor;
+      el.style.backgroundImage = '';
+    };
+    setAvText('sidebarAv');
+    setAvText('topbarAv');
+  }
 
   document.getElementById('avatarNamePreview').textContent = name || 'Nama Kamu';
   document.getElementById('avatarEmailPreview').textContent = email || '—';
-
-  // Update sidebar & topbar
-  document.getElementById('sidebarAv').textContent = initials;
-  document.getElementById('sidebarAv').style.background = avatarColor;
-  document.getElementById('topbarAv').textContent = initials;
-  document.getElementById('topbarAv').style.background = avatarColor;
   document.getElementById('sidebarName').textContent = name || '—';
+}
+
+/* ── Photo Upload & Crop ── */
+let cropImg = null;
+let cropOffsetX = 0, cropOffsetY = 0;
+let cropDragStartX = 0, cropDragStartY = 0;
+let cropIsDragging = false;
+
+function triggerPhotoUpload() {
+  document.getElementById('photoInput').click();
+}
+
+function handlePhotoSelect(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  if (!file.type.startsWith('image/')) {
+    showSettingsToast('File harus berupa gambar!', true); return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showSettingsToast('Ukuran foto maksimal 5 MB!', true); return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => openCropDialog(e.target.result);
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+
+function openCropDialog(src) {
+  cropOffsetX = 0; cropOffsetY = 0;
+  document.getElementById('cropZoom').value = 1;
+
+  const img = document.getElementById('cropImage');
+  img.src = src;
+  img.onload = () => {
+    cropImg = img;
+    updateCrop();
+    setupCropDrag();
+  };
+  document.getElementById('photoCropDialog').classList.add('show');
+}
+
+function updateCrop() {
+  const img = document.getElementById('cropImage');
+  const zoom = parseFloat(document.getElementById('cropZoom').value);
+  const vw = 220, vh = 220;
+  const nw = img.naturalWidth, nh = img.naturalHeight;
+  const scale = Math.max(vw / nw, vh / nh) * zoom;
+  const dispW = nw * scale, dispH = nh * scale;
+
+  // Clamp offset so image always covers the circle
+  const maxX = (dispW - vw) / 2;
+  const maxY = (dispH - vh) / 2;
+  cropOffsetX = Math.max(-maxX, Math.min(maxX, cropOffsetX));
+  cropOffsetY = Math.max(-maxY, Math.min(maxY, cropOffsetY));
+
+  img.style.width = dispW + 'px';
+  img.style.height = dispH + 'px';
+  img.style.transform = `translate(calc(-50% + ${cropOffsetX}px), calc(-50% + ${cropOffsetY}px)) `;
+}
+
+function setupCropDrag() {
+  const vp = document.querySelector('.crop-viewport');
+  vp.onmousedown = (e) => {
+    cropIsDragging = true;
+    cropDragStartX = e.clientX - cropOffsetX;
+    cropDragStartY = e.clientY - cropOffsetY;
+    e.preventDefault();
+  };
+  window.onmousemove = (e) => {
+    if (!cropIsDragging) return;
+    cropOffsetX = e.clientX - cropDragStartX;
+    cropOffsetY = e.clientY - cropDragStartY;
+    updateCrop();
+  };
+  window.onmouseup = () => { cropIsDragging = false; };
+
+  // Touch support
+  vp.ontouchstart = (e) => {
+    cropIsDragging = true;
+    cropDragStartX = e.touches[0].clientX - cropOffsetX;
+    cropDragStartY = e.touches[0].clientY - cropOffsetY;
+  };
+  vp.ontouchmove = (e) => {
+    if (!cropIsDragging) return;
+    cropOffsetX = e.touches[0].clientX - cropDragStartX;
+    cropOffsetY = e.touches[0].clientY - cropDragStartY;
+    updateCrop();
+    e.preventDefault();
+  };
+  vp.ontouchend = () => { cropIsDragging = false; };
+}
+
+function applyCrop() {
+  const img = document.getElementById('cropImage');
+  const zoom = parseFloat(document.getElementById('cropZoom').value);
+  const size = 220;
+  const nw = img.naturalWidth, nh = img.naturalHeight;
+  const scale = Math.max(size / nw, size / nh) * zoom;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Draw circle clip
+  ctx.beginPath();
+  ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+  ctx.clip();
+
+  const dispW = nw * scale, dispH = nh * scale;
+  const dx = (size - dispW) / 2 + cropOffsetX;
+  const dy = (size - dispH) / 2 + cropOffsetY;
+  ctx.drawImage(img, dx, dy, dispW, dispH);
+
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  localStorage.setItem('myStorageAvatarPhoto', dataUrl);
+
+  closeCropDialog();
+  const name = document.getElementById('inputDisplayName').value.trim() ||
+    (document.getElementById('inputFirstName').value.trim() + ' ' + document.getElementById('inputLastName').value.trim()).trim() || 'User';
+  updateAvatarPreview(name, currentUser ? currentUser.email : '');
+  showSettingsToast('Foto profil berhasil diperbarui!');
+}
+
+function closeCropDialog() {
+  document.getElementById('photoCropDialog').classList.remove('show');
+  cropIsDragging = false;
+}
+
+function removePhoto() {
+  localStorage.removeItem('myStorageAvatarPhoto');
+  const name = document.getElementById('inputDisplayName').value.trim() || 'User';
+  updateAvatarPreview(name, currentUser ? currentUser.email : '');
+  showSettingsToast('Foto profil dihapus');
 }
 
 async function saveProfile() {

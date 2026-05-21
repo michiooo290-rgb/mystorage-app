@@ -1123,7 +1123,20 @@ document.addEventListener('DOMContentLoaded', async function() {
   const email = user.email;
 
   document.querySelectorAll('.user-name').forEach(function(el) { el.textContent = fullName; });
-  document.querySelectorAll('.user-av, .topbar-av').forEach(function(el) { el.textContent = userInitials; });
+
+  // Apply avatar photo or initials
+  const savedPhoto = localStorage.getItem('myStorageAvatarPhoto');
+  const savedColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+  document.querySelectorAll('.user-av, .topbar-av').forEach(function(el) {
+    if (savedPhoto) {
+      el.textContent = '';
+      el.style.background = 'url(' + savedPhoto + ') center/cover';
+      el.style.backgroundSize = 'cover';
+    } else {
+      el.textContent = userInitials;
+      el.style.background = savedColor;
+    }
+  });
   const roleEl = document.querySelector('.user-role');
   if (roleEl) roleEl.textContent = email;
 
