@@ -253,9 +253,12 @@ function renderFiles() {
 
   const FOLDER_BADGE = {};
   const badgeColors = [
-    { bg: '#e0e7ff', color: '#4338ca' }, { bg: '#e0f2fe', color: '#0369a1' },
-    { bg: '#dcfce7', color: '#15803d' }, { bg: '#ffedd5', color: '#c2410c' },
-    { bg: '#fce7f3', color: '#9d174d' }, { bg: '#ede9fe', color: '#6d28d9' },
+    { bg: 'rgba(15,14,13,0.06)',   color: '#5a5754' },
+    { bg: 'rgba(200,96,42,0.08)',  color: '#92400e' },
+    { bg: 'rgba(29,78,216,0.07)',  color: '#1e40af' },
+    { bg: 'rgba(45,106,79,0.07)',  color: '#166534' },
+    { bg: 'rgba(126,34,206,0.07)', color: '#6b21a8' },
+    { bg: 'rgba(3,105,161,0.07)',  color: '#075985' },
   ];
   allFolders.forEach(function(f, i) {
     FOLDER_BADGE[f.name] = badgeColors[i % badgeColors.length];
@@ -336,12 +339,12 @@ function renderShared() {
   }
 
   const FILE_ICONS_LOCAL = {
-    pdf: { icon: 'ti-file-type-pdf', color: '#ef4444', bg: '#fff0f0' },
-    doc: { icon: 'ti-file-text', color: '#6366f1', bg: '#eef2ff' },
-    foto: { icon: 'ti-photo', color: '#22c55e', bg: '#dcfce7' },
-    video: { icon: 'ti-video', color: '#f97316', bg: '#fff7ed' },
-    spreadsheet: { icon: 'ti-table', color: '#0ea5e9', bg: '#f0f9ff' },
-    audio: { icon: 'ti-music', color: '#a855f7', bg: '#f3e8ff' },
+    pdf:         { icon: 'ti-file-type-pdf', color: '#c0392b', bg: 'rgba(192,57,43,0.08)' },
+    doc:         { icon: 'ti-file-text',     color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)' },
+    foto:        { icon: 'ti-photo',         color: '#2d6a4f', bg: 'rgba(45,106,79,0.08)' },
+    video:       { icon: 'ti-video',         color: '#c8602a', bg: 'rgba(200,96,42,0.08)' },
+    spreadsheet: { icon: 'ti-table',         color: '#0369a1', bg: 'rgba(3,105,161,0.08)' },
+    audio:       { icon: 'ti-music',         color: '#7e22ce', bg: 'rgba(126,34,206,0.08)' },
   };
 
   list.innerHTML = sharedLinks.map(function(s, i) {
@@ -352,17 +355,17 @@ function renderShared() {
     const dateStr = created.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
     return (
-      '<div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;animation-delay:' + (i*0.05) + 's" class="file-card" style="margin:0">' +
+      '<div style="background:#fff;border:1px solid rgba(15,14,13,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(15,14,13,0.06)" class="shared-item">' +
       '<div style="width:40px;height:40px;border-radius:10px;background:' + iconInfo.bg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
       '<i class="ti ' + iconInfo.icon + '" style="color:' + iconInfo.color + ';font-size:18px"></i></div>' +
       '<div style="flex:1;min-width:0">' +
-      '<div style="font-size:13.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.name) + '</div>' +
-      '<div style="font-size:11.5px;color:var(--text-faint);margin-top:3px">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#f87171' : '#fbbf24') + '">' + daysLeft + ' hari tersisa</span></div>' +
+      '<div style="font-size:13px;font-weight:500;color:#0f0e0d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.name) + '</div>' +
+      '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'DM Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0">' +
-      '<button onclick="copySharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text-muted);font-size:12px;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background=\'rgba(124,58,237,0.12)\';this.style.color=\'#e2e8f0\'" onmouseleave="this.style.background=\'rgba(255,255,255,0.05)\';this.style.color=\'var(--text-muted)\'">' +
-      '<i class="ti ti-copy" style="font-size:13px"></i>Salin Link</button>' +
-      '<button onclick="removeSharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background=\'rgba(239,68,68,0.18)\'" onmouseleave="this.style.background=\'rgba(239,68,68,0.08)\'">' +
+      '<button onclick="copySharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseenter="this.style.background=\'#0f0e0d\';this.style.color=\'#fff\';this.style.borderColor=\'transparent\'" onmouseleave="this.style.background=\'#f7f5f2\';this.style.color=\'#5a5754\';this.style.borderColor=\'rgba(15,14,13,0.14)\'">' +
+      '<i class="ti ti-copy" style="font-size:13px"></i>Salin</button>' +
+      '<button onclick="removeSharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.15);border-radius:8px;color:#c0392b;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseenter="this.style.background=\'rgba(192,57,43,0.12)\'" onmouseleave="this.style.background=\'rgba(192,57,43,0.06)\'">' +
       '<i class="ti ti-trash" style="font-size:13px"></i>Hapus</button>' +
       '</div></div>'
     );
