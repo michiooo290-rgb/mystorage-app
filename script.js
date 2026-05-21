@@ -613,9 +613,252 @@ function setNav(el) {
   }
 }
 
-/* ── MODAL ── */
+/* ── UPLOAD TAB SWITCH ── */
+let currentUploadTab = 'files';
+let pendingFolderData = null; // { subfolders: {name: File[]}, rootFiles: File[] }
+
+function switchUploadTab(tab) {
+  currentUploadTab = tab;
+  const tabFiles = document.getElementById('tabFiles');
+  const tabFolder = document.getElementById('tabFolder');
+  const dzWrap = document.getElementById('dropZoneWrap');
+  const dzFolderWrap = document.getElementById('dropZoneFolderWrap');
+  const folderRow = document.getElementById('folderSelectRow');
+
+  if (tab === 'files') {
+    tabFiles.style.background = '#fff';
+    tabFiles.style.fontWeight = '600';
+    tabFiles.style.color = '#0f0e0d';
+    tabFiles.style.boxShadow = '0 1px 4px rgba(15,14,13,0.08)';
+    tabFolder.style.background = 'transparent';
+    tabFolder.style.fontWeight = '500';
+    tabFolder.style.color = '#9a9693';
+    tabFolder.style.boxShadow = 'none';
+    dzWrap.style.display = 'block';
+    dzFolderWrap.style.display = 'none';
+    if (folderRow) folderRow.style.display = 'flex';
+    document.getElementById('selectedFiles').textContent = '';
+    pendingFolderData = null;
+  } else {
+    tabFolder.style.background = '#fff';
+    tabFolder.style.fontWeight = '600';
+    tabFolder.style.color = '#0f0e0d';
+    tabFolder.style.boxShadow = '0 1px 4px rgba(15,14,13,0.08)';
+    tabFiles.style.background = 'transparent';
+    tabFiles.style.fontWeight = '500';
+    tabFiles.style.color = '#9a9693';
+    tabFiles.style.boxShadow = 'none';
+    dzWrap.style.display = 'none';
+    dzFolderWrap.style.display = 'block';
+    if (folderRow) folderRow.style.display = 'none';
+    document.getElementById('selectedFiles').textContent = '';
+  }
+}
+
+function handleFolderSelect(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+
+  // Ambil nama folder root dari path pertama
+  const rootFolderName = files[0].webkitRelativePath.split('/')[0];
+
+  // Kelompokkan: subfolder level 1 → file-filenya, dan file langsung di root
+  const subfolderMap = {}; // subfolderName -> File[]
+  const rootFiles = [];
+
+  files.forEach(function(f) {
+    const parts = f.webkitRelativePath.split('/');
+    // parts[0] = root folder, parts[1] = subfolder atau file
+    if (parts.length === 2) {
+      // File langsung di root
+      rootFiles.push(f);
+    } else if (parts.length >= 3) {
+      // File di subfolder (pakai subfolder level 1 sebagai nama folder)
+      const sub = parts[1];
+      if (!subfolderMap[sub]) subfolderMap[sub] = [];
+      subfolderMap[sub].push(f);
+    }
+  });
+
+  pendingFolderData = { rootFolderName, subfolderMap, rootFiles };
+
+  // Render preview
+  const preview = document.getElementById('folderPreview');
+  const subNames = Object.keys(subfolderMap);
+  const totalFiles = files.length;
+
+  let html = '<div style="font-weight:600;color:#0f0e0d;margin-bottom:8px;display:flex;align-items:center;gap:6px">' +
+    '<i class="ti ti-folder" style="color:#f97316"></i>' + escapeHtml(rootFolderName) +
+    '<span style="font-weight:400;color:#9a9693;font-size:11px">(' + totalFiles + ' file total)</span></div>';
+
+  if (rootFiles.length > 0) {
+    html += '<div style="padding:5px 8px;background:rgba(99,102,241,0.07);border-radius:7px;margin-bottom:6px;color:#3730a3;font-size:11.5px">' +
+      '<i class="ti ti-files" style="font-size:12px;margin-right:4px"></i>' +
+      rootFiles.length + ' file langsung di folder "' + escapeHtml(rootFolderName) + '"</div>';
+  }
+
+  if (subNames.length > 0) {
+    html += '<div style="display:flex;flex-direction:column;gap:4px">';
+    subNames.slice(0, 8).forEach(function(sub) {
+      html += '<div style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:rgba(15,14,13,0.03);border-radius:6px">' +
+        '<i class="ti ti-folder" style="color:#fbbf24;font-size:13px"></i>' +
+        '<span style="color:#0f0e0d;font-size:11.5px">' + escapeHtml(sub) + '</span>' +
+        '<span style="color:#9a9693;font-size:11px;margin-left:auto">' + subfolderMap[sub].length + ' file</span></div>';
+    });
+    if (subNames.length > 8) {
+      html += '<div style="text-align:center;color:#9a9693;font-size:11px;padding:3px">...dan ' + (subNames.length - 8) + ' subfolder lainnya</div>';
+    }
+    html += '</div>';
+  }
+
+  preview.innerHTML = html;
+  preview.style.display = 'block';
+
+  document.getElementById('selectedFiles').innerHTML =
+    '📁 <strong>' + escapeHtml(rootFolderName) + '</strong> — ' + totalFiles + ' file, ' + (subNames.length + (rootFiles.length > 0 ? 1 : 0)) + ' folder akan dibuat';
+}
+
+function doUpload() {
+  if (currentUploadTab === 'folder') {
+    uploadFolder();
+  } else {
+    uploadFile();
+  }
+}
+
+/* ── UPLOAD FOLDER (webkitdirectory) ── */
+async function uploadFolder() {
+  if (!pendingFolderData) { showToast('Pilih folder dulu!'); return; }
+
+  const { rootFolderName, subfolderMap, rootFiles } = pendingFolderData;
+  const { data: authData } = await sb.auth.getSession();
+  const uid = authData && authData.session ? authData.session.user.id : null;
+
+  const btnConfirm = document.getElementById('btnUploadConfirm');
+  const btnCancel  = document.querySelector('#modal .btn-cancel');
+  btnConfirm.disabled = true;
+  if (btnCancel) btnCancel.disabled = true;
+
+  let progressBox = document.getElementById('uploadProgressBox');
+  if (!progressBox) {
+    progressBox = document.createElement('div');
+    progressBox.id = 'uploadProgressBox';
+    progressBox.style.cssText = 'margin-bottom:14px';
+    document.getElementById('selectedFiles').after(progressBox);
+  }
+
+  // Kumpulkan semua folder yang perlu dibuat
+  const foldersToCreate = [];
+  if (rootFiles.length > 0) foldersToCreate.push(rootFolderName);
+  Object.keys(subfolderMap).forEach(function(sub) { foldersToCreate.push(sub); });
+
+  // Buat folder-folder yang belum ada di DB
+  progressBox.innerHTML = '<div style="font-size:12px;color:#9a9693">Membuat folder...</div>';
+  for (let i = 0; i < foldersToCreate.length; i++) {
+    const fname = foldersToCreate[i];
+    const exists = allFolders.some(function(f) { return f.name.toLowerCase() === fname.toLowerCase(); });
+    if (!exists) {
+      const { error } = await sb.from('folders').insert({ name: fname, user_id: uid });
+      if (error) console.error('Gagal buat folder:', fname, error.message);
+    }
+  }
+  await loadFolders();
+
+  // Upload semua file
+  const allFilesToUpload = [];
+  rootFiles.forEach(function(f) { allFilesToUpload.push({ file: f, folderName: rootFolderName }); });
+  Object.keys(subfolderMap).forEach(function(sub) {
+    subfolderMap[sub].forEach(function(f) { allFilesToUpload.push({ file: f, folderName: sub }); });
+  });
+
+  let successCount = 0;
+  let failCount = 0;
+  const total = allFilesToUpload.length;
+
+  for (let i = 0; i < total; i++) {
+    const { file, folderName } = allFilesToUpload[i];
+    const pct = Math.round((i / total) * 100);
+
+    progressBox.innerHTML =
+      '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Upload ' + (i + 1) + '/' + total + ': <span style="color:#0f0e0d">' + escapeHtml(file.name) + '</span></div>' +
+      '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:#c8602a;border-radius:99px;transition:width 0.3s ease"></div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:#9a9693;margin-top:5px;text-align:right">' + pct + '%</div>';
+    btnConfirm.textContent = 'Uploading ' + (i+1) + '/' + total;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    let type = 'doc';
+    if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
+    else if (['mp4','mov','avi','mkv','webm'].includes(ext)) type = 'video';
+    else if (ext === 'pdf') type = 'pdf';
+    else if (['xlsx','csv','xls'].includes(ext)) type = 'spreadsheet';
+    else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
+    else if (['doc','docx','txt','odt','rtf','pptx','ppt'].includes(ext)) type = 'doc';
+
+    const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+    const sizeStr = file.size > 1024*1024
+      ? (file.size / (1024*1024)).toFixed(1) + ' MB'
+      : (file.size / 1024).toFixed(0) + ' KB';
+
+    const filePath = folderName + '/' + Date.now() + '_' + file.name;
+    const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
+    if (uploadError) { console.error('Upload error:', uploadError.message); failCount++; continue; }
+
+    const { error: insertError } = await sb.from('files').insert({
+      name: file.name,
+      folder_name: folderName,
+      type: type,
+      size: sizeStr,
+      icon: iconInfo.icon,
+      icon_color: iconInfo.iconColor,
+      icon_bg: iconInfo.iconBg,
+      storage_path: filePath,
+      user_id: uid
+    });
+    if (insertError) { console.error('Insert error:', insertError.message); failCount++; }
+    else successCount++;
+  }
+
+  progressBox.innerHTML =
+    '<div style="font-size:12px;color:#2d6a4f;margin-bottom:6px">✅ Selesai!</div>' +
+    '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
+      '<div style="height:100%;width:100%;background:#2d6a4f;border-radius:99px"></div>' +
+    '</div>';
+
+  btnConfirm.disabled = false;
+  if (btnCancel) btnCancel.disabled = false;
+  btnConfirm.textContent = 'Upload';
+
+  setTimeout(() => { closeModal(); }, 600);
+
+  if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal.');
+  else if (failCount > 0) showToast('Gagal upload ' + failCount + ' file.');
+  else showToast('📁 Folder berhasil diupload! ' + successCount + ' file, ' + foldersToCreate.length + ' folder dibuat.');
+
+  pendingFolderData = null;
+  await loadAll();
+}
+
+
 function openModal() {
   document.getElementById('modal').classList.add('show');
+  // Reset ke tab file biasa
+  currentUploadTab = 'files';
+  pendingFolderData = null;
+  const dzWrap = document.getElementById('dropZoneWrap');
+  const dzFolderWrap = document.getElementById('dropZoneFolderWrap');
+  if (dzWrap) dzWrap.style.display = 'block';
+  if (dzFolderWrap) dzFolderWrap.style.display = 'none';
+  const folderRow = document.getElementById('folderSelectRow');
+  if (folderRow) folderRow.style.display = 'flex';
+  const preview = document.getElementById('folderPreview');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+  // Reset tab button styles
+  const tabFiles = document.getElementById('tabFiles');
+  const tabFolder = document.getElementById('tabFolder');
+  if (tabFiles) { tabFiles.style.background='#fff'; tabFiles.style.fontWeight='600'; tabFiles.style.color='#0f0e0d'; tabFiles.style.boxShadow='0 1px 4px rgba(15,14,13,0.08)'; }
+  if (tabFolder) { tabFolder.style.background='transparent'; tabFolder.style.fontWeight='500'; tabFolder.style.color='#9a9693'; tabFolder.style.boxShadow='none'; }
   // Auto-fill folder aktif jika sedang membuka folder
   if (currentFolderFilter) {
     const sel = document.getElementById('folderSelect');
@@ -628,9 +871,16 @@ function closeModal() {
   document.getElementById('selectedFiles').textContent = '';
   document.getElementById('folderSelect').value = '';
   document.getElementById('fileInput').value = '';
+  const folderInput = document.getElementById('folderInput');
+  if (folderInput) folderInput.value = '';
   droppedFiles = null;
+  pendingFolderData = null;
   const pb = document.getElementById('uploadProgressBox');
   if (pb) pb.remove();
+  const preview = document.getElementById('folderPreview');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+  const btnConfirm = document.getElementById('btnUploadConfirm');
+  if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
 }
 
 /* ── ADD FOLDER ── */
