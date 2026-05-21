@@ -1000,6 +1000,219 @@ body::before {
 .empty-state p { font-size: 13px; color: var(--ink-4); }
 
 /* ═══════════════════════════
+   CUSTOM DIALOG (confirm / prompt)
+   ═══════════════════════════ */
+.custom-dialog-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 14, 13, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.custom-dialog-overlay.show {
+  display: flex;
+  animation: cdOverlayIn 0.25s ease both;
+}
+@keyframes cdOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.custom-dialog {
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px 28px;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  border: 1px solid var(--border);
+  box-shadow:
+    0 24px 80px rgba(15, 14, 13, 0.25),
+    0 8px 24px rgba(15, 14, 13, 0.12),
+    0 0 0 1px rgba(15, 14, 13, 0.04);
+  animation: cdDialogIn 0.38s var(--ease-spring) both;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle gradient accent line at top */
+.custom-dialog::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #e8834a, var(--accent));
+  opacity: 0.8;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+@keyframes cdDialogIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Icon Badge ── */
+.custom-dialog-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 26px;
+  background: rgba(192, 57, 43, 0.08);
+  color: var(--red);
+  border: 1px solid rgba(192, 57, 43, 0.12);
+  animation: cdIconPulse 2s ease-in-out infinite;
+}
+.custom-dialog-icon.prompt {
+  background: rgba(200, 96, 42, 0.08);
+  color: var(--accent);
+  border-color: rgba(200, 96, 42, 0.15);
+}
+.custom-dialog-icon.logout {
+  background: rgba(249, 115, 22, 0.08);
+  color: #f97316;
+  border-color: rgba(249, 115, 22, 0.12);
+}
+.custom-dialog-icon.success {
+  background: rgba(45, 106, 79, 0.08);
+  color: var(--green);
+  border-color: rgba(45, 106, 79, 0.12);
+}
+
+@keyframes cdIconPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.04); }
+}
+
+/* ── Typography ── */
+.custom-dialog-title {
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.custom-dialog-msg {
+  font-size: 13.5px;
+  color: var(--ink-3);
+  line-height: 1.55;
+  margin-bottom: 24px;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Input (for prompt dialog) ── */
+.custom-dialog-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--paper);
+  outline: none;
+  margin-bottom: 24px;
+  transition: all var(--t-fast);
+}
+.custom-dialog-input:focus {
+  border-color: var(--accent);
+  background: var(--white);
+  box-shadow: 0 0 0 4px rgba(200, 96, 42, 0.08);
+}
+.custom-dialog-input::placeholder {
+  color: var(--ink-5);
+}
+
+/* ── Footer Buttons ── */
+.custom-dialog-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.custom-dialog-btn {
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  font-family: 'Instrument Sans', 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  border: none;
+  min-width: 110px;
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-dialog-btn.cancel {
+  background: var(--paper);
+  color: var(--ink-3);
+  border: 1px solid var(--border-2);
+}
+.custom-dialog-btn.cancel:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--border-3);
+}
+
+.custom-dialog-btn.confirm {
+  background: var(--ink);
+  color: var(--white);
+  box-shadow: 0 2px 8px rgba(15, 14, 13, 0.15);
+}
+.custom-dialog-btn.confirm:hover {
+  background: var(--ink-2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(15, 14, 13, 0.2);
+}
+.custom-dialog-btn.confirm:active {
+  transform: translateY(0);
+}
+
+/* Danger variant */
+.custom-dialog-btn.danger {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(192, 57, 43, 0.2);
+}
+.custom-dialog-btn.danger:hover {
+  background: #a5322a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(192, 57, 43, 0.25);
+}
+.custom-dialog-btn.danger:active {
+  transform: translateY(0);
+}
+
+/* Logout variant */
+.custom-dialog-btn.logout-confirm {
+  background: linear-gradient(135deg, #f97316, var(--accent));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+}
+.custom-dialog-btn.logout-confirm:hover {
+  background: linear-gradient(135deg, #ea580c, #a84e20);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.25);
+}
+.custom-dialog-btn.logout-confirm:active {
+  transform: translateY(0);
+}
+
+/* ═══════════════════════════
    RESPONSIVE
    ═══════════════════════════ */
 @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
@@ -1010,8 +1223,20 @@ body::before {
   .topbar { padding: 0 16px; }
   .content { padding: 16px; gap: 20px; }
   .file-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  .custom-dialog {
+    width: calc(100vw - 32px);
+    padding: 28px 20px 22px;
+  }
 }
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }
   .search { display: none; }
+
+  .custom-dialog-footer {
+    flex-direction: column-reverse;
+  }
+  .custom-dialog-btn {
+    width: 100%;
+  }
 }

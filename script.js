@@ -31,6 +31,89 @@ let showOnlyFavorites = false;
 let userInitials = 'US';
 let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
 
+/* ── CUSTOM DIALOG UTILITIES ── */
+function customConfirm({ title, message, confirmText, cancelText, icon, iconClass, confirmBtnClass } = {}) {
+  return new Promise(function(resolve) {
+    var overlay = document.getElementById('customConfirm');
+    var titleEl = document.getElementById('confirmTitle');
+    var msgEl = document.getElementById('confirmMsg');
+    var okBtn = document.getElementById('confirmOk');
+    var cancelBtn = document.getElementById('confirmCancel');
+    var iconEl = document.getElementById('confirmIcon');
+
+    titleEl.textContent = title || 'Konfirmasi';
+    msgEl.textContent = message || 'Apakah Anda yakin?';
+    okBtn.textContent = confirmText || 'Ya, Lanjutkan';
+    cancelBtn.textContent = cancelText || 'Batal';
+
+    // Set icon
+    iconEl.className = 'custom-dialog-icon' + (iconClass ? ' ' + iconClass : '');
+    iconEl.innerHTML = '<i class="ti ' + (icon || 'ti-alert-triangle') + '"></i>';
+
+    // Set confirm button style
+    okBtn.className = 'custom-dialog-btn ' + (confirmBtnClass || 'confirm');
+
+    overlay.classList.add('show');
+
+    function cleanup() {
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+    }
+    function onOk() { cleanup(); resolve(true); }
+    function onCancel() { cleanup(); resolve(false); }
+    function onOverlay(e) { if (e.target === overlay) { cleanup(); resolve(false); } }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+  });
+}
+
+function customPrompt({ title, message, placeholder, defaultValue, confirmText, cancelText, icon, iconClass } = {}) {
+  return new Promise(function(resolve) {
+    var overlay = document.getElementById('customPrompt');
+    var titleEl = document.getElementById('promptTitle');
+    var msgEl = document.getElementById('promptMsg');
+    var input = document.getElementById('promptInput');
+    var okBtn = document.getElementById('promptOk');
+    var cancelBtn = document.getElementById('promptCancel');
+    var iconEl = document.getElementById('promptIcon');
+
+    titleEl.textContent = title || 'Input';
+    msgEl.textContent = message || 'Masukkan data:';
+    input.placeholder = placeholder || 'Ketik di sini...';
+    input.value = defaultValue || '';
+    okBtn.textContent = confirmText || 'Simpan';
+    cancelBtn.textContent = cancelText || 'Batal';
+
+    // Set icon
+    iconEl.className = 'custom-dialog-icon' + (iconClass ? ' ' + iconClass : ' prompt');
+    iconEl.innerHTML = '<i class="ti ' + (icon || 'ti-edit') + '"></i>';
+
+    overlay.classList.add('show');
+    setTimeout(function() { input.focus(); input.select(); }, 100);
+
+    function cleanup() {
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      input.removeEventListener('keydown', onKey);
+    }
+    function onOk() { var val = input.value; cleanup(); resolve(val); }
+    function onCancel() { cleanup(); resolve(null); }
+    function onOverlay(e) { if (e.target === overlay) { cleanup(); resolve(null); } }
+    function onKey(e) { if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+    input.addEventListener('keydown', onKey);
+  });
+}
+
 /* ── UTILITY ── */
 function resetFolderUI() {
   document.querySelectorAll('.folder-wrap').forEach(function(w) { w.classList.remove('active'); });
@@ -380,7 +463,14 @@ function copySharedLink(idx) {
     navigator.clipboard.writeText(s.url);
     showToast('Link berhasil disalin!');
   } catch {
-    prompt('Salin link ini:', s.url);
+    customPrompt({
+      title: 'Salin Link',
+      message: 'Salin link berikut secara manual:',
+      defaultValue: s.url,
+      icon: 'ti-link',
+      iconClass: 'prompt',
+      confirmText: 'Tutup'
+    });
   }
 }
 
@@ -543,7 +633,14 @@ function closeModal() {
 
 /* ── ADD FOLDER ── */
 async function addFolder() {
-  const name = prompt('Nama folder baru:');
+  const name = await customPrompt({
+    title: 'Buat Folder Baru',
+    message: 'Masukkan nama untuk folder baru Anda:',
+    placeholder: 'Contoh: Tugas Kuliah',
+    icon: 'ti-folder-plus',
+    iconClass: 'prompt',
+    confirmText: 'Buat Folder'
+  });
   if (!name || !name.trim()) return;
   if (allFolders.some(function(f) { return f.name.toLowerCase() === name.trim().toLowerCase(); })) {
     showToast('Folder "' + name.trim() + '" sudah ada!');
@@ -568,7 +665,14 @@ function deleteFolderByName(btn) {
 async function deleteFolder(folderName) {
   const filesInFolder = allFiles.filter(function(f) { return f.folder_name === folderName; });
   if (filesInFolder.length > 0) {
-    if (!confirm('Folder "' + folderName + '" masih berisi ' + filesInFolder.length + ' file.\nHapus semua file dan folder ini?')) return;
+    const confirmed = await customConfirm({
+      title: 'Hapus Folder & Isi',
+      message: 'Folder "' + folderName + '" masih berisi ' + filesInFolder.length + ' file. Semua file di dalamnya akan dihapus permanen.',
+      icon: 'ti-trash',
+      confirmText: 'Hapus Semua',
+      confirmBtnClass: 'danger'
+    });
+    if (!confirmed) return;
     showToast('Menghapus isi folder...');
     for (let i = 0; i < filesInFolder.length; i++) {
       const file = filesInFolder[i];
@@ -577,7 +681,14 @@ async function deleteFolder(folderName) {
       await sb.from('files').delete().eq('id', file.id);
     }
   } else {
-    if (!confirm('Yakin ingin menghapus folder "' + folderName + '"?')) return;
+    const confirmed = await customConfirm({
+      title: 'Hapus Folder',
+      message: 'Yakin ingin menghapus folder "' + folderName + '"? Tindakan ini tidak bisa dibatalkan.',
+      icon: 'ti-trash',
+      confirmText: 'Ya, Hapus',
+      confirmBtnClass: 'danger'
+    });
+    if (!confirmed) return;
   }
   const { error } = await sb.from('folders').delete().eq('name', folderName);
   if (error) { showToast('Gagal hapus folder: ' + error.message); return; }
@@ -650,7 +761,14 @@ async function shareFile() {
     await navigator.clipboard.writeText(data.signedUrl);
     showToast('Link berhasil disalin ke clipboard!');
   } catch (clipErr) {
-    prompt('Salin link berikut (Ctrl+C):', data.signedUrl);
+    customPrompt({
+      title: 'Salin Link Berbagi',
+      message: 'Salin link berikut secara manual (Ctrl+C):',
+      defaultValue: data.signedUrl,
+      icon: 'ti-link',
+      iconClass: 'prompt',
+      confirmText: 'Tutup'
+    });
     showToast('Salin link dari dialog ya!');
   }
 }
@@ -661,7 +779,15 @@ async function renameFile() {
   const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
   if (!file) return;
   document.getElementById('ctxMenu').classList.remove('show');
-  const newName = prompt('Masukkan nama file baru:', file.name);
+  const newName = await customPrompt({
+    title: 'Rename File',
+    message: 'Masukkan nama baru untuk file ini:',
+    defaultValue: file.name,
+    placeholder: 'Nama file baru...',
+    icon: 'ti-edit',
+    iconClass: 'prompt',
+    confirmText: 'Ubah Nama'
+  });
   if (!newName || newName.trim() === '' || newName.trim() === file.name) return;
   showToast('Mengubah nama file...');
   const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
@@ -765,7 +891,14 @@ async function deleteFile() {
   if (!ctxTarget) return;
   const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
   if (!file) return;
-  if (!confirm('Yakin ingin menghapus file "' + file.name + '"? File yang dihapus tidak bisa dikembalikan.')) {
+  const confirmed = await customConfirm({
+    title: 'Hapus File Permanen',
+    message: 'Yakin ingin menghapus "' + file.name + '"? File yang dihapus tidak bisa dikembalikan.',
+    icon: 'ti-trash',
+    confirmText: 'Ya, Hapus',
+    confirmBtnClass: 'danger'
+  });
+  if (!confirmed) {
     ctxTarget = null;
     return;
   }
@@ -971,7 +1104,15 @@ document.addEventListener('DOMContentLoaded', async function() {
   if (userChip) {
     userChip.title = 'Klik untuk logout';
     userChip.onclick = async function() {
-      if (confirm('Yakin ingin logout?')) {
+      const confirmed = await customConfirm({
+        title: 'Logout',
+        message: 'Yakin ingin keluar dari akun Anda?',
+        icon: 'ti-logout',
+        iconClass: 'logout',
+        confirmText: 'Ya, Logout',
+        confirmBtnClass: 'logout-confirm'
+      });
+      if (confirmed) {
         await sb.auth.signOut();
         window.location.href = 'login.html';
       }

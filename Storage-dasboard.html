@@ -284,6 +284,37 @@
   <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus Permanen</div>
 </div>
 
+<!-- Custom Confirm Dialog -->
+<div class="custom-dialog-overlay" id="customConfirm">
+  <div class="custom-dialog">
+    <div class="custom-dialog-icon" id="confirmIcon">
+      <i class="ti ti-alert-triangle"></i>
+    </div>
+    <div class="custom-dialog-title" id="confirmTitle">Konfirmasi</div>
+    <div class="custom-dialog-msg" id="confirmMsg">Apakah Anda yakin?</div>
+    <div class="custom-dialog-footer">
+      <button class="custom-dialog-btn cancel" id="confirmCancel">Batal</button>
+      <button class="custom-dialog-btn confirm" id="confirmOk">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Custom Prompt Dialog -->
+<div class="custom-dialog-overlay" id="customPrompt">
+  <div class="custom-dialog">
+    <div class="custom-dialog-icon prompt" id="promptIcon">
+      <i class="ti ti-edit"></i>
+    </div>
+    <div class="custom-dialog-title" id="promptTitle">Input</div>
+    <div class="custom-dialog-msg" id="promptMsg">Masukkan data:</div>
+    <input type="text" class="custom-dialog-input" id="promptInput" placeholder="Ketik di sini..." />
+    <div class="custom-dialog-footer">
+      <button class="custom-dialog-btn cancel" id="promptCancel">Batal</button>
+      <button class="custom-dialog-btn confirm" id="promptOk">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
   <span id="toastMsg">Berhasil!</span>
