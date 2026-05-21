@@ -224,7 +224,7 @@ function renderFiles() {
     const isFav = favs.includes(String(f.id));
 
     return (
-      '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's" data-file-id="' + safeId + '" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+      '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer;" data-file-id="' + safeId + '" onclick="openFile(\'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
       '<div class="file-top">' +
       '<div class="file-icon-box" style="background:' + iconBg + '">' +
       '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
@@ -240,6 +240,20 @@ function renderFiles() {
   }).join('');
 
   document.getElementById('fileCount').textContent = filtered.length;
+}
+
+/* ── OPEN FILE (viewer) ── */
+function openFile(id) {
+  const file = allFiles.find(function(f) { return String(f.id) === String(id); });
+  if (!file) return;
+  const path = file.storage_path || (file.folder_name + '/' + file.name);
+  const params = new URLSearchParams({
+    path: path,
+    name: file.name,
+    type: file.type || 'doc',
+    size: file.size || ''
+  });
+  window.open('viewer.html?' + params.toString(), '_blank');
 }
 
 /* ── FILTER & SEARCH ── */
