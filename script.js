@@ -519,7 +519,14 @@ function setNav(el) {
 }
 
 /* ── MODAL ── */
-function openModal() { document.getElementById('modal').classList.add('show'); }
+function openModal() {
+  document.getElementById('modal').classList.add('show');
+  // Auto-fill folder aktif jika sedang membuka folder
+  if (currentFolderFilter) {
+    const sel = document.getElementById('folderSelect');
+    if (sel) sel.value = currentFolderFilter;
+  }
+}
 
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
@@ -665,6 +672,74 @@ async function renameFile() {
   renderStats();
 }
 
+/* ── MOVE FILE ── */
+function moveFile() {
+  if (!ctxTarget) return;
+  const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
+  if (!file) return;
+  document.getElementById('ctxMenu').classList.remove('show');
+
+  // Isi dropdown folder tujuan (exclude folder saat ini)
+  const sel = document.getElementById('moveFolderSelect');
+  sel.innerHTML = '<option value="">Pilih folder tujuan...</option>' +
+    allFolders
+      .filter(function(f) { return f.name !== file.folder_name; })
+      .map(function(f) {
+        return '<option value="' + escapeAttr(f.name) + '">' + escapeHtml(f.name) + '</option>';
+      }).join('');
+
+  // Update subtitle modal
+  const sub = document.getElementById('moveModalSub');
+  if (sub) sub.textContent = 'Pindahkan "' + file.name + '" dari folder "' + (file.folder_name || '-') + '" ke:';
+
+  document.getElementById('moveModal').classList.add('show');
+}
+
+function closeMoveModal() {
+  document.getElementById('moveModal').classList.remove('show');
+  document.getElementById('moveFolderSelect').value = '';
+}
+
+async function confirmMoveFile() {
+  const targetFolder = document.getElementById('moveFolderSelect').value;
+  if (!targetFolder) { showToast('Pilih folder tujuan dulu!'); return; }
+
+  const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
+  if (!file) return;
+
+  const btn = document.querySelector('#moveModal .btn-confirm');
+  if (btn) { btn.disabled = true; btn.textContent = 'Memindahkan...'; }
+
+  const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
+  const newPath = targetFolder + '/' + Date.now() + '_' + file.name;
+
+  // Pindah file di Supabase Storage
+  const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
+  if (moveErr) {
+    showToast('Gagal memindahkan file: ' + moveErr.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
+    return;
+  }
+
+  // Update record di database
+  const { error: dbErr } = await sb.from('files').update({
+    folder_name: targetFolder,
+    storage_path: newPath
+  }).eq('id', file.id);
+
+  if (dbErr) {
+    showToast('Gagal update database: ' + dbErr.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
+    return;
+  }
+
+  closeMoveModal();
+  showToast('File berhasil dipindahkan ke "' + targetFolder + '"!');
+  ctxTarget = null;
+  if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
+  await loadAll();
+}
+
 /* ── FAVORIT ── */
 function toggleFavorite() {
   if (!ctxTarget) return;
@@ -725,6 +800,43 @@ async function uploadFile() {
   const fileInput = document.getElementById('fileInput');
   const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
+
+  // ── Validasi ukuran file ──
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB per file
+  const MAX_TOTAL_SIZE = 1024 * 1024 * 1024; // 1 GB total storage
+
+  // Hitung sisa storage yang tersedia
+  let usedBytes = 0;
+  allFiles.forEach(function(f) {
+    if (f.size) {
+      const num = parseFloat(f.size);
+      if (f.size.includes('MB')) usedBytes += num * 1024 * 1024;
+      else if (f.size.includes('KB')) usedBytes += num * 1024;
+      else if (f.size.includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
+    }
+  });
+  const remainingBytes = MAX_TOTAL_SIZE - usedBytes;
+
+  // Cek setiap file
+  let tooBigFiles = [];
+  let totalNewBytes = 0;
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    totalNewBytes += f.size;
+    if (f.size > MAX_FILE_SIZE) {
+      tooBigFiles.push(f.name + ' (' + (f.size / (1024*1024)).toFixed(1) + ' MB)');
+    }
+  }
+  if (tooBigFiles.length > 0) {
+    showToast('File terlalu besar (maks 100 MB): ' + tooBigFiles[0]);
+    return;
+  }
+  if (totalNewBytes > remainingBytes) {
+    const remMB = (remainingBytes / (1024*1024)).toFixed(0);
+    const newMB = (totalNewBytes / (1024*1024)).toFixed(1);
+    showToast('Storage tidak cukup! Perlu ' + newMB + ' MB, sisa ' + remMB + ' MB.');
+    return;
+  }
 
   const btnConfirm = document.querySelector('.btn-confirm');
   const btnCancel  = document.querySelector('.btn-cancel');
@@ -817,8 +929,24 @@ async function uploadFile() {
 
 function handleFileSelect(input) {
   droppedFiles = null;
-  const names = Array.from(input.files).map(function(f) { return f.name; }).join(', ');
-  document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
+  const filesArr = Array.from(input.files);
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
+  const el = document.getElementById('selectedFiles');
+
+  const warnings = filesArr.filter(function(f) { return f.size > MAX_FILE_SIZE; });
+  const totalSize = filesArr.reduce(function(sum, f) { return sum + f.size; }, 0);
+  const totalStr = totalSize > 1024*1024
+    ? (totalSize/(1024*1024)).toFixed(1) + ' MB'
+    : (totalSize/1024).toFixed(0) + ' KB';
+
+  if (warnings.length > 0) {
+    el.innerHTML = '<span style="color:#f87171">⚠️ ' + warnings[0].name + ' melebihi batas 100 MB!</span>';
+  } else if (filesArr.length > 0) {
+    const names = filesArr.map(function(f) { return f.name; }).join(', ');
+    el.innerHTML = '📎 ' + escapeHtml(names) + ' <span style="color:var(--text-faint)">(' + totalStr + ')</span>';
+  } else {
+    el.textContent = '';
+  }
 }
 
 /* ── INIT ── */
@@ -849,6 +977,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
+  });
+  document.getElementById('moveModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMoveModal();
   });
 
   const dz = document.getElementById('dropZone');

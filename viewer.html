@@ -467,6 +467,26 @@
     showToast('Membuat link...');
     const { data, error } = await sb.storage.from('user-files').createSignedUrl(storagePath, 604800);
     if (error) { showToast('Gagal membuat link: ' + error.message, true); return; }
+
+    // Simpan ke localStorage supaya muncul di panel "Dibagikan" di dashboard
+    try {
+      let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+      // Hindari duplikat berdasarkan storagePath
+      saved = saved.filter(function(s) { return s.fileId !== storagePath; });
+      saved.unshift({
+        fileId: storagePath,
+        name: fileName || 'File',
+        url: data.signedUrl,
+        type: fileType || 'doc',
+        folder: storagePath.split('/')[0] || '',
+        createdAt: Date.now()
+      });
+      if (saved.length > 50) saved = saved.slice(0, 50);
+      localStorage.setItem('myStorageShared', JSON.stringify(saved));
+    } catch(e) {
+      console.warn('Gagal simpan shared link:', e);
+    }
+
     try {
       await navigator.clipboard.writeText(data.signedUrl);
       showToast('Link berhasil disalin ke clipboard!');

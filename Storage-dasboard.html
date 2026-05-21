@@ -250,10 +250,25 @@
   </div>
 </div>
 
-<div class="ctx-menu" id="ctxMenu">
+<div class="modal-overlay" id="moveModal">
+  <div class="modal">
+    <div class="modal-title">Pindah ke Folder</div>
+    <div class="modal-sub" id="moveModalSub">Pilih folder tujuan untuk file ini.</div>
+    <div class="modal-row">
+      <select class="modal-select" id="moveFolderSelect">
+        <option value="">Pilih folder tujuan...</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeMoveModal()">Batal</button>
+      <button class="btn-confirm" onclick="confirmMoveFile()">Pindahkan</button>
+    </div>
+  </div>
+</div>
   <div class="ctx-item" onclick="downloadFile()"><i class="ti ti-download"></i>Download</div>
   <div class="ctx-item" onclick="shareFile()"><i class="ti ti-share"></i>Bagikan Link</div>
   <div class="ctx-item" onclick="renameFile()"><i class="ti ti-edit"></i>Rename File</div>
+  <div class="ctx-item" onclick="moveFile()"><i class="ti ti-folder-symlink"></i>Pindah ke Folder</div>
   <div class="ctx-item" onclick="toggleFavorite()"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
   <div class="ctx-divider"></div>
   <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus Permanen</div>
