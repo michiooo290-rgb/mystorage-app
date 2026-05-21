@@ -7,33 +7,33 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  --ink:          #e2e0ff;
+  --ink:          #e8e6ff;
   --ink-2:        #c4c0f0;
   --ink-3:        #8b86b0;
   --ink-4:        #5c577a;
   --surface:      rgba(255,255,255,0.04);
   --bg:           #0a0a1a;
   --bg-2:         #0d0d22;
-  --bg-card:      rgba(255,255,255,0.035);
-  --bg-card-hover:rgba(255,255,255,0.06);
+  --bg-card:      rgba(255,255,255,0.03);
+  --bg-card-hover:rgba(255,255,255,0.055);
   --accent:       #7c3aed;
   --accent-2:     #8b5cf6;
-  --accent-light: rgba(124,58,237,0.12);
+  --accent-light: rgba(124,58,237,0.10);
   --accent-mid:   #a78bfa;
   --cyan:         #06b6d4;
-  --cyan-light:   rgba(6,182,212,0.12);
+  --cyan-light:   rgba(6,182,212,0.10);
   --amber:        #f59e0b;
   --red:          #f87171;
 
-  --border:       rgba(255,255,255,0.06);
-  --border-2:     rgba(255,255,255,0.10);
-  --border-accent:rgba(124,58,237,0.25);
+  --border:       rgba(255,255,255,0.05);
+  --border-2:     rgba(255,255,255,0.08);
+  --border-accent:rgba(124,58,237,0.20);
 
-  --shadow-sm:  0 2px 12px rgba(0,0,0,0.4);
-  --shadow-md:  0 4px 24px rgba(0,0,0,0.45), 0 0 40px rgba(124,58,237,0.06);
-  --shadow-lg:  0 12px 48px rgba(0,0,0,0.55), 0 0 60px rgba(124,58,237,0.08);
-  --glow-purple:0 0 20px rgba(124,58,237,0.3), 0 0 60px rgba(124,58,237,0.1);
-  --glow-cyan:  0 0 20px rgba(6,182,212,0.25);
+  --shadow-sm:  0 2px 12px rgba(0,0,0,0.5);
+  --shadow-md:  0 4px 24px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.04);
+  --shadow-lg:  0 12px 48px rgba(0,0,0,0.65), 0 0 60px rgba(124,58,237,0.06);
+  --glow-purple:0 0 20px rgba(124,58,237,0.2), 0 0 60px rgba(124,58,237,0.06);
+  --glow-cyan:  0 0 20px rgba(6,182,212,0.15);
 
   --radius-xs: 6px;
   --radius-sm: 12px;
@@ -88,11 +88,11 @@ body {
   width: 150%; height: 150%;
   top: -25%; left: -25%;
   background:
-    radial-gradient(ellipse 600px 600px at 15% 25%, rgba(124,58,237,0.28) 0%, transparent 70%),
-    radial-gradient(ellipse 500px 500px at 80% 15%, rgba(99,102,241,0.20) 0%, transparent 70%),
-    radial-gradient(ellipse 400px 400px at 65% 80%, rgba(6,182,212,0.15) 0%, transparent 70%),
-    radial-gradient(ellipse 450px 450px at 25% 75%, rgba(139,92,246,0.22) 0%, transparent 70%),
-    radial-gradient(ellipse 300px 300px at 90% 55%, rgba(245,158,11,0.08) 0%, transparent 70%);
+    radial-gradient(ellipse 600px 600px at 15% 25%, rgba(124,58,237,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 500px at 80% 15%, rgba(99,102,241,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 400px at 65% 80%, rgba(6,182,212,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 450px 450px at 25% 75%, rgba(139,92,246,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 300px 300px at 90% 55%, rgba(245,158,11,0.04) 0%, transparent 70%);
   animation: meshShift 12s ease-in-out infinite alternate;
 }
 @keyframes meshShift {
@@ -109,14 +109,14 @@ body {
   z-index: 1;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(124,58,237,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124,58,237,0.035) 1px, transparent 1px);
+    linear-gradient(rgba(124,58,237,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124,58,237,0.025) 1px, transparent 1px);
   background-size: 60px 60px;
   animation: gridPulse 8s ease-in-out infinite;
 }
 @keyframes gridPulse {
-  0%,100% { opacity: 0.4; }
-  50%     { opacity: 0.9; }
+  0%,100% { opacity: 0.3; }
+  50%     { opacity: 0.6; }
 }
 
 /* Noise texture */
@@ -186,9 +186,9 @@ body {
   top: 0; left: 0; bottom: 0;
   gap: 2px;
   z-index: 20;
-  background: rgba(8,8,20,0.6);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(8,8,20,0.55);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
   border-right: 1px solid var(--border);
   transition: transform 0.28s var(--ease-out-expo);
 }
@@ -418,13 +418,13 @@ body {
   align-items: center;
   gap: 12px;
   padding: 0 28px;
-  background: rgba(8,8,20,0.75);
+  background: rgba(8,8,20,0.6);
   border-bottom: 1px solid var(--border);
   position: sticky;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
 }
 
 .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-4); white-space: nowrap; }

@@ -12,12 +12,12 @@ const FOLDER_COLORS = [
 ];
 
 const FILE_ICONS = {
-  pdf:         { icon: 'ti-file-type-pdf', iconColor: '#ef4444', iconBg: '#fff0f0' },
-  doc:         { icon: 'ti-file-text',     iconColor: '#6366f1', iconBg: '#eef2ff' },
-  foto:        { icon: 'ti-photo',         iconColor: '#22c55e', iconBg: '#dcfce7' },
-  video:       { icon: 'ti-video',         iconColor: '#f97316', iconBg: '#fff7ed' },
-  spreadsheet: { icon: 'ti-table',         iconColor: '#0ea5e9', iconBg: '#f0f9ff' },
-  audio:       { icon: 'ti-music',         iconColor: '#a855f7', iconBg: '#f3e8ff' },
+  pdf:         { icon: 'ti-file-type-pdf', iconColor: '#f87171', iconBg: 'rgba(248,113,113,0.12)' },
+  doc:         { icon: 'ti-file-text',     iconColor: '#818cf8', iconBg: 'rgba(129,140,248,0.12)' },
+  foto:        { icon: 'ti-photo',         iconColor: '#4ade80', iconBg: 'rgba(74,222,128,0.12)' },
+  video:       { icon: 'ti-video',         iconColor: '#fb923c', iconBg: 'rgba(251,146,60,0.12)' },
+  spreadsheet: { icon: 'ti-table',         iconColor: '#38bdf8', iconBg: 'rgba(56,189,248,0.12)' },
+  audio:       { icon: 'ti-music',         iconColor: '#c084fc', iconBg: 'rgba(192,132,252,0.12)' },
 };
 
 let currentFilter = 'semua';
@@ -864,11 +864,11 @@ async function uploadFile() {
     const pct = Math.round((i / total) * 100);
 
     progressBox.innerHTML =
-      '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Mengupload ' + (i + 1) + ' dari ' + total + ': <span style="color:var(--text)">' + file.name + '</span></div>' +
+      '<div style="font-size:12px;color:var(--ink-3);margin-bottom:6px">Mengupload ' + (i + 1) + ' dari ' + total + ': <span style="color:var(--ink)">' + file.name + '</span></div>' +
       '<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">' +
         '<div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#7c3aed,#a855f7);border-radius:99px;transition:width 0.3s ease"></div>' +
       '</div>' +
-      '<div style="font-size:11px;color:var(--text-faint);margin-top:5px;text-align:right">' + pct + '%</div>';
+      '<div style="font-size:11px;color:var(--ink-4);margin-top:5px;text-align:right">' + pct + '%</div>';
 
     btnConfirm.textContent = 'Mengupload ' + (i+1) + '/' + total;
 
@@ -907,7 +907,7 @@ async function uploadFile() {
 
   // Progress 100%
   progressBox.innerHTML =
-    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">Selesai!</div>' +
+    '<div style="font-size:12px;color:var(--ink-3);margin-bottom:6px">Selesai!</div>' +
     '<div style="background:rgba(255,255,255,0.06);border-radius:99px;height:6px;overflow:hidden">' +
       '<div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#4ade80);border-radius:99px"></div>' +
     '</div>' +
@@ -943,7 +943,7 @@ function handleFileSelect(input) {
     el.innerHTML = '<span style="color:#f87171">⚠️ ' + warnings[0].name + ' melebihi batas 100 MB!</span>';
   } else if (filesArr.length > 0) {
     const names = filesArr.map(function(f) { return f.name; }).join(', ');
-    el.innerHTML = '📎 ' + escapeHtml(names) + ' <span style="color:var(--text-faint)">(' + totalStr + ')</span>';
+    el.innerHTML = '📎 ' + escapeHtml(names) + ' <span style="color:var(--ink-4)">(' + totalStr + ')</span>';
   } else {
     el.textContent = '';
   }
