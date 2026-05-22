@@ -754,7 +754,7 @@ function setNav(el) {
 /* ── MODAL ── */
 function openModal() {
   document.getElementById('modal').classList.add('show');
-  // Pastikan dropdown terisi dulu, baru auto-select folder aktif
+  switchUploadTab('files'); // selalu mulai di tab File
   populateFolderSelect();
   if (currentFolderId) {
     const sel = document.getElementById('folderSelect');
@@ -764,12 +764,60 @@ function openModal() {
 
 function closeModal() {
   document.getElementById('modal').classList.remove('show');
-  document.getElementById('selectedFiles').textContent = '';
-  document.getElementById('folderSelect').value = '';
-  document.getElementById('fileInput').value = '';
+  var sf = document.getElementById('selectedFiles');
+  if (sf) sf.textContent = '';
+  var sfolder = document.getElementById('selectedFolder');
+  if (sfolder) sfolder.textContent = '';
+  var fs = document.getElementById('folderSelect');
+  if (fs) fs.value = '';
+  var fi = document.getElementById('fileInput');
+  if (fi) fi.value = '';
+  var foi = document.getElementById('folderInput');
+  if (foi) foi.value = '';
   droppedFiles = null;
-  const pb = document.getElementById('uploadProgressBox');
+  var pb = document.getElementById('uploadProgressBox');
   if (pb) pb.remove();
+}
+
+function switchUploadTab(tab) {
+  var tabFilesContent = document.getElementById('tabFilesContent');
+  var tabFolderContent = document.getElementById('tabFolderContent');
+  var tabFilesBtn = document.getElementById('tabFiles');
+  var tabFolderBtn = document.getElementById('tabFolder');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalSub = document.getElementById('modalSub');
+
+  if (tab === 'files') {
+    tabFilesContent.style.display = '';
+    tabFolderContent.style.display = 'none';
+    tabFilesBtn.style.background = '#fff';
+    tabFilesBtn.style.fontWeight = '600';
+    tabFilesBtn.style.color = '#0f0e0d';
+    tabFilesBtn.style.boxShadow = '0 1px 4px rgba(15,14,13,0.08)';
+    tabFolderBtn.style.background = 'transparent';
+    tabFolderBtn.style.fontWeight = '500';
+    tabFolderBtn.style.color = '#9a9693';
+    tabFolderBtn.style.boxShadow = 'none';
+    if (modalTitle) modalTitle.textContent = 'Upload File';
+    if (modalSub) modalSub.textContent = 'Pilih file dan tentukan kategori folder tujuan.';
+  } else {
+    tabFilesContent.style.display = 'none';
+    tabFolderContent.style.display = '';
+    tabFolderBtn.style.background = '#fff';
+    tabFolderBtn.style.fontWeight = '600';
+    tabFolderBtn.style.color = '#0f0e0d';
+    tabFolderBtn.style.boxShadow = '0 1px 4px rgba(15,14,13,0.08)';
+    tabFilesBtn.style.background = 'transparent';
+    tabFilesBtn.style.fontWeight = '500';
+    tabFilesBtn.style.color = '#9a9693';
+    tabFilesBtn.style.boxShadow = 'none';
+    if (modalTitle) modalTitle.textContent = 'Upload Folder';
+    if (modalSub) modalSub.textContent = 'Pilih folder dari komputer untuk diupload.';
+  }
+}
+
+function doUpload() {
+  uploadFile();
 }
 
 /* ── ADD FOLDER ── */
@@ -1281,6 +1329,22 @@ function handleFileSelect(input) {
   } else if (filesArr.length > 0) {
     const names = filesArr.map(function(f) { return f.name; }).join(', ');
     el.innerHTML = '📎 ' + escapeHtml(names) + ' <span style="color:#9a9693">(' + totalStr + ')</span>';
+  } else {
+    el.textContent = '';
+  }
+}
+
+function handleFolderSelect(input) {
+  droppedFiles = null;
+  const filesArr = Array.from(input.files);
+  const el = document.getElementById('selectedFolder');
+  if (filesArr.length > 0) {
+    const totalSize = filesArr.reduce(function(sum, f) { return sum + f.size; }, 0);
+    const totalStr = totalSize > 1024*1024
+      ? (totalSize/(1024*1024)).toFixed(1) + ' MB'
+      : (totalSize/1024).toFixed(0) + ' KB';
+    const folderName = filesArr[0].webkitRelativePath.split('/')[0];
+    el.innerHTML = '📁 <strong>' + escapeHtml(folderName) + '</strong> — ' + filesArr.length + ' file <span style="color:#9a9693">(' + totalStr + ')</span>';
   } else {
     el.textContent = '';
   }

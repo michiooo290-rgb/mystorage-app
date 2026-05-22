@@ -243,8 +243,9 @@
 
 <div class="modal-overlay" id="modal">
   <div class="modal">
-    <div class="modal-title">Upload File</div>
-    <div class="modal-sub">Pilih file dan tentukan kategori folder tujuan.</div>
+    <div class="modal-title" id="modalTitle">Upload File</div>
+    <div class="modal-sub" id="modalSub">Pilih file dan tentukan kategori folder tujuan.</div>
+
     <!-- Upload Mode Tabs -->
     <div style="display:flex;gap:0;margin-bottom:14px;background:rgba(15,14,13,0.05);border-radius:10px;padding:3px">
       <button id="tabFiles" onclick="switchUploadTab('files')" style="flex:1;padding:7px 0;border:none;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#0f0e0d;cursor:pointer;box-shadow:0 1px 4px rgba(15,14,13,0.08);transition:all 0.15s;font-family:inherit">
@@ -255,37 +256,14 @@
       </button>
     </div>
 
-    <!-- Tab: Upload File biasa -->
-    <div id="dropZoneWrap">
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-      <i class="ti ti-cloud-upload"></i>
-      <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
-      <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
-    </div>
-    </div>
-
-    <!-- Tab: Upload Folder -->
-    <div class="modal-title">Upload</div>
-    <div class="modal-sub">Pilih file atau folder untuk diupload.</div>
-
-    <!-- Toggle: File / Folder -->
-    <div class="upload-toggle" id="uploadToggle">
-      <button class="upload-toggle-btn active" onclick="setUploadMode('file')" id="toggleFileBtn">
-        <i class="ti ti-file-upload"></i>File
-      </button>
-      <button class="upload-toggle-btn" onclick="setUploadMode('folder')" id="toggleFolderBtn">
-        <i class="ti ti-folder-upload"></i>Folder
-      </button>
-    </div>
-
-    <!-- File upload mode -->
-    <div id="fileUploadMode">
+    <!-- Tab: Upload File -->
+    <div id="tabFilesContent">
       <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
         <i class="ti ti-cloud-upload"></i>
         <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
         <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
       </div>
-      <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
+      <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;margin-top:8px;"></div>
       <div class="modal-row">
         <select class="modal-select" id="folderSelect">
           <option value="">Upload ke folder saat ini</option>
@@ -293,15 +271,15 @@
       </div>
     </div>
 
-    <!-- Folder upload mode -->
-    <div id="folderUploadMode" style="display:none">
+    <!-- Tab: Upload Folder -->
+    <div id="tabFolderContent" style="display:none">
       <div class="drop-zone" id="dropZoneFolder" onclick="document.getElementById('folderInput').click()">
         <i class="ti ti-folder-up" style="font-size:38px;color:var(--accent);opacity:0.7"></i>
         <p style="margin-top:8px">Klik untuk pilih <span>folder dari komputer</span></p>
-        <p style="font-size:11px;color:var(--ink-5);margin-top:4px">Semua file & sub-folder akan diupload</p>
+        <p style="font-size:11px;color:var(--ink-5);margin-top:4px">Semua file &amp; sub-folder akan diupload</p>
         <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSelect(this)"/>
       </div>
-      <div id="selectedFolder" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
+      <div id="selectedFolder" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;margin-top:8px;"></div>
     </div>
 
     <div class="modal-footer">
