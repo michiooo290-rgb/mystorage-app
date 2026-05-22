@@ -871,6 +871,12 @@ body::before {
   border-color: var(--ink-3);
   background: var(--paper-2);
 }
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb, 99,102,241), 0.06);
+  transform: scale(1.01);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb, 99,102,241), 0.12);
+}
 .drop-zone i { font-size: 34px; color: var(--ink-5); display: block; margin-bottom: 10px; }
 .drop-zone p { font-size: 13px; color: var(--ink-4); }
 .drop-zone span { color: var(--ink-2); font-weight: 500; }
