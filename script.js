@@ -667,7 +667,6 @@ function renderFiles() {
 
     if (currentViewMode === 'list') {
       // ── LIST VIEW CARD ──
-      var typeLabelList = getFileTypeLabel(f.name, f.type);
       return (
         '<div class="file-card" style="' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
         // Checkbox
@@ -677,7 +676,6 @@ function renderFiles() {
         '<div class="file-top" style="margin-bottom:0;flex-shrink:0;position:relative">' +
         '<div class="file-icon-box" style="background:' + iconBg + ';width:32px;height:32px;font-size:15px;">' +
         '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
-        '<span style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);background:' + typeLabelList.bg + ';color:' + typeLabelList.color + ';font-size:7px;font-weight:700;letter-spacing:0.03em;padding:1px 4px;border-radius:3px;white-space:nowrap;line-height:1.4;border:1px solid ' + typeLabelList.color + '22;font-family:\'JetBrains Mono\',monospace;">' + typeLabelList.label + '</span>' +
         '</div>' +
         // Name (flex-1)
         '<div class="file-name" style="flex:1;margin-bottom:0;font-size:13px;" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
@@ -696,7 +694,6 @@ function renderFiles() {
     }
 
     // ── GRID VIEW CARD (default) ──
-    var typeLabel = getFileTypeLabel(f.name, f.type);
     return (
       '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')" ondragstart="fileCardDragStart(event, \'' + safeId + '\')" ondragend="fileCardDragEnd(event, this)">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
@@ -705,7 +702,6 @@ function renderFiles() {
       '<div style="position:relative;display:inline-block">' +
       '<div class="file-icon-box" style="background:' + iconBg + '">' +
       '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
-      '<span style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:' + typeLabel.bg + ';color:' + typeLabel.color + ';font-size:8.5px;font-weight:700;letter-spacing:0.04em;padding:1.5px 5px;border-radius:4px;white-space:nowrap;line-height:1.4;border:1px solid ' + typeLabel.color + '22;font-family:\'JetBrains Mono\',monospace;">' + typeLabel.label + '</span>' +
       '</div>' +
       '<div style="display:flex; gap:6px; align-items:center;">' +
       (isFav ? '<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>' : '') +
