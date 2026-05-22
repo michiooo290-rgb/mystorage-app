@@ -42,9 +42,10 @@
     });
   }
 
-  /* ── Create a floating toggle button ── */
+  /* ── Create a floating toggle button (only if no topbar toggle exists) ── */
   function createFloatingToggle() {
     if (document.getElementById('nmFloatBtn')) return;
+    if (document.getElementById('nmTopbarBtn')) return; // dashboard has its own
     const btn = document.createElement('button');
     btn.id = 'nmFloatBtn';
     btn.className = 'nm-toggle nm-float';

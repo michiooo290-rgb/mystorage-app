@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="nightmode.css"/>
+  <script src="nightmode.js"></script>
 </head>
 <body>
 
@@ -109,8 +110,8 @@
       </button>
     </div>
     <div class="topbar-right">
-      <div class="btn-icon nm-toggle" title="Mode Malam" onclick="NightMode.toggle()" aria-pressed="false">
-        <i class="ti ti-moon nm-icon"></i>
+      <div class="btn-icon" id="nmTopbarBtn" title="Mode Malam" onclick="NightMode.toggle(); updateNmBtn()" aria-pressed="false">
+        <i class="ti ti-moon" id="nmTopbarIcon"></i>
       </div>
       <div class="btn-icon" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">
         <i class="ti ti-bell"></i>
@@ -379,8 +380,20 @@
   <span id="toastMsg">Berhasil!</span>
 </div>
 
-<script src="nightmode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
+<script>
+  function updateNmBtn() {
+    var dark = NightMode.isDark();
+    var icon = document.getElementById('nmTopbarIcon');
+    var btn  = document.getElementById('nmTopbarBtn');
+    if (!icon || !btn) return;
+    icon.className = dark ? 'ti ti-sun' : 'ti ti-moon';
+    btn.title      = dark ? 'Mode Terang' : 'Mode Malam';
+    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  }
+  // Sync icon on page load
+  document.addEventListener('DOMContentLoaded', updateNmBtn);
+</script>
 </body>
 </html>
