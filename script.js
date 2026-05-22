@@ -269,9 +269,7 @@ function renderFolders() {
     // Hitung subfolder
     const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
-    const safeId = escapeAttr(f.id);
-    const initials = escapeHtml(userInitials);
-    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
+    const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
       '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
@@ -289,8 +287,7 @@ function renderFolders() {
         : '') +
       '<text x="11" y="' + (subCount > 0 ? '60' : '48') + '" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
       '<text x="11" y="' + (subCount > 0 ? '70' : '61') + '" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + escapeHtml(subLabel) + '</text>' +
-      '<circle cx="10" cy="' + (subCount > 0 ? '80' : '69') + '" r="6.5" fill="' + c.av + '"/>' +
-      '<text x="10" y="' + (subCount > 0 ? '84' : '73') + '" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">' + initials + '</text>' +
+      
       '</svg></div>'
     );
   }).join('');
@@ -708,9 +705,7 @@ function renderFoldersFiltered(search) {
     const fileCount = allFiles.filter(function(x) { return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name); }).length;
     const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
-    const safeId = escapeAttr(f.id);
-    const initials = escapeHtml(userInitials);
-    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
+    const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
       '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
@@ -723,8 +718,7 @@ function renderFoldersFiltered(search) {
       '<path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="' + c.color2 + '"/>' +
       '<text x="11" y="48" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
       '<text x="11" y="61" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + escapeHtml(subLabel) + '</text>' +
-      '<circle cx="10" cy="69" r="6.5" fill="' + c.av + '"/>' +
-      '<text x="10" y="73" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">' + initials + '</text>' +
+      
       '</svg></div>'
     );
   }).join('');
