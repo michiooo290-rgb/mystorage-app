@@ -320,8 +320,22 @@
     audio:       { icon: 'ti-music',         color: '#a855f7', bg: '#f3e8ff' },
   };
 
+  function hideOfficeLoading() {
+    const overlay = document.getElementById('officeLoadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  function reloadOfficePreview(gdocsUrl) {
+    const frame = document.getElementById('officeFrame');
+    const overlay = document.getElementById('officeLoadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
+    if (frame) {
+      frame.src = '';
+      setTimeout(() => { frame.src = gdocsUrl; }, 300);
+    }
+  }
+
   function checkPdfLoaded(iframe) {
-    // Jika iframe berhasil load konten PDF, sembunyikan fallback bar
     try {
       if (iframe.contentDocument && iframe.contentDocument.body) {
         const bar = document.getElementById('pdfFallbackBar');
@@ -367,35 +381,7 @@
     const wrap = document.getElementById('viewerWrap');
 
     if (type === 'pdf') {
-      // Coba render PDF langsung dulu; jika browser trigger download (WPS/dll),
-      // fallback otomatis ke Google Docs Viewer
-      const directSrc = url;
-      const gdocsSrc  = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-
-      wrap.innerHTML = `
-        <iframe
-          id="pdfFrame"
-          class="pdf-viewer"
-          src="${directSrc}"
-          title="${name}"
-          onload="checkPdfLoaded(this)"
-        ></iframe>
-        <div id="pdfFallbackBar" style="display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);
-          background:rgba(15,13,26,0.9);border:1px solid rgba(124,58,237,0.4);border-radius:10px;
-          padding:10px 18px;display:none;align-items:center;gap:10px;font-size:13px;color:#e2e8f0;z-index:99;white-space:nowrap">
-          <i class="ti ti-alert-circle" style="color:#f59e0b"></i>
-          PDF tidak bisa tampil langsung?
-          <button onclick="useFallback('${gdocsSrc}')" style="background:var(--accent);border:none;border-radius:7px;
-            color:#fff;padding:5px 13px;font-size:12px;cursor:pointer;font-family:inherit">
-            Buka via Google Docs
-          </button>
-        </div>`;
-
-      // Tampilkan fallback bar setelah 3 detik jika iframe masih kosong
-      setTimeout(function() {
-        const bar = document.getElementById('pdfFallbackBar');
-        if (bar) bar.style.display = 'flex';
-      }, 3000);
+      wrap.innerHTML = `<iframe class="pdf-viewer" src="${url}" title="${name}"></iframe>`;
     }
     else if (type === 'foto') {
       wrap.innerHTML = `
@@ -425,57 +411,65 @@
         </div>`;
     }
     else if (type === 'spreadsheet' || type === 'doc') {
-      // Download file dulu sebagai blob, lalu buat object URL untuk ditampilkan
       const ext = name.split('.').pop().toLowerCase();
-      const isPdf = (ext === 'pdf');
-      // Untuk .txt bisa langsung iframe, untuk office format perlu download
+
+      // .txt — render langsung
       if (ext === 'txt') {
         wrap.innerHTML = `<iframe class="pdf-viewer" src="${url}" title="${name}" style="background:#1a1a2e;color:#e2e8f0"></iframe>`;
         return;
       }
-      // Tampilkan loading sementara fetch blob
-      wrap.innerHTML = `
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Mengunduh file untuk preview...</p>
-        </div>`;
-      try {
-        const resp = await fetch(url);
-        const blob = await resp.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+
+      // Format Office (docx, pptx, xlsx, xls, ppt, doc) — langsung Google Docs Viewer
+      const officeExts = ['docx','doc','pptx','ppt','xlsx','xls','csv'];
+      if (officeExts.includes(ext)) {
+        const gdocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+        const nameEsc  = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
         wrap.innerHTML = `
-          <div class="generic-viewer">
-            <div class="generic-icon-box" style="background:${iconInfo.bg}">
-              <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
+          <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;">
+            <!-- Loading overlay -->
+            <div id="officeLoadingOverlay" style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
+              align-items:center;justify-content:center;gap:14px;background:var(--bg-deep);pointer-events:none;">
+              <div class="spinner"></div>
+              <p style="font-size:14px;color:var(--text-muted)">Memuat preview via Google Docs...</p>
+              <p style="font-size:12px;color:var(--text-faint)">Mungkin perlu beberapa detik</p>
             </div>
-            <h3>${nameEsc}</h3>
-            <p>File <strong>${ext.toUpperCase()}</strong> tidak bisa ditampilkan langsung di browser.<br>
-            Gunakan tombol di bawah untuk membuka atau mengunduh file ini.</p>
-            <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;justify-content:center">
-              <a href="${blobUrl}" download="${name}" class="btn-action primary" style="display:flex;align-items:center;gap:6px;text-decoration:none">
-                <i class="ti ti-download"></i> Download & Buka
-              </a>
-              <button class="btn-action" onclick="window.open('${blobUrl}')">
-                <i class="ti ti-external-link"></i> Buka di Tab Baru
+            <!-- Google Docs iframe -->
+            <iframe
+              id="officeFrame"
+              src="${gdocsUrl}"
+              title="${nameEsc}"
+              style="flex:1;border:none;background:#fff;"
+              onload="hideOfficeLoading()"
+            ></iframe>
+            <!-- Bottom bar: tombol download cadangan -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;
+              background:var(--bg-glass);border-top:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;">
+              <span style="font-size:12px;color:var(--text-faint)">Preview tidak muncul?</span>
+              <button class="btn-action" onclick="reloadOfficePreview('${gdocsUrl}')">
+                <i class="ti ti-refresh"></i> Muat Ulang Preview
+              </button>
+              <button class="btn-action primary" onclick="downloadFile()">
+                <i class="ti ti-download"></i> Download File
               </button>
             </div>
-            <p style="font-size:11.5px;color:var(--text-faint);margin-top:16px">Tip: Setelah download, buka dengan Microsoft Office, LibreOffice, atau Google Drive.</p>
           </div>`;
-      } catch(e) {
-        // Fallback jika fetch gagal
-        const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-        wrap.innerHTML = `
-          <div class="generic-viewer">
-            <div class="generic-icon-box" style="background:${iconInfo.bg}">
-              <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
-            </div>
-            <h3>${nameEsc}</h3>
-            <p>File ini tidak bisa ditampilkan langsung. Gunakan tombol <strong>Download</strong> di atas.</p>
-          </div>`;
+        return;
       }
+
+      // Format lain yang tidak dikenal — tampilkan tombol download
+      const nameEsc  = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+      wrap.innerHTML = `
+        <div class="generic-viewer">
+          <div class="generic-icon-box" style="background:${iconInfo.bg}">
+            <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
+          </div>
+          <h3>${nameEsc}</h3>
+          <p>Format <strong>${ext.toUpperCase()}</strong> tidak bisa ditampilkan langsung.<br>Gunakan tombol di bawah untuk mengunduh.</p>
+          <button class="btn-action primary" onclick="downloadFile()" style="margin-top:8px">
+            <i class="ti ti-download"></i> Download File
+          </button>
+        </div>`;
     }
     else {
       // Unsupported — tampilkan icon + tombol download
