@@ -296,7 +296,7 @@ function renderFolders() {
     const safeName = escapeHtml(f.name);
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -761,7 +761,7 @@ function renderFoldersFiltered(search) {
     const safeName = escapeHtml(f.name);
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -994,6 +994,87 @@ async function deleteFolderById(folderId, folderName) {
     updateFileSectionTitle();
   }
   showToast('Folder "' + folderName + '" berhasil dihapus!');
+  await loadAll();
+}
+
+/* ── RENAME FOLDER INLINE (double-click) ── */
+function startFolderRename(folderId, folderName, wrapEl) {
+  wrapEl.onclick = null;
+
+  var existing = wrapEl.querySelector('.folder-rename-overlay');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'folder-rename-overlay';
+  overlay.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,0.93);backdrop-filter:blur(4px);z-index:10;padding:10px 12px;box-sizing:border-box;gap:5px';
+
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.value = folderName;
+  inp.maxLength = 60;
+  inp.style.cssText = 'width:100%;padding:6px 10px;border:2px solid #c8602a;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:#0f0e0d;outline:none;background:#fff;text-align:center;box-shadow:0 2px 8px rgba(200,96,42,0.18);box-sizing:border-box';
+
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:10px;color:#9a9693;text-align:center';
+  hint.textContent = 'Enter simpan · Esc batal';
+
+  overlay.appendChild(inp);
+  overlay.appendChild(hint);
+  wrapEl.appendChild(overlay);
+  setTimeout(function() { inp.focus(); inp.select(); }, 50);
+
+  function commit() {
+    var newName = inp.value.trim();
+    cleanupOverlay();
+    if (!newName || newName === folderName) return;
+    renameFolderById(folderId, folderName, newName);
+  }
+
+  function cleanupOverlay() {
+    if (overlay.parentNode) overlay.remove();
+    wrapEl.onclick = function() { openFolderById(folderId, wrapEl.dataset.folderName || folderName); };
+  }
+
+  inp.addEventListener('keydown', function(e) {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); commit(); }
+    if (e.key === 'Escape') { e.preventDefault(); cleanupOverlay(); }
+  });
+
+  inp.addEventListener('blur', function() {
+    setTimeout(commit, 150);
+  });
+
+  overlay.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+
+async function renameFolderById(folderId, oldName, newName) {
+  var folder = allFolders.find(function(f) { return f.id === folderId; });
+  if (!folder) return;
+  var parentId = folder.parent_id || null;
+  var siblings = allFolders.filter(function(f) { return (f.parent_id || null) === parentId && f.id !== folderId; });
+  if (siblings.some(function(f) { return f.name.toLowerCase() === newName.toLowerCase(); })) {
+    showToast('Folder "' + newName + '" sudah ada di sini!');
+    return;
+  }
+
+  showToast('Mengubah nama folder...');
+  var result = await sb.from('folders').update({ name: newName }).eq('id', folderId);
+  if (result.error) { showToast('Gagal ubah nama: ' + result.error.message); return; }
+
+  // Update folder_name pada file lama yang memakai string folder_name
+  await sb.from('files').update({ folder_name: newName }).eq('folder_name', oldName).eq('folder_id', folderId);
+
+  // Update breadcrumb aktif jika perlu
+  folderPath = folderPath.map(function(crumb) {
+    return crumb.id === folderId ? { id: crumb.id, name: newName } : crumb;
+  });
+  if (currentFolderId === folderId) {
+    currentFolderFilter = newName;
+    updateFileSectionTitle();
+  }
+
+  showToast('\uD83D\uDCC1 Folder berhasil diubah menjadi "' + newName + '"!');
   await loadAll();
 }
 
