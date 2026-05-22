@@ -193,6 +193,18 @@
     </div>
 
     <div>
+      <!-- Bulk action bar (muncul saat ada file terpilih) -->
+      <div id="bulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(200,96,42,0.07);border:1.5px solid rgba(200,96,42,0.18);border-radius:var(--radius);margin-bottom:10px;">
+        <input type="checkbox" id="checkSelectAll" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="toggleSelectAll(this.checked)">
+        <span id="bulkCount" style="font-size:13px;font-weight:600;color:var(--ink-2);flex:1">0 file dipilih</span>
+        <button onclick="bulkDelete()" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#c8602a;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
+          <i class="ti ti-trash" style="font-size:13px"></i>Hapus Terpilih
+        </button>
+        <button onclick="exitSelectMode()" style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1.5px solid var(--border-2);background:transparent;color:var(--ink-3);border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit">
+          Batal
+        </button>
+      </div>
+
       <div class="section-head">
         <div class="section-head-left">
           <span class="section-title" id="fileSectionTitle">File Terbaru</span>
@@ -201,6 +213,9 @@
         <div style="display:flex;gap:8px">
           <div class="btn-back-folder" id="btnBackFolder" onclick="closeFolder()" style="display:none">
             <i class="ti ti-arrow-left" style="font-size:14px"></i>Semua File
+          </div>
+          <div class="btn-icon" id="btnSelectMode" title="Pilih file" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="enterSelectMode()">
+            <i class="ti ti-checkbox" style="font-size:15px"></i> <span>Pilih</span>
           </div>
           <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="toggleSort()">
             <i class="ti ti-arrows-sort" style="font-size:15px"></i> <span id="sortLabel">Urutkan</span>

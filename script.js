@@ -29,6 +29,9 @@ let ctxTarget = null;
 let allFolders = [];
 let allFiles = [];
 let droppedFiles = null;
+let droppedFolderFiles = null;
+let selectedFileIds = new Set();
+let isSelectMode = false;
 let showOnlyFavorites = false;
 let userInitials = 'US';
 let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
@@ -510,15 +513,19 @@ function renderFiles() {
     const safeFolder = escapeHtml(f.folder_name || '-');
     const isFav = favs.includes(String(f.id));
 
+    var isSelected = selectedFileIds.has(String(f.id));
+    var selectedStyle = isSelected ? 'outline:2.5px solid #c8602a;outline-offset:2px;background:rgba(200,96,42,0.05);' : '';
     return (
-      '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer;" data-file-id="' + safeId + '" onclick="openFile(\'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+      '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+      '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
+      '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
       '<div class="file-top">' +
       '<div class="file-icon-box" style="background:' + iconBg + '">' +
       '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
       '<div style="display:flex; gap:6px; align-items:center;">' +
       (isFav ? '<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>' : '') +
-      '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
-      '<i class="ti ti-dots-vertical"></i></div></div></div>' +
+      (isSelectMode ? '' : '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
+      '<i class="ti ti-dots-vertical"></i></div>') + '</div></div>' +
       '<span class="fcat-badge" style="background:' + badge.bg + ';color:' + badge.color + '">' + safeFolder + '</span>' +
       '<div class="file-name" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
       '<div class="file-info"><span>' + escapeHtml(f.size || '-') + '</span><span>' + date + '</span></div>' +
@@ -1651,6 +1658,153 @@ async function folderCardDrop(e, el) {
   if (failCount > 0 && successCount > 0) showToast(successCount + ' file masuk ke ' + folderName + ', ' + failCount + ' gagal.');
   else if (failCount > 0) showToast('Gagal upload ke ' + folderName + '.');
   else showToast(successCount + ' file berhasil masuk ke ' + folderName + '! 📁');
+}
+
+
+/* ── SELECT MODE & BULK DELETE ── */
+function enterSelectMode() {
+  isSelectMode = true;
+  selectedFileIds.clear();
+  var bulkBar = document.getElementById('bulkBar');
+  var btnSelect = document.getElementById('btnSelectMode');
+  if (bulkBar) bulkBar.style.display = 'flex';
+  if (btnSelect) btnSelect.style.display = 'none';
+  updateBulkBar();
+  renderFiles();
+}
+
+function exitSelectMode() {
+  isSelectMode = false;
+  selectedFileIds.clear();
+  var bulkBar = document.getElementById('bulkBar');
+  var btnSelect = document.getElementById('btnSelectMode');
+  if (bulkBar) bulkBar.style.display = 'none';
+  if (btnSelect) btnSelect.style.display = '';
+  var cb = document.getElementById('checkSelectAll');
+  if (cb) cb.checked = false;
+  renderFiles();
+}
+
+function fileCardClick(event, id) {
+  if (isSelectMode) {
+    // In select mode, clicking card toggles selection
+    var newState = !selectedFileIds.has(String(id));
+    toggleFileSelect(String(id), newState);
+    // Sync checkbox inside card
+    var card = document.querySelector('[data-file-id="' + id + '"]');
+    if (card) {
+      var cb = card.querySelector('input[type=checkbox]');
+      if (cb) cb.checked = newState;
+    }
+  } else {
+    openFile(id);
+  }
+}
+
+function toggleFileSelect(id, checked) {
+  if (checked) {
+    selectedFileIds.add(String(id));
+  } else {
+    selectedFileIds.delete(String(id));
+  }
+  // Update card visual
+  var card = document.querySelector('[data-file-id="' + id + '"]');
+  if (card) {
+    if (checked) {
+      card.style.outline = '2.5px solid #c8602a';
+      card.style.outlineOffset = '2px';
+      card.style.background = 'rgba(200,96,42,0.05)';
+    } else {
+      card.style.outline = '';
+      card.style.outlineOffset = '';
+      card.style.background = '';
+    }
+  }
+  updateBulkBar();
+}
+
+function toggleSelectAll(checked) {
+  // Get all currently visible file IDs from cards
+  var cards = document.querySelectorAll('#fileGrid [data-file-id]');
+  cards.forEach(function(card) {
+    var id = card.getAttribute('data-file-id');
+    var cb = card.querySelector('input[type=checkbox]');
+    if (checked) {
+      selectedFileIds.add(String(id));
+      card.style.outline = '2.5px solid #c8602a';
+      card.style.outlineOffset = '2px';
+      card.style.background = 'rgba(200,96,42,0.05)';
+    } else {
+      selectedFileIds.delete(String(id));
+      card.style.outline = '';
+      card.style.outlineOffset = '';
+      card.style.background = '';
+    }
+    if (cb) cb.checked = checked;
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  var count = selectedFileIds.size;
+  var countEl = document.getElementById('bulkCount');
+  if (countEl) countEl.textContent = count + ' file dipilih';
+  // Sync select-all checkbox state
+  var cards = document.querySelectorAll('#fileGrid [data-file-id]');
+  var cb = document.getElementById('checkSelectAll');
+  if (cb && cards.length > 0) {
+    cb.checked = count > 0 && count >= cards.length;
+    cb.indeterminate = count > 0 && count < cards.length;
+  }
+}
+
+async function bulkDelete() {
+  if (selectedFileIds.size === 0) { showToast('Pilih file dulu!'); return; }
+  var count = selectedFileIds.size;
+  var confirmed = await customConfirm({
+    title: 'Hapus ' + count + ' File',
+    message: 'Yakin ingin menghapus ' + count + ' file sekaligus? File yang dihapus tidak bisa dikembalikan.',
+    icon: 'ti-trash',
+    confirmText: 'Ya, Hapus Semua',
+    confirmBtnClass: 'danger'
+  });
+  if (!confirmed) return;
+
+  showToast('Menghapus ' + count + ' file...');
+
+  var ids = Array.from(selectedFileIds);
+  var successCount = 0;
+  var failCount = 0;
+
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i];
+    var file = allFiles.find(function(f) { return String(f.id) === id; });
+    if (!file) { failCount++; continue; }
+
+    var pathToDelete = file.storage_path || (file.folder_name + '/' + file.name);
+    try {
+      await sb.storage.from('user-files').remove([pathToDelete]);
+      var { error } = await sb.from('files').delete().eq('id', id);
+      if (error) { failCount++; }
+      else {
+        // Remove from favs if needed
+        var favs = getFavs();
+        if (favs.includes(id)) {
+          favs = favs.filter(function(fid) { return fid !== id; });
+          localStorage.setItem('myStorageFavs', JSON.stringify(favs));
+        }
+        successCount++;
+      }
+    } catch(e) { failCount++; }
+  }
+
+  exitSelectMode();
+  await loadFiles();
+  renderStats();
+
+  if (failCount > 0 && successCount > 0) showToast(successCount + ' file dihapus, ' + failCount + ' gagal.');
+  else if (failCount > 0) showToast('Gagal menghapus ' + failCount + ' file.');
+  else showToast(successCount + ' file berhasil dihapus! 🗑️');
 }
 
 

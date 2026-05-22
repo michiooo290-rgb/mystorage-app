@@ -1270,3 +1270,23 @@ body::before {
     width: 100%;
   }
 }
+/* ── SELECT MODE ── */
+.file-select-cb {
+  pointer-events: all;
+}
+.file-card:has(.file-select-cb input:checked) {
+  outline: 2.5px solid #c8602a;
+  outline-offset: 2px;
+  background: rgba(200,96,42,0.04);
+}
+#btnSelectMode.active {
+  background: rgba(200,96,42,0.08);
+  color: #c8602a;
+}
+#bulkBar {
+  animation: slideDown 0.18s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
