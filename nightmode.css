@@ -267,10 +267,14 @@
 /* ═══════════════════════════════════════════════════════
    TABS
    ═══════════════════════════════════════════════════════ */
-[data-theme="dark"] .tab-row,
-[data-theme="dark"] .filter-row {
+[data-theme="dark"] .tab-row {
   background: var(--paper-2);
   border-color: var(--border);
+}
+
+/* filter-row adalah flex container transparan — tidak boleh punya background */
+[data-theme="dark"] .filter-row {
+  background: transparent;
 }
 
 [data-theme="dark"] .tab-btn {
