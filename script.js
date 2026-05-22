@@ -1644,6 +1644,50 @@ function readDirectoryEntries(dirEntry, path, fileList) {
   });
 }
 
+/**
+ * Resolve (atau buat jika belum ada) rantai folder berdasarkan array nama.
+ * parentId = null berarti root.
+ * Mengembalikan id folder terakhir, atau null jika gagal.
+ * Cache disimpan di folderIdCache agar tidak query berulang untuk path yang sama.
+ */
+var folderIdCache = {};
+async function resolveOrCreateFolderChain(parts, rootParentId, userId) {
+  var parentId = rootParentId || null;
+  for (var p = 0; p < parts.length; p++) {
+    var name = parts[p];
+    var cacheKey = (parentId || 'root') + '::' + name;
+    if (folderIdCache[cacheKey]) {
+      parentId = folderIdCache[cacheKey];
+      continue;
+    }
+
+    // Cari di DB
+    var q = sb.from('folders').select('id').eq('name', name);
+    if (parentId) q = q.eq('parent_id', parentId);
+    else          q = q.is('parent_id', null);
+    var { data: existing } = await q.maybeSingle();
+
+    if (existing) {
+      folderIdCache[cacheKey] = existing.id;
+      // Tambah ke allFolders lokal jika belum ada
+      if (!allFolders.find(function(f) { return f.id === existing.id; })) {
+        allFolders.push({ id: existing.id, name: name, parent_id: parentId, user_id: userId });
+      }
+      parentId = existing.id;
+    } else {
+      // Buat folder baru
+      var obj = { name: name, user_id: userId };
+      if (parentId) obj.parent_id = parentId;
+      var { data: nf, error: ce } = await sb.from('folders').insert(obj).select('id').single();
+      if (ce || !nf) { console.error('Gagal buat folder:', name, ce && ce.message); return null; }
+      folderIdCache[cacheKey] = nf.id;
+      allFolders.push({ id: nf.id, name: name, parent_id: parentId, user_id: userId });
+      parentId = nf.id;
+    }
+  }
+  return parentId;
+}
+
 async function uploadFolderFiles() {
   var filesArr = droppedFolderFiles;
   if (!filesArr || filesArr.length === 0) {
@@ -1666,6 +1710,9 @@ async function uploadFolderFiles() {
   if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.textContent = 'Mengupload...'; }
   if (btnCancel)    btnCancel.disabled = true;
 
+  // Reset folder cache tiap upload baru
+  folderIdCache = {};
+
   // Auth session (ambil sekali di luar loop)
   var { data: sd } = await sb.auth.getSession();
   var userId = sd && sd.session ? sd.session.user.id : 'unknown';
@@ -1678,17 +1725,33 @@ async function uploadFolderFiles() {
     var file = filesArr[i];
     var relPath = file.webkitRelativePath || file.name;
 
-    // Storage path: userId/folderId/relPath (pakai ID bukan nama biar unik)
-    var storagePath = userId + '/' + (destId ? destId + '/' : '') + Date.now() + '_' + relPath;
+    // relPath contoh: "NamaFolder/SubFolder/file.pdf"
+    // Pisahkan menjadi bagian folder dan nama file
+    var pathParts = relPath.replace(/\\/g, '/').split('/');
+    var fileName  = pathParts[pathParts.length - 1];
+    var folderParts = pathParts.slice(0, pathParts.length - 1); // bisa kosong jika tidak ada subfolder
 
     if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
 
     try {
+      // Resolve chain folder: destId (root tujuan) → folderParts[0] → folderParts[1] → dst
+      var targetFolderId = destId;
+      var targetFolderName = destName;
+
+      if (folderParts.length > 0) {
+        targetFolderId = await resolveOrCreateFolderChain(folderParts, destId, userId);
+        if (!targetFolderId) { failCount++; continue; }
+        targetFolderName = folderParts[folderParts.length - 1];
+      }
+
+      // Storage path unik
+      var storagePath = userId + '/' + (targetFolderId || 'root') + '/' + Date.now() + '_' + fileName;
+
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
       if (upErr) { console.error('Storage upload error:', upErr.message); failCount++; continue; }
 
-      // Determine file type (sama seperti uploadFile)
-      var ext = file.name.split('.').pop().toLowerCase();
+      // Determine file type
+      var ext = fileName.split('.').pop().toLowerCase();
       var type = 'doc';
       if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
       else if (['mp4','mov','avi','mkv','webm'].includes(ext)) type = 'video';
@@ -1702,9 +1765,9 @@ async function uploadFolderFiles() {
         : (file.size/1024).toFixed(0)+' KB';
 
       var { error: insertErr } = await sb.from('files').insert({
-        name: file.name,
-        folder_name: destName,
-        folder_id: destId || null,
+        name: fileName,
+        folder_name: targetFolderName,
+        folder_id: targetFolderId || null,
         type: type,
         size: sizeStr,
         icon: iconInfo.icon,
@@ -1723,6 +1786,7 @@ async function uploadFolderFiles() {
   droppedFolderFiles = null;
 
   setTimeout(function() { closeModal(); }, 400);
+  await loadFolders(); // reload folder dulu agar subfolder baru tampil
   await loadFiles();
   renderStats();
 
