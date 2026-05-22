@@ -20,6 +20,54 @@ const FILE_ICONS = {
   audio:       { icon: 'ti-music',         iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.08)' },
 };
 
+/* ── FILE TYPE LABEL ── */
+function getFileTypeLabel(fileName, fileType) {
+  if (!fileName) return fileType ? fileType.toUpperCase() : 'FILE';
+  const ext = fileName.split('.').pop().toLowerCase();
+  const extMap = {
+    // Documents
+    pdf: { label: 'PDF', color: '#c0392b', bg: 'rgba(192,57,43,0.13)' },
+    doc: { label: 'DOC', color: '#1d4ed8', bg: 'rgba(29,78,216,0.13)' },
+    docx: { label: 'DOCX', color: '#1d4ed8', bg: 'rgba(29,78,216,0.13)' },
+    // Presentations
+    ppt: { label: 'PPT', color: '#c2410c', bg: 'rgba(194,65,12,0.13)' },
+    pptx: { label: 'PPTX', color: '#c2410c', bg: 'rgba(194,65,12,0.13)' },
+    // Spreadsheets
+    xls: { label: 'XLS', color: '#0369a1', bg: 'rgba(3,105,161,0.13)' },
+    xlsx: { label: 'XLSX', color: '#0369a1', bg: 'rgba(3,105,161,0.13)' },
+    csv: { label: 'CSV', color: '#0369a1', bg: 'rgba(3,105,161,0.13)' },
+    // Images
+    jpg: { label: 'JPG', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    jpeg: { label: 'JPEG', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    png: { label: 'PNG', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    gif: { label: 'GIF', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    webp: { label: 'WEBP', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    svg: { label: 'SVG', color: '#2d6a4f', bg: 'rgba(45,106,79,0.13)' },
+    // Videos
+    mp4: { label: 'MP4', color: '#c8602a', bg: 'rgba(200,96,42,0.13)' },
+    mov: { label: 'MOV', color: '#c8602a', bg: 'rgba(200,96,42,0.13)' },
+    avi: { label: 'AVI', color: '#c8602a', bg: 'rgba(200,96,42,0.13)' },
+    mkv: { label: 'MKV', color: '#c8602a', bg: 'rgba(200,96,42,0.13)' },
+    webm: { label: 'WEBM', color: '#c8602a', bg: 'rgba(200,96,42,0.13)' },
+    // Audio
+    mp3: { label: 'MP3', color: '#7e22ce', bg: 'rgba(126,34,206,0.13)' },
+    wav: { label: 'WAV', color: '#7e22ce', bg: 'rgba(126,34,206,0.13)' },
+    ogg: { label: 'OGG', color: '#7e22ce', bg: 'rgba(126,34,206,0.13)' },
+    flac: { label: 'FLAC', color: '#7e22ce', bg: 'rgba(126,34,206,0.13)' },
+    // Archives
+    zip: { label: 'ZIP', color: '#5a5754', bg: 'rgba(90,87,84,0.13)' },
+    rar: { label: 'RAR', color: '#5a5754', bg: 'rgba(90,87,84,0.13)' },
+    '7z': { label: '7Z', color: '#5a5754', bg: 'rgba(90,87,84,0.13)' },
+    // Text/Code
+    txt: { label: 'TXT', color: '#5a5754', bg: 'rgba(90,87,84,0.13)' },
+    js: { label: 'JS', color: '#92400e', bg: 'rgba(146,64,14,0.13)' },
+    html: { label: 'HTML', color: '#c2410c', bg: 'rgba(194,65,12,0.13)' },
+    css: { label: 'CSS', color: '#1d4ed8', bg: 'rgba(29,78,216,0.13)' },
+    py: { label: 'PY', color: '#0369a1', bg: 'rgba(3,105,161,0.13)' },
+  };
+  return extMap[ext] || { label: ext ? ext.toUpperCase() : (fileType ? fileType.toUpperCase() : 'FILE'), color: '#5a5754', bg: 'rgba(90,87,84,0.13)' };
+}
+
 let currentFilter = 'semua';
 let currentFolderFilter = null;   // nama folder (untuk kompatibilitas file filter)
 let currentFolderId = null;       // UUID folder yang sedang dibuka (null = root)
@@ -569,15 +617,18 @@ function renderFiles() {
 
     if (currentViewMode === 'list') {
       // ── LIST VIEW CARD ──
+      var typeLabelList = getFileTypeLabel(f.name, f.type);
       return (
         '<div class="file-card" style="' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
         // Checkbox
         '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';flex-shrink:0;align-items:center;justify-content:center;">' +
         '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
-        // Icon
-        '<div class="file-top" style="margin-bottom:0;flex-shrink:0;">' +
+        // Icon + type label
+        '<div class="file-top" style="margin-bottom:0;flex-shrink:0;position:relative">' +
         '<div class="file-icon-box" style="background:' + iconBg + ';width:32px;height:32px;font-size:15px;">' +
-        '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div></div>' +
+        '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
+        '<span style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);background:' + typeLabelList.bg + ';color:' + typeLabelList.color + ';font-size:7px;font-weight:700;letter-spacing:0.03em;padding:1px 4px;border-radius:3px;white-space:nowrap;line-height:1.4;border:1px solid ' + typeLabelList.color + '22;font-family:\'JetBrains Mono\',monospace;">' + typeLabelList.label + '</span>' +
+        '</div>' +
         // Name (flex-1)
         '<div class="file-name" style="flex:1;margin-bottom:0;font-size:13px;" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
         // Folder col
@@ -595,18 +646,22 @@ function renderFiles() {
     }
 
     // ── GRID VIEW CARD (default) ──
+    var typeLabel = getFileTypeLabel(f.name, f.type);
     return (
       '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')" ondragstart="fileCardDragStart(event, \'' + safeId + '\')" ondragend="fileCardDragEnd(event, this)">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
       '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
       '<div class="file-top">' +
+      '<div style="position:relative;display:inline-block">' +
       '<div class="file-icon-box" style="background:' + iconBg + '">' +
       '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
+      '<span style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);background:' + typeLabel.bg + ';color:' + typeLabel.color + ';font-size:8.5px;font-weight:700;letter-spacing:0.04em;padding:1.5px 5px;border-radius:4px;white-space:nowrap;line-height:1.4;border:1px solid ' + typeLabel.color + '22;font-family:\'JetBrains Mono\',monospace;">' + typeLabel.label + '</span>' +
+      '</div>' +
       '<div style="display:flex; gap:6px; align-items:center;">' +
       (isFav ? '<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>' : '') +
       (isSelectMode ? '' : '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
       '<i class="ti ti-dots-vertical"></i></div>') + '</div></div>' +
-      '<span class="fcat-badge" style="background:' + badge.bg + ';color:' + badge.color + '">' + safeFolder + '</span>' +
+      '<span class="fcat-badge" style="background:' + badge.bg + ';color:' + badge.color + ';margin-top:8px">' + safeFolder + '</span>' +
       '<div class="file-name" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
       '<div class="file-info"><span>' + escapeHtml(f.size || '-') + '</span><span>' + date + '</span></div>' +
       '</div>'
