@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="nightmode.css"/>
 </head>
 <body>
 
@@ -108,6 +109,9 @@
       </button>
     </div>
     <div class="topbar-right">
+      <div class="btn-icon nm-toggle" title="Mode Malam" onclick="NightMode.toggle()" aria-pressed="false">
+        <i class="ti ti-moon nm-icon"></i>
+      </div>
       <div class="btn-icon" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">
         <i class="ti ti-bell"></i>
         <div class="notif-dot"></div>
@@ -375,6 +379,7 @@
   <span id="toastMsg">Berhasil!</span>
 </div>
 
+<script src="nightmode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="script.js"></script>
 </body>

@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="settings.css"/>
+  <link rel="stylesheet" href="nightmode.css"/>
   <style>
     .avatar-wrapper {
       position: relative;
@@ -198,6 +199,9 @@
         </div>
         <div class="settings-nav-item" onclick="scrollToSection('sec-notif', this)">
           <i class="ti ti-bell-ringing"></i>Notifikasi
+        </div>
+        <div class="settings-nav-item" onclick="scrollToSection('sec-tampilan', this)">
+          <i class="ti ti-palette"></i>Tampilan
         </div>
       </nav>
 
@@ -486,6 +490,44 @@
           </div>
         </div>
 
+        <!-- ════════════════════════
+             4. TAMPILAN
+             ════════════════════════ -->
+        <div class="settings-card" id="sec-tampilan">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:rgba(92,70,12,0.08)">
+              <i class="ti ti-palette" style="color:#92400e"></i>
+            </div>
+            <div class="settings-card-head-text">
+              <div class="settings-card-title">Tampilan</div>
+              <div class="settings-card-desc">Sesuaikan tampilan antarmuka MyStorage</div>
+            </div>
+          </div>
+          <div class="settings-card-body">
+
+            <div class="notif-row">
+              <div class="notif-left">
+                <div class="notif-title">Mode Malam</div>
+                <div class="notif-desc">Aktifkan tema gelap di seluruh halaman MyStorage. Preferensi ini tersimpan otomatis di perangkat ini.</div>
+              </div>
+              <!-- Static toggle wired to NightMode API -->
+              <label class="toggle-switch" style="cursor:pointer" onclick="NightMode.toggle(); syncNightModeToggle(); return false;">
+                <input type="checkbox" id="nightModeCheck" style="pointer-events:none"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:12px 0 0;border-top:1px solid var(--border)">
+              <span style="font-size:12px;color:var(--ink-4)">Preview tema:</span>
+              <div style="display:flex;gap:8px">
+                <div style="width:28px;height:28px;border-radius:8px;background:#f7f5f2;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Terang" onclick="if(NightMode.isDark()){NightMode.toggle();syncNightModeToggle();}">☀️</div>
+                <div style="width:28px;height:28px;border-radius:8px;background:#141210;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Malam" onclick="if(!NightMode.isDark()){NightMode.toggle();syncNightModeToggle();}">🌙</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div><!-- end settings-content -->
     </div><!-- end settings-layout -->
 
@@ -524,6 +566,7 @@
   <span id="settingsToastMsg">Berhasil!</span>
 </div>
 
+<script src="nightmode.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ────────────────────────
@@ -1199,7 +1242,15 @@ document.addEventListener('DOMContentLoaded', async function() {
   sb.auth.onAuthStateChange(function(event, session) {
     if (event === 'SIGNED_OUT' || !session) window.location.href = 'login.html';
   });
+
+  // Sync night mode toggle checkbox
+  syncNightModeToggle();
 });
+
+function syncNightModeToggle() {
+  const cb = document.getElementById('nightModeCheck');
+  if (cb) cb.checked = NightMode.isDark();
+}
 </script>
 
 </body>

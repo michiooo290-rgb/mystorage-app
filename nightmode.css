@@ -1,0 +1,432 @@
+/* ═══════════════════════════════════════════════════════
+   MyStorage — Night Mode CSS
+   Overrides CSS custom properties when [data-theme="dark"]
+   is set on <html>. Works for style.css, settings.css,
+   login.html inline styles, and viewer.html.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Smooth transition on theme switch ── */
+*, *::before, *::after {
+  transition:
+    background-color 0.28s ease,
+    color            0.28s ease,
+    border-color     0.22s ease,
+    box-shadow       0.22s ease !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DARK THEME VARIABLES
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  /* Ink → light on dark */
+  --ink:     #f0ede8;
+  --ink-2:   #d8d4ce;
+  --ink-3:   #a09c97;
+  --ink-4:   #6a6662;
+  --ink-5:   #3e3c39;
+
+  /* Paper → dark surfaces */
+  --paper:   #141210;
+  --paper-2: #1c1a17;
+  --paper-3: #232019;
+
+  /* White → darkest surface */
+  --white:   #1a1815;
+
+  /* Borders → light on dark */
+  --border:   rgba(255,240,220,0.07);
+  --border-2: rgba(255,240,220,0.11);
+  --border-3: rgba(255,240,220,0.18);
+
+  /* Accent stays warm */
+  --accent:      #d97c4a;
+  --accent-2:    #e08d5a;
+  --accent-warm: #d97c4a;
+  --accent-warm-2: #e08d5a;
+  --accent-light: rgba(217,124,74,0.10);
+  --accent-mid:  #d97c4a;
+
+  /* Shadows deeper */
+  --shadow-xs: 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+
+  /* Status colors — slightly brighter for dark bg */
+  --green: #34d399;
+  --red:   #f87171;
+  --amber: #fbbf24;
+  --blue:  #60a5fa;
+}
+
+/* ═══════════════════════════════════════════════════════
+   BODY & SCROLLBAR
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] body {
+  background: var(--paper);
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255,240,220,0.12);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,240,220,0.2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .sidebar {
+  background: var(--paper-2);
+  border-right-color: var(--border);
+}
+
+[data-theme="dark"] .logo-icon {
+  background: rgba(255,255,255,0.08);
+}
+
+[data-theme="dark"] .nav-item {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .nav-item:hover {
+  background: var(--paper-3);
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] .nav-item.active {
+  background: rgba(217,124,74,0.12);
+  color: var(--accent);
+  border-color: rgba(217,124,74,0.2);
+}
+
+[data-theme="dark"] .nav-item.active i {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .divider {
+  background: var(--border);
+}
+
+[data-theme="dark"] .badge {
+  background: rgba(255,255,255,0.08);
+  color: var(--ink-3);
+}
+
+[data-theme="dark"] .storage-bar-track {
+  background: var(--paper-3);
+}
+
+[data-theme="dark"] .user-area {
+  border-top-color: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOPBAR
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .topbar {
+  background: rgba(20,18,16,0.88);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .search-input {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .search-input::placeholder {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .search-input:focus {
+  background: var(--paper-3);
+  border-color: var(--accent);
+}
+
+[data-theme="dark"] .icon-btn {
+  color: var(--ink-3);
+}
+
+[data-theme="dark"] .icon-btn:hover {
+  background: var(--paper-3);
+  color: var(--ink);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CARDS & TILES
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .file-card,
+[data-theme="dark"] .folder-card,
+[data-theme="dark"] .settings-card {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .card:hover,
+[data-theme="dark"] .file-card:hover,
+[data-theme="dark"] .folder-card:hover {
+  background: var(--paper-3);
+  border-color: var(--border-2);
+}
+
+[data-theme="dark"] .stat-card-icon {
+  background: var(--paper-3);
+}
+
+/* ═══════════════════════════════════════════════════════
+   MODALS & DROPDOWNS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-card,
+[data-theme="dark"] .dropdown-menu,
+[data-theme="dark"] .ctx-menu,
+[data-theme="dark"] .panel {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+}
+
+[data-theme="dark"] .modal-overlay,
+[data-theme="dark"] .modal-overlay-forgot {
+  background: rgba(0,0,0,0.65);
+}
+
+[data-theme="dark"] .modal-title {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .modal-sub {
+  color: var(--ink-3);
+}
+
+[data-theme="dark"] .ctx-item {
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] .ctx-item:hover {
+  background: var(--paper-3);
+}
+
+/* ═══════════════════════════════════════════════════════
+   INPUTS & FORMS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] .field-input,
+[data-theme="dark"] .search-bar input {
+  background: var(--paper-2) !important;
+  border-color: var(--border-2) !important;
+  color: var(--ink) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] .field-input::placeholder {
+  color: var(--ink-4) !important;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] .field-input:focus {
+  border-color: var(--accent) !important;
+  background: var(--paper-3) !important;
+  box-shadow: 0 0 0 3px rgba(217,124,74,0.12) !important;
+}
+
+[data-theme="dark"] .field-label {
+  color: var(--ink-2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .btn-secondary,
+[data-theme="dark"] .btn-ghost,
+[data-theme="dark"] .btn-outline {
+  background: var(--paper-3);
+  border-color: var(--border-2);
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .btn-ghost:hover {
+  background: var(--paper-3);
+  border-color: var(--border-3);
+}
+
+[data-theme="dark"] .btn-modal-cancel {
+  background: var(--paper-3);
+  border-color: var(--border-2);
+  color: var(--ink-2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TABS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .tab-row,
+[data-theme="dark"] .filter-row {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .tab-btn {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .tab-btn.active {
+  background: var(--paper-3);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .filter-chip {
+  background: transparent;
+  color: var(--ink-4);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .filter-chip.active,
+[data-theme="dark"] .filter-chip:hover {
+  background: var(--paper-3);
+  color: var(--ink-2);
+  border-color: var(--border-2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .toast {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+  color: var(--ink);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+/* ═══════════════════════════════════════════════════════
+   LOGIN PAGE SPECIFICS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .right-panel {
+  background: var(--paper);
+}
+
+/* Left panel stays dark (already dark by design) — just tweak slightly */
+[data-theme="dark"] .left-panel {
+  background: #0a0908;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SETTINGS PAGE SPECIFICS
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .settings-nav-item {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .settings-nav-item:hover {
+  background: var(--paper-2);
+  color: var(--ink-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .settings-nav-item.active {
+  background: var(--paper-3);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .settings-section-title {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .settings-label {
+  color: var(--ink-3);
+}
+
+[data-theme="dark"] .toggle-track {
+  background: var(--paper-3);
+  border-color: var(--border-2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BACKGROUND DECORATIVES
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .bg-mesh {
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .bg-grid {
+  opacity: 0.4;
+}
+
+[data-theme="dark"] .bg-noise {
+  opacity: 0.03;
+}
+
+/* ═══════════════════════════════════════════════════════
+   SECTION HEADERS & TYPOGRAPHY
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .section-title,
+[data-theme="dark"] .page-title,
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3 {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .subtitle {
+  color: var(--ink-3);
+}
+
+[data-theme="dark"] .divider,
+[data-theme="dark"] hr {
+  background: var(--border);
+  border-color: var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════
+   CUSTOM CONFIRM DIALOG
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] #customConfirm .modal-card,
+[data-theme="dark"] .confirm-card {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BREADCRUMB
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .breadcrumb-item {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .breadcrumb-sep {
+  color: var(--ink-5);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SHARED PANEL / EMPTY STATES
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .empty-icon {
+  background: var(--paper-2);
+}
+
+[data-theme="dark"] .empty-title {
+  color: var(--ink);
+}
+
+[data-theme="dark"] .empty-sub {
+  color: var(--ink-3);
+}
+
+/* ═══════════════════════════════════════════════════════
+   VIEWER PAGE — Light Mode Override
+   viewer.html uses its own dark purple theme by default.
+   In light mode we keep it as-is (dark is natural for viewer).
+   In NIGHT MODE we deepen it further for better contrast.
+   ═══════════════════════════════════════════════════════ */
+[data-theme="dark"] .viewer-topbar,
+[data-theme="dark"] .viewer-sidebar {
+  background: rgba(8,6,14,0.95);
+  border-color: rgba(255,255,255,0.06);
+}
