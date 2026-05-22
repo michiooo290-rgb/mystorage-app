@@ -257,13 +257,41 @@ function renderStats() {
   checkStorageNotif(usedBytes);
 }
 
+/* ── PIN FOLDER ── */
+function getPinnedFolders() {
+  return JSON.parse(localStorage.getItem('myStoragePinnedFolders') || '[]');
+}
+function togglePinFolder(folderId, e) {
+  if (e) e.stopPropagation();
+  var pins = getPinnedFolders();
+  var idx = pins.indexOf(folderId);
+  if (idx === -1) {
+    pins.push(folderId);
+    showToast('\uD83D\uDCCC Folder dipin ke atas!');
+  } else {
+    pins.splice(idx, 1);
+    showToast('Pin folder dilepas.');
+  }
+  localStorage.setItem('myStoragePinnedFolders', JSON.stringify(pins));
+  renderFolders();
+}
+
 /* ── RENDER FOLDERS ── */
 function renderFolders() {
   const grid = document.getElementById('folderGrid');
+  const pins = getPinnedFolders();
+
   // Tampilkan hanya folder yang parent_id-nya sama dengan currentFolderId
-  const visible = allFolders.filter(function(f) {
+  let visible = allFolders.filter(function(f) {
     const pid = f.parent_id || null;
     return pid === currentFolderId;
+  });
+
+  // Sort: pinned duluan, lalu urutan asli
+  visible = visible.slice().sort(function(a, b) {
+    var ap = pins.includes(a.id) ? 0 : 1;
+    var bp = pins.includes(b.id) ? 0 : 1;
+    return ap - bp;
   });
 
   // Render breadcrumb
@@ -280,23 +308,24 @@ function renderFolders() {
       (currentFolderId ? 'Belum ada subfolder di sini.' : 'Belum ada folder. Buat folder baru!') +
       '</p></div>';
     document.getElementById('folderCount').textContent = '0';
-    // Update folder select di modal upload
     populateFolderSelect();
     return;
   }
 
   grid.innerHTML = visible.map(function(f, i) {
     const c = FOLDER_COLORS[i % FOLDER_COLORS.length];
-    // Hitung file langsung di folder ini (support file lama yg belum punya folder_id)
     const fileCount = allFiles.filter(function(x) {
       return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name);
     }).length;
-    // Hitung subfolder
     const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
-    const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
+    const safeId = escapeAttr(f.id);
+    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
+    const isPinned = pins.includes(f.id);
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      '<div class="folder-wrap' + (isPinned ? ' folder-pinned' : '') + '" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      '<button class="folder-pin-btn' + (isPinned ? ' pinned' : '') + '" title="' + (isPinned ? 'Lepas pin' : 'Pin ke atas') + '" onclick="togglePinFolder(\'' + safeId + '\', event)">' +
+      '<i class="ti ' + (isPinned ? 'ti-pin-filled' : 'ti-pin') + '"></i></button>' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -305,6 +334,7 @@ function renderFolders() {
       '</filter></defs>' +
       '<path d="M6,20 Q6,14 12,14 L54,14 Q59,14 62,19 L67,26 L132,26 Q137,26 137,31 L137,82 Q137,88 131,88 L9,88 Q3,88 3,82 L3,27 Q3,20 9,20 Z" fill="' + c.color1 + '" filter="url(#fs' + i + ')"/>' +
       '<path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="' + c.color2 + '"/>' +
+      (isPinned ? '<text x="128" y="24" font-size="9" fill="' + c.sub + '" font-family="sans-serif" text-anchor="end">\uD83D\uDCCC</text>' : '') +
       (subCount > 0
         ? '<rect x="18" y="36" width="16" height="11" rx="2" fill="' + c.color1 + '"/>' +
           '<rect x="37" y="36" width="16" height="11" rx="2" fill="' + c.color1 + '"/>' +
@@ -312,7 +342,6 @@ function renderFolders() {
         : '') +
       '<text x="11" y="' + (subCount > 0 ? '60' : '48') + '" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
       '<text x="11" y="' + (subCount > 0 ? '70' : '61') + '" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + escapeHtml(subLabel) + '</text>' +
-      
       '</svg></div>'
     );
   }).join('');
@@ -567,7 +596,7 @@ function renderFiles() {
 
     // ── GRID VIEW CARD (default) ──
     return (
-      '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+      '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')" ondragstart="fileCardDragStart(event, \'' + safeId + '\')" ondragend="fileCardDragEnd(event, this)">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
       '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
       '<div class="file-top">' +
@@ -761,7 +790,7 @@ function renderFoldersFiltered(search) {
     const safeName = escapeHtml(f.name);
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -997,87 +1026,6 @@ async function deleteFolderById(folderId, folderName) {
   await loadAll();
 }
 
-/* ── RENAME FOLDER INLINE (double-click) ── */
-function startFolderRename(folderId, folderName, wrapEl) {
-  wrapEl.onclick = null;
-
-  var existing = wrapEl.querySelector('.folder-rename-overlay');
-  if (existing) existing.remove();
-
-  var overlay = document.createElement('div');
-  overlay.className = 'folder-rename-overlay';
-  overlay.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:14px;background:rgba(255,255,255,0.93);backdrop-filter:blur(4px);z-index:10;padding:10px 12px;box-sizing:border-box;gap:5px';
-
-  var inp = document.createElement('input');
-  inp.type = 'text';
-  inp.value = folderName;
-  inp.maxLength = 60;
-  inp.style.cssText = 'width:100%;padding:6px 10px;border:2px solid #c8602a;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;color:#0f0e0d;outline:none;background:#fff;text-align:center;box-shadow:0 2px 8px rgba(200,96,42,0.18);box-sizing:border-box';
-
-  var hint = document.createElement('div');
-  hint.style.cssText = 'font-size:10px;color:#9a9693;text-align:center';
-  hint.textContent = 'Enter simpan · Esc batal';
-
-  overlay.appendChild(inp);
-  overlay.appendChild(hint);
-  wrapEl.appendChild(overlay);
-  setTimeout(function() { inp.focus(); inp.select(); }, 50);
-
-  function commit() {
-    var newName = inp.value.trim();
-    cleanupOverlay();
-    if (!newName || newName === folderName) return;
-    renameFolderById(folderId, folderName, newName);
-  }
-
-  function cleanupOverlay() {
-    if (overlay.parentNode) overlay.remove();
-    wrapEl.onclick = function() { openFolderById(folderId, wrapEl.dataset.folderName || folderName); };
-  }
-
-  inp.addEventListener('keydown', function(e) {
-    e.stopPropagation();
-    if (e.key === 'Enter') { e.preventDefault(); commit(); }
-    if (e.key === 'Escape') { e.preventDefault(); cleanupOverlay(); }
-  });
-
-  inp.addEventListener('blur', function() {
-    setTimeout(commit, 150);
-  });
-
-  overlay.addEventListener('click', function(e) { e.stopPropagation(); });
-}
-
-async function renameFolderById(folderId, oldName, newName) {
-  var folder = allFolders.find(function(f) { return f.id === folderId; });
-  if (!folder) return;
-  var parentId = folder.parent_id || null;
-  var siblings = allFolders.filter(function(f) { return (f.parent_id || null) === parentId && f.id !== folderId; });
-  if (siblings.some(function(f) { return f.name.toLowerCase() === newName.toLowerCase(); })) {
-    showToast('Folder "' + newName + '" sudah ada di sini!');
-    return;
-  }
-
-  showToast('Mengubah nama folder...');
-  var result = await sb.from('folders').update({ name: newName }).eq('id', folderId);
-  if (result.error) { showToast('Gagal ubah nama: ' + result.error.message); return; }
-
-  // Update folder_name pada file lama yang memakai string folder_name
-  await sb.from('files').update({ folder_name: newName }).eq('folder_name', oldName).eq('folder_id', folderId);
-
-  // Update breadcrumb aktif jika perlu
-  folderPath = folderPath.map(function(crumb) {
-    return crumb.id === folderId ? { id: crumb.id, name: newName } : crumb;
-  });
-  if (currentFolderId === folderId) {
-    currentFolderFilter = newName;
-    updateFileSectionTitle();
-  }
-
-  showToast('\uD83D\uDCC1 Folder berhasil diubah menjadi "' + newName + '"!');
-  await loadAll();
-}
-
 /* ── CONTEXT MENU ── */
 function showCtx(e, id) {
   e.preventDefault();
@@ -1269,38 +1217,82 @@ function toggleFavorite() {
   renderStats();
 }
 
-/* ── DELETE FILE ── */
+/* ── DELETE FILE (with Undo) ── */
 async function deleteFile() {
   if (!ctxTarget) return;
   const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
   if (!file) return;
   const confirmed = await customConfirm({
-    title: 'Hapus File Permanen',
-    message: 'Yakin ingin menghapus "' + file.name + '"? File yang dihapus tidak bisa dikembalikan.',
+    title: 'Hapus File',
+    message: 'Hapus "' + file.name + '"? Anda punya 5 detik untuk membatalkan.',
     icon: 'ti-trash',
     confirmText: 'Ya, Hapus',
     confirmBtnClass: 'danger'
   });
-  if (!confirmed) {
-    ctxTarget = null;
-    return;
-  }
+  if (!confirmed) { ctxTarget = null; return; }
   document.getElementById('ctxMenu').classList.remove('show');
-  showToast('Menghapus file...');
+
+  const fileId = ctxTarget;
   const pathToDelete = file.storage_path || (file.folder_name + '/' + file.name);
-  const { error: storageError } = await sb.storage.from('user-files').remove([pathToDelete]);
-  if (storageError) console.error('Gagal menghapus dari Storage:', storageError.message);
-  const { error } = await sb.from('files').delete().eq('id', ctxTarget);
-  if (error) { showToast('Gagal hapus data database: ' + error.message); return; }
+
+  // Hapus dari DB segera (bisa di-restore dengan re-insert, tapi lebih mudah: hapus storage tertunda)
+  const { error } = await sb.from('files').delete().eq('id', fileId);
+  if (error) { showToast('Gagal hapus: ' + error.message); ctxTarget = null; return; }
+
+  // Hapus dari favs lokal
   let favs = getFavs();
-  if (favs.includes(ctxTarget)) {
-    favs = favs.filter(function(id) { return id !== ctxTarget; });
+  if (favs.includes(fileId)) {
+    favs = favs.filter(function(id) { return id !== fileId; });
     localStorage.setItem('myStorageFavs', JSON.stringify(favs));
   }
-  showToast('File "' + file.name + '" berhasil dihapus.');
+
   ctxTarget = null;
   await loadFiles();
   renderStats();
+
+  // Hapus storage setelah 5 detik, kecuali di-undo
+  let undone = false;
+  let deletionTimer = setTimeout(async function() {
+    if (!undone) {
+      await sb.storage.from('user-files').remove([pathToDelete]);
+    }
+  }, 5000);
+
+  showToast('\uD83D\uDDD1\uFE0F "' + file.name + '" dihapus.', {
+    icon: 'ti-trash',
+    duration: 5000,
+    undoLabel: 'Undo',
+    onUndo: async function() {
+      undone = true;
+      clearTimeout(deletionTimer);
+      // Re-insert file ke DB
+      const { error: reErr } = await sb.from('files').insert({
+        id: file.id,
+        name: file.name,
+        folder_name: file.folder_name,
+        folder_id: file.folder_id,
+        type: file.type,
+        size: file.size,
+        icon: file.icon,
+        icon_color: file.icon_color,
+        icon_bg: file.icon_bg,
+        storage_path: file.storage_path,
+        user_id: file.user_id,
+        created_at: file.created_at
+      });
+      if (reErr) {
+        showToast('Gagal undo: ' + reErr.message);
+        return;
+      }
+      // Restore favs jika perlu
+      if (favs.indexOf(fileId) === -1 && JSON.parse(localStorage.getItem('myStorageFavs') || '[]').indexOf(fileId) !== -1) {
+        // sudah dihapus dari favs, jangan restore otomatis
+      }
+      showToast('\u2705 File "' + file.name + '" berhasil dikembalikan!');
+      await loadFiles();
+      renderStats();
+    }
+  });
 }
 
 /* ── STORAGE NOTIFICATION CHECK ── */
@@ -1329,12 +1321,44 @@ function checkStorageNotif(usedBytes) {
 }
 
 /* ── TOAST ── */
-function showToast(msg) {
+function showToast(msg, opts) {
+  // opts: { undoLabel, onUndo, duration, icon }
   const t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
+  const msgEl = document.getElementById('toastMsg');
+  const undoEl = document.getElementById('toastUndo');
+  const iconEl = document.getElementById('toastIcon');
+
+  msgEl.textContent = msg;
+
+  // Icon
+  if (iconEl) {
+    iconEl.className = 'ti ' + ((opts && opts.icon) ? opts.icon : 'ti-check');
+    iconEl.style.color = (opts && opts.icon === 'ti-trash') ? '#f87171' : '#4ade80';
+  }
+
+  // Undo button
+  if (undoEl) {
+    if (opts && opts.onUndo) {
+      undoEl.style.display = 'flex';
+      undoEl.textContent = opts.undoLabel || 'Undo';
+      undoEl.onclick = function() {
+        clearTimeout(t._timer);
+        clearInterval(t._countdown);
+        t.classList.remove('show');
+        opts.onUndo();
+      };
+    } else {
+      undoEl.style.display = 'none';
+      undoEl.onclick = null;
+    }
+  }
+
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer = setTimeout(function() { t.classList.remove('show'); }, 2800);
+  clearInterval(t._countdown);
+
+  const duration = (opts && opts.duration) || 2800;
+  t._timer = setTimeout(function() { t.classList.remove('show'); }, duration);
 }
 
 /* ── UPLOAD FILE ── */
@@ -1707,15 +1731,38 @@ async function uploadFolderFiles() {
   else showToast('Folder berhasil diupload ke ' + (destName || 'Dashboard') + '!');
 }
 
+/* ── FILE CARD DRAG (seret file ke folder) ── */
+let draggingFileId = null;
+
+function fileCardDragStart(e, fileId) {
+  draggingFileId = fileId;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/mystorage-fileid', fileId);
+  // Ghost styling
+  setTimeout(function() {
+    var el = document.querySelector('[data-file-id="' + fileId + '"]');
+    if (el) el.classList.add('file-card-dragging');
+  }, 0);
+}
+
+function fileCardDragEnd(e, el) {
+  draggingFileId = null;
+  if (el) el.classList.remove('file-card-dragging');
+  // Clear all folder highlights
+  document.querySelectorAll('.folder-drop-target').forEach(function(f) {
+    f.classList.remove('folder-drop-target');
+  });
+}
+
 /* ── FOLDER CARD DRAG & DROP ── */
 function folderCardDragOver(e, el) {
   e.preventDefault();
   e.stopPropagation();
+  e.dataTransfer.dropEffect = draggingFileId ? 'move' : 'copy';
   el.classList.add('folder-drop-target');
 }
 
 function folderCardDragLeave(e, el) {
-  // Hanya remove jika benar-benar keluar dari card (bukan ke child element)
   if (!el.contains(e.relatedTarget)) {
     el.classList.remove('folder-drop-target');
   }
@@ -1726,26 +1773,53 @@ async function folderCardDrop(e, el) {
   e.stopPropagation();
   el.classList.remove('folder-drop-target');
 
-  var folderId = el.getAttribute('data-folder-id');
-  var folderName = el.getAttribute('data-folder-name');
-  if (!folderId) return;
+  var targetFolderId = el.getAttribute('data-folder-id');
+  var targetFolderName = el.getAttribute('data-folder-name');
+  if (!targetFolderId) return;
 
-  var folderObj = allFolders.find(function(f) { return f.id === folderId; });
+  // ── CASE 1: Drop file card dari dalam app ──
+  var internalFileId = e.dataTransfer.getData('text/mystorage-fileid') || draggingFileId;
+  if (internalFileId) {
+    draggingFileId = null;
+    document.querySelectorAll('.file-card-dragging').forEach(function(c) { c.classList.remove('file-card-dragging'); });
+
+    var file = allFiles.find(function(f) { return String(f.id) === String(internalFileId); });
+    if (!file) { showToast('File tidak ditemukan.'); return; }
+    if (file.folder_id === targetFolderId) { showToast('File sudah ada di folder ini.'); return; }
+
+    showToast('Memindahkan ke ' + targetFolderName + '...');
+    const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
+    const newPath = targetFolderName + '/' + Date.now() + '_' + file.name;
+
+    const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
+    if (moveErr) { showToast('Gagal pindah storage: ' + moveErr.message); return; }
+
+    const { error: dbErr } = await sb.from('files').update({
+      folder_name: targetFolderName,
+      folder_id: targetFolderId,
+      storage_path: newPath
+    }).eq('id', file.id);
+
+    if (dbErr) { showToast('Gagal update DB: ' + dbErr.message); return; }
+    showToast('\uD83D\uDCC1 "' + file.name + '" dipindahkan ke ' + targetFolderName + '!');
+    await loadAll();
+    return;
+  }
+
+  // ── CASE 2: Drop file dari OS (upload langsung) ──
   var files = e.dataTransfer.files;
-  if (!files || files.length === 0) { showToast('Drop file ke folder ' + folderName); return; }
+  if (!files || files.length === 0) return;
 
   var { data: sd } = await sb.auth.getSession();
   var userId = sd && sd.session ? sd.session.user.id : 'unknown';
-
   var successCount = 0;
   var failCount = 0;
 
-  // Show quick toast
-  showToast('Mengupload ' + files.length + ' file ke ' + folderName + '...');
+  showToast('Mengupload ' + files.length + ' file ke ' + targetFolderName + '...');
 
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
-    var storagePath = userId + '/' + folderId + '/' + Date.now() + '_' + file.name;
+    var storagePath = userId + '/' + targetFolderId + '/' + Date.now() + '_' + file.name;
 
     try {
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
@@ -1760,33 +1834,23 @@ async function folderCardDrop(e, el) {
       else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
 
       var iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-      var sizeStr = file.size > 1024*1024
-        ? (file.size/(1024*1024)).toFixed(1)+' MB'
-        : (file.size/1024).toFixed(0)+' KB';
+      var sizeStr = file.size > 1024*1024 ? (file.size/(1024*1024)).toFixed(1)+' MB' : (file.size/1024).toFixed(0)+' KB';
 
       var { error: insertErr } = await sb.from('files').insert({
-        name: file.name,
-        folder_name: folderName,
-        folder_id: folderId,
-        type: type,
-        size: sizeStr,
-        icon: iconInfo.icon,
-        icon_color: iconInfo.iconColor,
-        icon_bg: iconInfo.iconBg,
-        storage_path: storagePath,
-        user_id: userId
+        name: file.name, folder_name: targetFolderName, folder_id: targetFolderId,
+        type: type, size: sizeStr, icon: iconInfo.icon, icon_color: iconInfo.iconColor,
+        icon_bg: iconInfo.iconBg, storage_path: storagePath, user_id: userId
       });
-      if (insertErr) failCount++;
-      else successCount++;
+      if (insertErr) failCount++; else successCount++;
     } catch(e2) { failCount++; }
   }
 
   await loadFiles();
   renderStats();
 
-  if (failCount > 0 && successCount > 0) showToast(successCount + ' file masuk ke ' + folderName + ', ' + failCount + ' gagal.');
-  else if (failCount > 0) showToast('Gagal upload ke ' + folderName + '.');
-  else showToast(successCount + ' file berhasil masuk ke ' + folderName + '! 📁');
+  if (failCount > 0 && successCount > 0) showToast(successCount + ' file masuk ke ' + targetFolderName + ', ' + failCount + ' gagal.');
+  else if (failCount > 0) showToast('Gagal upload ke ' + targetFolderName + '.');
+  else showToast(successCount + ' file berhasil masuk ke ' + targetFolderName + '! \uD83D\uDCC1');
 }
 
 
@@ -1892,48 +1956,78 @@ async function bulkDelete() {
   var count = selectedFileIds.size;
   var confirmed = await customConfirm({
     title: 'Hapus ' + count + ' File',
-    message: 'Yakin ingin menghapus ' + count + ' file sekaligus? File yang dihapus tidak bisa dikembalikan.',
+    message: 'Yakin ingin menghapus ' + count + ' file sekaligus? Anda punya 5 detik untuk membatalkan.',
     icon: 'ti-trash',
     confirmText: 'Ya, Hapus Semua',
     confirmBtnClass: 'danger'
   });
   if (!confirmed) return;
 
-  showToast('Menghapus ' + count + ' file...');
-
   var ids = Array.from(selectedFileIds);
+  var filesToDelete = ids.map(function(id) {
+    return allFiles.find(function(f) { return String(f.id) === id; });
+  }).filter(Boolean);
+
   var successCount = 0;
   var failCount = 0;
+  var deletedFromDB = [];
 
-  for (var i = 0; i < ids.length; i++) {
-    var id = ids[i];
-    var file = allFiles.find(function(f) { return String(f.id) === id; });
-    if (!file) { failCount++; continue; }
-
-    var pathToDelete = file.storage_path || (file.folder_name + '/' + file.name);
-    try {
-      await sb.storage.from('user-files').remove([pathToDelete]);
-      var { error } = await sb.from('files').delete().eq('id', id);
-      if (error) { failCount++; }
-      else {
-        // Remove from favs if needed
-        var favs = getFavs();
-        if (favs.includes(id)) {
-          favs = favs.filter(function(fid) { return fid !== id; });
-          localStorage.setItem('myStorageFavs', JSON.stringify(favs));
-        }
-        successCount++;
+  for (var i = 0; i < filesToDelete.length; i++) {
+    var file = filesToDelete[i];
+    var { error } = await sb.from('files').delete().eq('id', file.id);
+    if (error) { failCount++; }
+    else {
+      deletedFromDB.push(file);
+      successCount++;
+      // Hapus dari favs
+      var favs = getFavs();
+      if (favs.includes(String(file.id))) {
+        localStorage.setItem('myStorageFavs', JSON.stringify(favs.filter(function(fid) { return fid !== String(file.id); })));
       }
-    } catch(e) { failCount++; }
+    }
   }
 
   exitSelectMode();
   await loadFiles();
   renderStats();
 
-  if (failCount > 0 && successCount > 0) showToast(successCount + ' file dihapus, ' + failCount + ' gagal.');
-  else if (failCount > 0) showToast('Gagal menghapus ' + failCount + ' file.');
-  else showToast(successCount + ' file berhasil dihapus! 🗑️');
+  if (successCount === 0) { showToast('Gagal menghapus ' + failCount + ' file.'); return; }
+
+  let undone = false;
+  let deletionTimer = setTimeout(async function() {
+    if (!undone) {
+      for (var j = 0; j < deletedFromDB.length; j++) {
+        var f = deletedFromDB[j];
+        var pathToDelete = f.storage_path || (f.folder_name + '/' + f.name);
+        await sb.storage.from('user-files').remove([pathToDelete]);
+      }
+    }
+  }, 5000);
+
+  var label = successCount + ' file dihapus' + (failCount > 0 ? ' (' + failCount + ' gagal)' : '') + '.';
+  showToast('\uD83D\uDDD1\uFE0F ' + label, {
+    icon: 'ti-trash',
+    duration: 5000,
+    undoLabel: 'Undo',
+    onUndo: async function() {
+      undone = true;
+      clearTimeout(deletionTimer);
+      var reErr = false;
+      for (var j = 0; j < deletedFromDB.length; j++) {
+        var f = deletedFromDB[j];
+        var { error: rErr } = await sb.from('files').insert({
+          id: f.id, name: f.name, folder_name: f.folder_name, folder_id: f.folder_id,
+          type: f.type, size: f.size, icon: f.icon, icon_color: f.icon_color,
+          icon_bg: f.icon_bg, storage_path: f.storage_path, user_id: f.user_id, created_at: f.created_at
+        });
+        if (rErr) reErr = true;
+      }
+      if (reErr) showToast('Sebagian file gagal dikembalikan.');
+      else showToast('\u2705 ' + deletedFromDB.length + ' file berhasil dikembalikan!');
+      await loadFiles();
+      renderStats();
+    }
+  });
 }
 
 
