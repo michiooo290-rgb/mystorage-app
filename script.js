@@ -12,12 +12,12 @@ const FOLDER_COLORS = [
 ];
 
 const FILE_ICONS = {
-  pdf:         { icon: 'ti-file-type-pdf', iconColor: '#c0392b', iconBg: 'rgba(192,57,43,0.08)' },
-  doc:         { icon: 'ti-file-text',     iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.08)' },
-  foto:        { icon: 'ti-photo',         iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.08)' },
-  video:       { icon: 'ti-video',         iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.08)' },
-  spreadsheet: { icon: 'ti-table',         iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.08)' },
-  audio:       { icon: 'ti-music',         iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.08)' },
+  pdf:         { icon: 'ti-file-type-pdf',  iconColor: '#c0392b', iconBg: 'rgba(192,57,43,0.18)' },
+  doc:         { icon: 'ti-file-type-docx', iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.15)' },
+  foto:        { icon: 'ti-photo',          iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.08)' },
+  video:       { icon: 'ti-video',          iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.08)' },
+  spreadsheet: { icon: 'ti-file-type-xls',  iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.15)' },
+  audio:       { icon: 'ti-music',          iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.08)' },
 };
 
 /* ── FILE TYPE LABEL ── */
@@ -66,6 +66,56 @@ function getFileTypeLabel(fileName, fileType) {
     py: { label: 'PY', color: '#0369a1', bg: 'rgba(3,105,161,0.13)' },
   };
   return extMap[ext] || { label: ext ? ext.toUpperCase() : (fileType ? fileType.toUpperCase() : 'FILE'), color: '#5a5754', bg: 'rgba(90,87,84,0.13)' };
+}
+
+/* ── FILE ICON INFO BY EXTENSION ── */
+function getFileIconInfo(fileName, fileType) {
+  if (!fileName) return FILE_ICONS[fileType] || FILE_ICONS['doc'];
+  const ext = fileName.split('.').pop().toLowerCase();
+  const iconMap = {
+    // PDF
+    pdf:  { icon: 'ti-file-type-pdf',  iconColor: '#c0392b', iconBg: 'rgba(192,57,43,0.18)' },
+    // Word
+    doc:  { icon: 'ti-file-type-doc',  iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.15)' },
+    docx: { icon: 'ti-file-type-docx', iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.15)' },
+    // PowerPoint
+    ppt:  { icon: 'ti-file-type-ppt',  iconColor: '#c2410c', iconBg: 'rgba(194,65,12,0.18)' },
+    pptx: { icon: 'ti-file-type-ppt',  iconColor: '#c2410c', iconBg: 'rgba(194,65,12,0.18)' },
+    // Excel / Spreadsheet
+    xls:  { icon: 'ti-file-type-xls',  iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.15)' },
+    xlsx: { icon: 'ti-file-type-xls',  iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.15)' },
+    csv:  { icon: 'ti-file-type-csv',  iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.15)' },
+    // Images
+    jpg:  { icon: 'ti-file-type-jpg',  iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    jpeg: { icon: 'ti-file-type-jpg',  iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    png:  { icon: 'ti-file-type-png',  iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    gif:  { icon: 'ti-file-type-bmp',  iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    webp: { icon: 'ti-photo',          iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    svg:  { icon: 'ti-file-type-svg',  iconColor: '#2d6a4f', iconBg: 'rgba(45,106,79,0.13)' },
+    // Videos
+    mp4:  { icon: 'ti-file-type-mp4',  iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.15)' },
+    mov:  { icon: 'ti-video',          iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.13)' },
+    avi:  { icon: 'ti-video',          iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.13)' },
+    mkv:  { icon: 'ti-video',          iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.13)' },
+    webm: { icon: 'ti-video',          iconColor: '#c8602a', iconBg: 'rgba(200,96,42,0.13)' },
+    // Audio
+    mp3:  { icon: 'ti-file-type-mp3',  iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.15)' },
+    wav:  { icon: 'ti-music',          iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.13)' },
+    ogg:  { icon: 'ti-music',          iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.13)' },
+    flac: { icon: 'ti-music',          iconColor: '#7e22ce', iconBg: 'rgba(126,34,206,0.13)' },
+    // Archives / ZIP
+    zip:  { icon: 'ti-file-type-zip',  iconColor: '#b45309', iconBg: 'rgba(180,83,9,0.15)' },
+    rar:  { icon: 'ti-file-zip',       iconColor: '#b45309', iconBg: 'rgba(180,83,9,0.15)' },
+    '7z': { icon: 'ti-file-zip',       iconColor: '#b45309', iconBg: 'rgba(180,83,9,0.15)' },
+    // Text / Code
+    txt:  { icon: 'ti-file-type-txt',  iconColor: '#5a5754', iconBg: 'rgba(90,87,84,0.13)' },
+    js:   { icon: 'ti-file-type-js',   iconColor: '#92400e', iconBg: 'rgba(146,64,14,0.15)' },
+    ts:   { icon: 'ti-file-type-ts',   iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.13)' },
+    html: { icon: 'ti-file-type-html', iconColor: '#c2410c', iconBg: 'rgba(194,65,12,0.13)' },
+    css:  { icon: 'ti-file-type-css',  iconColor: '#1d4ed8', iconBg: 'rgba(29,78,216,0.13)' },
+    py:   { icon: 'ti-file-type-py',   iconColor: '#0369a1', iconBg: 'rgba(3,105,161,0.13)' },
+  };
+  return iconMap[ext] || FILE_ICONS[fileType] || FILE_ICONS['doc'];
 }
 
 let currentFilter = 'semua';
@@ -602,10 +652,10 @@ function renderFiles() {
 
   grid.innerHTML = filtered.map(function(f, i) {
     const badge = FOLDER_BADGE[f.folder_name] || { bg: '#f3f4f6', color: '#6b7280' };
-    const iconInfo = FILE_ICONS[f.type] || FILE_ICONS['doc'];
-    const icon = f.icon || iconInfo.icon;
-    const iconColor = f.icon_color || iconInfo.iconColor;
-    const iconBg = f.icon_bg || iconInfo.iconBg;
+    const iconInfo = getFileIconInfo(f.name, f.type);
+    const icon = iconInfo.icon;
+    const iconColor = iconInfo.iconColor;
+    const iconBg = iconInfo.iconBg;
     const date = new Date(f.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
     const safeId = escapeAttr(String(f.id));
     const safeName = escapeHtml(f.name);
