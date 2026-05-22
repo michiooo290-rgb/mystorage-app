@@ -270,7 +270,7 @@ function renderFolders() {
     const initials = escapeHtml(userInitials);
     const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -705,7 +705,7 @@ function renderFoldersFiltered(search) {
     const initials = escapeHtml(userInitials);
     const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
       '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -1499,10 +1499,16 @@ async function uploadFolderFiles() {
 
   var destId = document.getElementById('folderDestSelect').value || null;
   var destObj = allFolders.find(function(f) { return f.id === destId; });
-  var destName = destObj ? destObj.name : 'root';
+  var destName = destObj ? destObj.name : null;
 
   var btnConfirm = document.getElementById('uploadBtn');
-  if (btnConfirm) btnConfirm.textContent = 'Mengupload...';
+  var btnCancel  = document.querySelector('#modal .btn-cancel');
+  if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.textContent = 'Mengupload...'; }
+  if (btnCancel)    btnCancel.disabled = true;
+
+  // Auth session (ambil sekali di luar loop)
+  var { data: sd } = await sb.auth.getSession();
+  var userId = sd && sd.session ? sd.session.user.id : 'unknown';
 
   var successCount = 0;
   var failCount = 0;
@@ -1511,49 +1517,142 @@ async function uploadFolderFiles() {
   for (var i = 0; i < filesArr.length; i++) {
     var file = filesArr[i];
     var relPath = file.webkitRelativePath || file.name;
-    // Gunakan full relative path di bawah folder tujuan
-    var storagePath = (destId ? destId + '/' : '') + relPath;
+
+    // Storage path: userId/folderId/relPath (pakai ID bukan nama biar unik)
+    var storagePath = userId + '/' + (destId ? destId + '/' : '') + Date.now() + '_' + relPath;
+
+    if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
 
     try {
-      var { data: sd } = await sb.auth.getSession();
-      var userId = sd && sd.session ? sd.session.user.id : 'unknown';
-      var filePath = userId + '/' + storagePath;
+      var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
+      if (upErr) { console.error('Storage upload error:', upErr.message); failCount++; continue; }
 
-      if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
-
-      var { error: upErr } = await sb.storage.from('user-files').upload(filePath, file, { upsert: true });
-      if (upErr) { failCount++; continue; }
-
-      var { data: urlData } = sb.storage.from('user-files').getPublicUrl(filePath);
-      var fileUrl = urlData ? urlData.publicUrl : '';
+      // Determine file type (sama seperti uploadFile)
       var ext = file.name.split('.').pop().toLowerCase();
+      var type = 'doc';
+      if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
+      else if (['mp4','mov','avi','mkv','webm'].includes(ext)) type = 'video';
+      else if (ext === 'pdf') type = 'pdf';
+      else if (['xlsx','csv','xls'].includes(ext)) type = 'spreadsheet';
+      else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
+
+      var iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
       var sizeStr = file.size > 1024*1024
         ? (file.size/(1024*1024)).toFixed(1)+' MB'
         : (file.size/1024).toFixed(0)+' KB';
 
-      await sb.from('files').insert({
+      var { error: insertErr } = await sb.from('files').insert({
         name: file.name,
-        url: fileUrl,
-        size: sizeStr,
-        type: ext,
-        folder: destName,
+        folder_name: destName,
         folder_id: destId || null,
-        path: filePath
+        type: type,
+        size: sizeStr,
+        icon: iconInfo.icon,
+        icon_color: iconInfo.iconColor,
+        icon_bg: iconInfo.iconBg,
+        storage_path: storagePath,
+        user_id: userId
       });
-      successCount++;
-    } catch(e) { failCount++; }
+      if (insertErr) { console.error('DB insert error:', insertErr.message); failCount++; }
+      else successCount++;
+    } catch(e) { console.error('Upload error:', e); failCount++; }
   }
 
-  if (btnConfirm) btnConfirm.textContent = 'Upload';
+  if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
+  if (btnCancel)    btnCancel.disabled = false;
   droppedFolderFiles = null;
 
-  setTimeout(function() { closeModal(); }, 300);
-  await loadAll();
+  setTimeout(function() { closeModal(); }, 400);
+  await loadFiles();
+  renderStats();
 
   if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal.');
-  else if (failCount > 0) showToast('Gagal upload ' + failCount + ' file.');
-  else showToast('Folder berhasil diupload ke ' + destName + '!');
+  else if (failCount > 0) showToast('Gagal upload ' + failCount + ' file. Cek konsol untuk detail.');
+  else showToast('Folder berhasil diupload ke ' + (destName || 'Dashboard') + '!');
 }
+
+/* ── FOLDER CARD DRAG & DROP ── */
+function folderCardDragOver(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  el.classList.add('folder-drop-target');
+}
+
+function folderCardDragLeave(e, el) {
+  // Hanya remove jika benar-benar keluar dari card (bukan ke child element)
+  if (!el.contains(e.relatedTarget)) {
+    el.classList.remove('folder-drop-target');
+  }
+}
+
+async function folderCardDrop(e, el) {
+  e.preventDefault();
+  e.stopPropagation();
+  el.classList.remove('folder-drop-target');
+
+  var folderId = el.getAttribute('data-folder-id');
+  var folderName = el.getAttribute('data-folder-name');
+  if (!folderId) return;
+
+  var folderObj = allFolders.find(function(f) { return f.id === folderId; });
+  var files = e.dataTransfer.files;
+  if (!files || files.length === 0) { showToast('Drop file ke folder ' + folderName); return; }
+
+  var { data: sd } = await sb.auth.getSession();
+  var userId = sd && sd.session ? sd.session.user.id : 'unknown';
+
+  var successCount = 0;
+  var failCount = 0;
+
+  // Show quick toast
+  showToast('Mengupload ' + files.length + ' file ke ' + folderName + '...');
+
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    var storagePath = userId + '/' + folderId + '/' + Date.now() + '_' + file.name;
+
+    try {
+      var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
+      if (upErr) { failCount++; continue; }
+
+      var ext = file.name.split('.').pop().toLowerCase();
+      var type = 'doc';
+      if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
+      else if (['mp4','mov','avi','mkv','webm'].includes(ext)) type = 'video';
+      else if (ext === 'pdf') type = 'pdf';
+      else if (['xlsx','csv','xls'].includes(ext)) type = 'spreadsheet';
+      else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
+
+      var iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
+      var sizeStr = file.size > 1024*1024
+        ? (file.size/(1024*1024)).toFixed(1)+' MB'
+        : (file.size/1024).toFixed(0)+' KB';
+
+      var { error: insertErr } = await sb.from('files').insert({
+        name: file.name,
+        folder_name: folderName,
+        folder_id: folderId,
+        type: type,
+        size: sizeStr,
+        icon: iconInfo.icon,
+        icon_color: iconInfo.iconColor,
+        icon_bg: iconInfo.iconBg,
+        storage_path: storagePath,
+        user_id: userId
+      });
+      if (insertErr) failCount++;
+      else successCount++;
+    } catch(e2) { failCount++; }
+  }
+
+  await loadFiles();
+  renderStats();
+
+  if (failCount > 0 && successCount > 0) showToast(successCount + ' file masuk ke ' + folderName + ', ' + failCount + ' gagal.');
+  else if (failCount > 0) showToast('Gagal upload ke ' + folderName + '.');
+  else showToast(successCount + ' file berhasil masuk ke ' + folderName + '! 📁');
+}
+
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {

@@ -539,6 +539,30 @@ body::before {
   animation: fadeUpIn 0.4s var(--ease-out-expo) both;
 }
 .folder-wrap:hover { transform: translateY(-3px); }
+.folder-wrap.folder-drop-target {
+  transform: translateY(-4px) scale(1.03);
+  filter: brightness(1.08);
+  outline: 2.5px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 14px;
+  transition: all 0.15s;
+}
+.folder-wrap.folder-drop-target::after {
+  content: "Drop di sini";
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  white-space: nowrap;
+  pointer-events: none;
+  font-family: inherit;
+}
 .folder-wrap.active svg path { stroke: var(--accent); stroke-width: 1px; }
 
 .folder-card {
