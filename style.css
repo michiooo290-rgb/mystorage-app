@@ -1290,3 +1290,168 @@ body::before {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+/* ═══════════════════════════════════════════
+   LIST VIEW / GRID VIEW TOGGLE
+   ═══════════════════════════════════════════ */
+
+/* ── View toggle button group ── */
+.view-toggle {
+  display: flex;
+  align-items: center;
+  background: var(--paper-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+}
+
+.view-toggle-btn {
+  width: 28px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  color: var(--ink-4);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s var(--ease-smooth);
+}
+.view-toggle-btn:hover { color: var(--ink-2); background: var(--paper-3); }
+.view-toggle-btn.active {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ═══════════════════════════════════════════
+   FILE GRID — LIST VIEW
+   ═══════════════════════════════════════════ */
+
+/* When list view is active, override the grid */
+.file-grid.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* List-view card */
+.file-grid.list-view .file-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transform: none !important;
+  animation: none;
+}
+
+.file-grid.list-view .file-card:hover {
+  transform: none !important;
+  background: var(--paper-2);
+}
+
+/* Hide grid-only elements */
+.file-grid.list-view .file-card .fcat-badge { display: none; }
+
+/* Icon — smaller in list */
+.file-grid.list-view .file-card .file-top {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.file-grid.list-view .file-card .file-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-xs);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.file-grid.list-view .file-card .file-icon-box:hover,
+.file-grid.list-view .file-card:hover .file-icon-box {
+  transform: none !important;
+}
+
+/* Name takes remaining space */
+.file-grid.list-view .file-card .file-name {
+  flex: 1;
+  margin-bottom: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Meta pushed to right */
+.file-grid.list-view .file-card .file-info {
+  margin-top: 0;
+  font-size: 10.5px;
+  color: var(--ink-5);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Folder badge shown as small pill on the right */
+.file-grid.list-view .file-card .list-folder-col {
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+  flex-shrink: 0;
+}
+
+/* Fav star repositioned */
+.file-grid.list-view .file-card .fav-star {
+  position: static;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* Checkbox in list mode */
+.file-grid.list-view .file-card .file-select-cb {
+  position: static !important;
+  flex-shrink: 0;
+}
+
+/* Menu dots */
+.file-grid.list-view .file-card .file-menu {
+  flex-shrink: 0;
+}
+
+/* List view header row */
+.file-list-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 14px;
+  font-size: 10.5px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--ink-5);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.file-list-header.visible { display: flex; }
+.lh-icon  { width: 32px; flex-shrink: 0; }
+.lh-name  { flex: 1; }
+.lh-folder{ width: 100px; flex-shrink: 0; }
+.lh-size  { width: 60px; flex-shrink: 0; text-align: right; }
+.lh-date  { width: 70px; flex-shrink: 0; text-align: right; }
+.lh-menu  { width: 26px; flex-shrink: 0; }
+
+/* Dark mode overrides for list view */
+[data-theme="dark"] .view-toggle {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+[data-theme="dark"] .view-toggle-btn.active {
+  background: var(--paper-3);
+}
+[data-theme="dark"] .file-grid.list-view .file-card:hover {
+  background: var(--paper-3);
+}

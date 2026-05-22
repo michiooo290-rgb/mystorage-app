@@ -25,6 +25,31 @@ let currentFolderFilter = null;   // nama folder (untuk kompatibilitas file filt
 let currentFolderId = null;       // UUID folder yang sedang dibuka (null = root)
 let folderPath = [];              // breadcrumb: [{id, name}]
 let currentSort = 'newest';
+let currentViewMode = localStorage.getItem('myStorageViewMode') || 'grid';
+
+/* ── VIEW MODE (grid / list) ── */
+function setViewMode(mode) {
+  currentViewMode = mode;
+  localStorage.setItem('myStorageViewMode', mode);
+
+  const grid = document.getElementById('fileGrid');
+  const header = document.getElementById('fileListHeader');
+  const btnGrid = document.getElementById('btnGridView');
+  const btnList = document.getElementById('btnListView');
+
+  if (mode === 'list') {
+    if (grid) grid.classList.add('list-view');
+    if (header) header.classList.add('visible');
+    if (btnGrid) btnGrid.classList.remove('active');
+    if (btnList) btnList.classList.add('active');
+  } else {
+    if (grid) grid.classList.remove('list-view');
+    if (header) header.classList.remove('visible');
+    if (btnGrid) btnGrid.classList.add('active');
+    if (btnList) btnList.classList.remove('active');
+  }
+  renderFiles();
+}
 let ctxTarget = null;
 let allFolders = [];
 let allFiles = [];
@@ -512,6 +537,35 @@ function renderFiles() {
 
     var isSelected = selectedFileIds.has(String(f.id));
     var selectedStyle = isSelected ? 'outline:2.5px solid #c8602a;outline-offset:2px;background:rgba(200,96,42,0.05);' : '';
+
+    if (currentViewMode === 'list') {
+      // ── LIST VIEW CARD ──
+      return (
+        '<div class="file-card" style="' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+        // Checkbox
+        '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';flex-shrink:0;align-items:center;justify-content:center;">' +
+        '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
+        // Icon
+        '<div class="file-top" style="margin-bottom:0;flex-shrink:0;">' +
+        '<div class="file-icon-box" style="background:' + iconBg + ';width:32px;height:32px;font-size:15px;">' +
+        '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div></div>' +
+        // Name (flex-1)
+        '<div class="file-name" style="flex:1;margin-bottom:0;font-size:13px;" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
+        // Folder col
+        '<div class="list-folder-col">' + safeFolder + '</div>' +
+        // Size + date
+        '<div class="file-info" style="margin-top:0;flex-direction:column;align-items:flex-end;gap:0;">' +
+        '<span>' + escapeHtml(f.size || '-') + '</span>' +
+        '<span style="margin-top:1px">' + date + '</span></div>' +
+        // Fav + menu
+        (isFav ? '<i class="ti ti-star fav-star" style="position:static;font-size:13px;flex-shrink:0;color:#fbbf24;"></i>' : '') +
+        (isSelectMode ? '' : '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
+        '<i class="ti ti-dots-vertical"></i></div>') +
+        '</div>'
+      );
+    }
+
+    // ── GRID VIEW CARD (default) ──
     return (
       '<div class="file-card" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
@@ -1893,6 +1947,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       window.location.href = 'login.html';
     }
   });
+
+  // Restore saved view mode (grid/list)
+  setViewMode(currentViewMode);
 
   loadAll();
 });

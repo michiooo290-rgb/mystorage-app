@@ -215,7 +215,7 @@
           <span class="section-title" id="fileSectionTitle">File Terbaru</span>
           <span class="section-count" id="fileCount">0</span>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
           <div class="btn-back-folder" id="btnBackFolder" onclick="closeFolder()" style="display:none">
             <i class="ti ti-arrow-left" style="font-size:14px"></i>Semua File
           </div>
@@ -224,6 +224,14 @@
           </div>
           <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="toggleSort()">
             <i class="ti ti-arrows-sort" style="font-size:15px"></i> <span id="sortLabel">Urutkan</span>
+          </div>
+          <div class="view-toggle" id="viewToggle" title="Ganti tampilan">
+            <button class="view-toggle-btn active" id="btnGridView" onclick="setViewMode('grid')" title="Grid View">
+              <i class="ti ti-layout-grid"></i>
+            </button>
+            <button class="view-toggle-btn" id="btnListView" onclick="setViewMode('list')" title="List View">
+              <i class="ti ti-layout-list"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -252,6 +260,14 @@
         </button>
       </div>
 
+      <div class="file-list-header" id="fileListHeader">
+        <div class="lh-icon"></div>
+        <div class="lh-name">Nama File</div>
+        <div class="lh-folder">Folder</div>
+        <div class="lh-size" style="text-align:right">Ukuran</div>
+        <div class="lh-date" style="text-align:right">Tanggal</div>
+        <div class="lh-menu"></div>
+      </div>
       <div class="file-grid" id="fileGrid">
         </div>
     </div>
