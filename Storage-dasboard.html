@@ -95,10 +95,10 @@
 <div class="main">
 
   <header class="topbar">
-    <div class="breadcrumb" style="margin-right:16px">
-      <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
+    <div class="breadcrumb" id="breadcrumb" style="margin-right:16px">
+      <i class="ti ti-home" style="font-size:15px;color:var(--ink-5);cursor:pointer" onclick="goToRoot()"></i>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
-      <span>Dashboard</span>
+      <span class="breadcrumb-item" onclick="goToRoot()" style="cursor:pointer">Dashboard</span>
     </div>
     <div class="search">
       <i class="ti ti-search"></i>
@@ -116,7 +116,7 @@
         <i class="ti ti-refresh"></i>
       </div>
       <button class="btn-upload" onclick="openModal()">
-        <i class="ti ti-cloud-upload"></i>Upload File
+        <i class="ti ti-cloud-upload"></i>Upload
       </button>
       <div class="topbar-av" title="Pengaturan Profil" onclick="window.location.href='settings.html'" style="cursor:pointer">RZ</div>
     </div>
@@ -265,24 +265,48 @@
     </div>
 
     <!-- Tab: Upload Folder -->
-    <div id="dropZoneFolderWrap" style="display:none">
-    <div class="drop-zone" id="dropZoneFolder" onclick="document.getElementById('folderInput').click()" style="cursor:pointer">
-      <i class="ti ti-folder-up" style="font-size:32px;color:var(--accent);margin-bottom:8px"></i>
-      <p>Klik untuk pilih <span>folder dari komputer</span></p>
-      <p style="font-size:11px;color:#9a9693;margin-top:4px">Subfolder otomatis jadi folder baru di web</p>
-      <input type="file" id="folderInput" webkitdirectory multiple style="display:none" onchange="handleFolderSelect(this)"/>
+    <div class="modal-title">Upload</div>
+    <div class="modal-sub">Pilih file atau folder untuk diupload.</div>
+
+    <!-- Toggle: File / Folder -->
+    <div class="upload-toggle" id="uploadToggle">
+      <button class="upload-toggle-btn active" onclick="setUploadMode('file')" id="toggleFileBtn">
+        <i class="ti ti-file-upload"></i>File
+      </button>
+      <button class="upload-toggle-btn" onclick="setUploadMode('folder')" id="toggleFolderBtn">
+        <i class="ti ti-folder-upload"></i>Folder
+      </button>
     </div>
-    <div id="folderPreview" style="display:none;margin-top:10px;background:rgba(15,14,13,0.03);border:1px solid rgba(15,14,13,0.08);border-radius:10px;padding:12px;font-size:12px"></div>
+
+    <!-- File upload mode -->
+    <div id="fileUploadMode">
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <i class="ti ti-cloud-upload"></i>
+        <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
+        <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
+      </div>
+      <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
+      <div class="modal-row">
+        <select class="modal-select" id="folderSelect">
+          <option value="">Upload ke folder saat ini</option>
+        </select>
+      </div>
     </div>
-    <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
-    <div class="modal-row" id="folderSelectRow">
-      <select class="modal-select" id="folderSelect">
-        <option value="">Pilih folder...</option>
-      </select>
+
+    <!-- Folder upload mode -->
+    <div id="folderUploadMode" style="display:none">
+      <div class="drop-zone" id="dropZoneFolder" onclick="document.getElementById('folderInput').click()">
+        <i class="ti ti-folder-up" style="font-size:38px;color:var(--accent);opacity:0.7"></i>
+        <p style="margin-top:8px">Klik untuk pilih <span>folder dari komputer</span></p>
+        <p style="font-size:11px;color:var(--ink-5);margin-top:4px">Semua file & sub-folder akan diupload</p>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSelect(this)"/>
+      </div>
+      <div id="selectedFolder" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;"></div>
     </div>
+
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal()">Batal</button>
-      <button class="btn-confirm" id="btnUploadConfirm" onclick="doUpload()">Upload</button>
+      <button class="btn-confirm" id="uploadBtn" onclick="doUpload()">Upload</button>
     </div>
   </div>
 </div>
