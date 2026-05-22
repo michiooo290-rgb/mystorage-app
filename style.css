@@ -1493,18 +1493,10 @@ body::before {
   outline-offset: 2px;
   border-radius: 14px;
 }
-.folder-wrap .folder-delete-btn {
-  right: 8px;
-  left: auto;
-}
 
 /* ── FILE CARD DRAG ── */
-.file-card[draggable="true"] {
-  cursor: grab;
-}
-.file-card[draggable="true"]:active {
-  cursor: grabbing;
-}
+.file-card[draggable="true"] { cursor: grab; }
+.file-card[draggable="true"]:active { cursor: grabbing; }
 .file-card-dragging {
   opacity: 0.4;
   transform: scale(0.97);
@@ -1519,17 +1511,12 @@ body::before {
   transition: transform 0.12s, outline 0.1s;
 }
 
-/* ── TOAST UNDO ── */
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* ── TOAST UNDO BUTTON ── */
 #toastUndo:hover {
   background: rgba(255,255,255,0.28) !important;
 }
 
-/* ── FOLDER RENAME OVERLAY ── */
+/* ── FOLDER RENAME INLINE OVERLAY ── */
 .folder-rename-overlay {
   animation: fadeInOverlay 0.12s ease;
 }
