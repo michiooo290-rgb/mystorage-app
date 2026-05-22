@@ -145,7 +145,8 @@ function getFavs() {
 
 /* ── LOAD DATA ── */
 async function loadAll() {
-  await Promise.all([loadFolders(), loadFiles()]);
+  await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
+  await loadFiles();
   renderStats();
 }
 
@@ -160,13 +161,28 @@ async function loadFiles() {
   const { data, error } = await sb.from('files').select('*').order('created_at', { ascending: false });
   if (error) { showToast('Gagal load file: ' + error.message); return; }
   allFiles = data || [];
+
+  // Auto-migrasi file lama: jika punya folder_name tapi belum folder_id, link ke folder yang sesuai
+  const toMigrate = allFiles.filter(function(f) { return f.folder_name && !f.folder_id; });
+  if (toMigrate.length > 0 && allFolders.length > 0) {
+    for (const f of toMigrate) {
+      const matchFolder = allFolders.find(function(folder) {
+        return folder.name === f.folder_name && !folder.parent_id;
+      });
+      if (matchFolder) {
+        await sb.from('files').update({ folder_id: matchFolder.id }).eq('id', f.id);
+        f.folder_id = matchFolder.id; // update local state juga
+      }
+    }
+  }
+
   renderFiles();
 }
 
 /* ── STATS ── */
 function renderStats() {
   const totalFiles = allFiles.length;
-  const totalFolders = allFolders.length;
+  const totalFolders = allFolders.filter(function(f) { return !f.parent_id; }).length; // hanya root folder
   const favCount = allFiles.filter(f => getFavs().includes(String(f.id))).length;
 
   const sharedCount = JSON.parse(localStorage.getItem('myStorageShared') || '[]').filter(function(s) {
@@ -243,8 +259,10 @@ function renderFolders() {
 
   grid.innerHTML = visible.map(function(f, i) {
     const c = FOLDER_COLORS[i % FOLDER_COLORS.length];
-    // Hitung file langsung di folder ini
-    const fileCount = allFiles.filter(function(x) { return x.folder_id === f.id; }).length;
+    // Hitung file langsung di folder ini (support file lama yg belum punya folder_id)
+    const fileCount = allFiles.filter(function(x) {
+      return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name);
+    }).length;
     // Hitung subfolder
     const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
@@ -424,12 +442,15 @@ function renderFiles() {
   let filtered = allFiles.filter(function(f) {
     const matchType   = currentFilter === 'semua' || f.type === currentFilter;
     const matchSearch = f.name.toLowerCase().includes(search) || (f.folder_name || '').toLowerCase().includes(search);
-    // Filter by folder: gunakan folder_id jika ada, fallback ke folder_name
+    // Filter folder: prioritas folder_id, fallback ke folder_name (kompatibilitas file lama)
     let matchFolder = true;
     if (currentFolderId) {
-      matchFolder = f.folder_id === currentFolderId || f.folder_name === currentFolderFilter;
-    } else if (currentFolderFilter) {
-      matchFolder = f.folder_name === currentFolderFilter;
+      // File baru punya folder_id, file lama hanya punya folder_name
+      matchFolder = f.folder_id === currentFolderId ||
+                    (!f.folder_id && f.folder_name === currentFolderFilter);
+    } else if (!currentFolderId && currentFolderFilter === null && !showOnlyFavorites) {
+      // Root view: tampilkan SEMUA file (tidak filter)
+      matchFolder = true;
     }
     const matchFav    = showOnlyFavorites ? favs.includes(String(f.id)) : true;
     return matchType && matchSearch && matchFolder && matchFav;
@@ -662,13 +683,15 @@ function renderFoldersFiltered(search) {
   grid.innerHTML = filtered.map(function(f, i) {
     const origIdx = allFolders.indexOf(f);
     const c = FOLDER_COLORS[origIdx % FOLDER_COLORS.length];
-    const fileCount = allFiles.filter(function(x) { return x.folder_name === f.name; }).length;
+    const fileCount = allFiles.filter(function(x) { return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name); }).length;
+    const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
-    const safeAttr = escapeAttr(f.name);
+    const safeId = escapeAttr(f.id);
     const initials = escapeHtml(userInitials);
+    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder="' + safeAttr + '" onclick="openFolder(this.dataset.folder)">' +
-      '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderByName(this)">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
+      '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
       '<defs><filter id="fsf' + i + '" x="-5%" y="-5%" width="110%" height="110%">' +
@@ -677,7 +700,7 @@ function renderFoldersFiltered(search) {
       '<path d="M6,20 Q6,14 12,14 L54,14 Q59,14 62,19 L67,26 L132,26 Q137,26 137,31 L137,82 Q137,88 131,88 L9,88 Q3,88 3,82 L3,27 Q3,20 9,20 Z" fill="' + c.color1 + '" filter="url(#fsf' + i + ')"/>' +
       '<path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="' + c.color2 + '"/>' +
       '<text x="11" y="48" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
-      '<text x="11" y="61" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + fileCount + ' file</text>' +
+      '<text x="11" y="61" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + escapeHtml(subLabel) + '</text>' +
       '<circle cx="10" cy="69" r="6.5" fill="' + c.av + '"/>' +
       '<text x="10" y="73" font-size="5.5" fill="#fff" text-anchor="middle" font-family="sans-serif" font-weight="600">' + initials + '</text>' +
       '</svg></div>'
@@ -731,7 +754,8 @@ function setNav(el) {
 /* ── MODAL ── */
 function openModal() {
   document.getElementById('modal').classList.add('show');
-  // Auto-fill folder aktif jika sedang berada di dalam folder
+  // Pastikan dropdown terisi dulu, baru auto-select folder aktif
+  populateFolderSelect();
   if (currentFolderId) {
     const sel = document.getElementById('folderSelect');
     if (sel) sel.value = currentFolderId;
