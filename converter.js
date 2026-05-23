@@ -16,8 +16,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ── Init: Auth check + load user & storage info ─────
 async function initConverterPage() {
-  // Wait for supabase SDK to be ready
-  if (!window.supabase) return;
+  // Wait for supabase SDK to be ready (loaded via script tag)
+  let tries = 0;
+  while (!window.supabase && tries < 30) {
+    await new Promise(r => setTimeout(r, 100));
+    tries++;
+  }
+  if (!window.supabase) {
+    console.warn('Supabase SDK not loaded');
+    return;
+  }
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 

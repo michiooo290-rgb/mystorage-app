@@ -109,6 +109,8 @@ body::before {
   z-index: 20;
   background: var(--ink);
   border-right: none;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Subtle left-panel grid overlay — same as login */
@@ -254,7 +256,7 @@ body::before {
   padding: 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  margin-top: auto;
+  margin-top: 12px;
   margin-bottom: 12px;
   transition: all var(--t-fast);
   border: 1px solid transparent;
