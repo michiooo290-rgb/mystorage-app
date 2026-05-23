@@ -4,13 +4,106 @@
 
 'use strict';
 
+// ── Supabase config (same as script.js) ─────────────
+const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
+
 // ── Init ────────────────────────────────────────────
-// nightmode.js manages the .nm-toggle button automatically.
-// The button in HTML has class="btn-icon nm-toggle" so nightmode.js
-// wires it up and keeps icon/state in sync on every page.
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   loadMammoth();
+  await initConverterPage();
 });
+
+// ── Init: Auth check + load user & storage info ─────
+async function initConverterPage() {
+  // Wait for supabase SDK to be ready
+  if (!window.supabase) return;
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Auth check — redirect to login if not logged in
+  const { data: sessionData } = await sb.auth.getSession();
+  if (!sessionData || !sessionData.session) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  const user     = sessionData.session.user;
+  const fullName = (user.user_metadata && user.user_metadata.full_name)
+    ? user.user_metadata.full_name
+    : user.email.split('@')[0];
+  const initials = fullName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const email    = user.email;
+
+  // Update sidebar user info
+  document.querySelectorAll('.user-name').forEach(el => { el.textContent = fullName; });
+  document.querySelectorAll('.user-role').forEach(el => { el.textContent = email; });
+
+  // Apply avatar photo or initials (respects settings saved in localStorage)
+  const savedPhoto = localStorage.getItem('myStorageAvatarPhoto');
+  const savedColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+  document.querySelectorAll('.user-av, .topbar-av').forEach(el => {
+    if (savedPhoto) {
+      el.textContent = '';
+      el.style.background = `url(${savedPhoto}) center/cover`;
+      el.style.backgroundSize = 'cover';
+    } else {
+      el.textContent = initials;
+      el.style.background = savedColor;
+    }
+  });
+
+  // Logout on user-chip click
+  const userChip = document.querySelector('.user-chip');
+  if (userChip) {
+    userChip.style.cursor = 'pointer';
+    userChip.title = 'Klik untuk logout';
+    userChip.onclick = async () => {
+      if (confirm('Yakin ingin keluar dari akun Anda?')) {
+        await sb.auth.signOut();
+        window.location.href = 'login.html';
+      }
+    };
+  }
+
+  // Load storage usage from files table
+  try {
+    const { data: files } = await sb.from('files').select('size').eq('user_id', user.id);
+    if (files && files.length > 0) {
+      let usedBytes = 0;
+      files.forEach(f => {
+        if (f.size) {
+          const num = parseFloat(f.size);
+          if (String(f.size).includes('MB'))      usedBytes += num * 1024 * 1024;
+          else if (String(f.size).includes('KB')) usedBytes += num * 1024;
+          else if (String(f.size).includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
+          else if (String(f.size).includes('B'))  usedBytes += num;
+        }
+      });
+
+      const usedMB  = usedBytes / (1024 * 1024);
+      const totalMB = 1024;
+      const pct     = Math.min(Math.round((usedMB / totalMB) * 100), 100);
+      const usedStr = usedBytes < 1024          ? usedBytes.toFixed(0) + ' B'
+                    : usedBytes < 1024*1024      ? (usedBytes/1024).toFixed(0) + ' KB'
+                    : usedBytes < 1024*1024*1024 ? (usedBytes/(1024*1024)).toFixed(1) + ' MB'
+                    : (usedBytes/(1024*1024*1024)).toFixed(2) + ' GB';
+
+      const pctEl  = document.getElementById('storagePct');
+      const usedEl = document.getElementById('storageUsed');
+      if (pctEl)  pctEl.textContent  = pct + '%';
+      if (usedEl) usedEl.textContent = usedStr + ' terpakai';
+
+      setTimeout(() => {
+        const fill = document.querySelector('.storage-fill');
+        if (fill) fill.style.width = pct + '%';
+      }, 300);
+    }
+  } catch (e) {
+    // Storage info not critical — silently ignore
+    console.warn('Could not load storage info:', e);
+  }
+}
 
 // ── State ───────────────────────────────────────────
 let currentMode = 'pdf-to-word'; // 'pdf-to-word' | 'word-to-pdf'
