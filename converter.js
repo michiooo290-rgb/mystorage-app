@@ -4,20 +4,11 @@
 
 'use strict';
 
-// ── Night Mode Button Sync ──────────────────────────
-function updateNmBtn() {
-  if (typeof NightMode === 'undefined') return;
-  const dark = NightMode.isDark();
-  const icon = document.getElementById('nmTopbarIcon');
-  const btn  = document.getElementById('nmTopbarBtn');
-  if (!icon || !btn) return;
-  icon.className = dark ? 'ti ti-sun' : 'ti ti-moon';
-  btn.title      = dark ? 'Mode Terang' : 'Mode Malam';
-  btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
-}
-
+// ── Init ────────────────────────────────────────────
+// nightmode.js manages the .nm-toggle button automatically.
+// The button in HTML has class="btn-icon nm-toggle" so nightmode.js
+// wires it up and keeps icon/state in sync on every page.
 document.addEventListener('DOMContentLoaded', () => {
-  updateNmBtn();
   loadMammoth();
 });
 

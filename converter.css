@@ -192,6 +192,11 @@
 
 .flow-arrow { color: var(--ink-5); font-size: 18px; }
 
+.card-header-note {
+  font-size: 11.5px;
+  color: var(--ink-5);
+}
+
 .card-body { padding: 28px 24px; }
 
 /* ── Drop Zone ── */
@@ -563,4 +568,163 @@
 .nav-item.converter-active {
   background: rgba(200,96,42,0.12) !important;
   color: #fff !important;
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   DARK MODE OVERRIDES — Converter Page
+   Triggered by [data-theme="dark"] from nightmode.css
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Layout wrappers ── */
+[data-theme="dark"] .converter-wrap {
+  background: var(--paper);
+}
+
+/* ── Mode tabs ── */
+[data-theme="dark"] .mode-tab {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .mode-tab:hover::before {
+  background: rgba(217,124,74,0.07);
+  opacity: 1;
+}
+
+[data-theme="dark"] .mode-tab.active {
+  background: var(--paper-2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(217,124,74,0.12);
+}
+
+[data-theme="dark"] .tab-label { color: var(--ink-2); }
+[data-theme="dark"] .tab-desc  { color: var(--ink-4); }
+
+[data-theme="dark"] .tab-check {
+  border-color: var(--border-2);
+}
+
+[data-theme="dark"] .mode-tab.active .tab-check {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Converter card ── */
+[data-theme="dark"] .converter-card {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .card-header {
+  background: var(--paper-3);
+  border-bottom-color: var(--border);
+}
+
+[data-theme="dark"] .card-header-note {
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .card-body {
+  background: var(--paper-2);
+}
+
+/* ── Drop zone ── */
+[data-theme="dark"] .drop-zone-big {
+  background: var(--paper-3);
+  border-color: var(--border-2);
+}
+
+[data-theme="dark"] .drop-zone-big:hover,
+[data-theme="dark"] .drop-zone-big.drag-over {
+  border-color: var(--accent);
+  background: rgba(217,124,74,0.05);
+}
+
+[data-theme="dark"] .drop-title   { color: var(--ink-2); }
+[data-theme="dark"] .drop-subtitle { color: var(--ink-4); }
+
+/* ── File items ── */
+[data-theme="dark"] .file-item {
+  background: var(--paper-3);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .file-item:hover {
+  border-color: var(--border-2);
+  background: var(--paper-3);
+}
+
+[data-theme="dark"] .file-item-name { color: var(--ink-2); }
+[data-theme="dark"] .file-item-meta { color: var(--ink-4); }
+
+[data-theme="dark"] .status-waiting    { color: var(--ink-4); }
+[data-theme="dark"] .status-processing { color: var(--accent); }
+[data-theme="dark"] .status-done       { color: var(--green); }
+[data-theme="dark"] .status-error      { color: var(--red); }
+
+[data-theme="dark"] .file-remove-btn {
+  color: var(--ink-4);
+}
+[data-theme="dark"] .file-remove-btn:hover {
+  background: rgba(248,113,113,0.12);
+  color: var(--red);
+}
+
+[data-theme="dark"] .file-download-btn {
+  border-color: var(--border-2);
+  color: var(--ink-3);
+}
+[data-theme="dark"] .file-download-btn:hover {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(52,211,153,0.07);
+}
+
+/* ── Actions row ── */
+[data-theme="dark"] .actions-row {
+  border-top-color: var(--border);
+}
+
+[data-theme="dark"] .btn-clear {
+  border-color: var(--border-2);
+  color: var(--ink-4);
+}
+[data-theme="dark"] .btn-clear:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: rgba(248,113,113,0.08);
+}
+
+/* ── Info note ── */
+[data-theme="dark"] .info-note {
+  background: rgba(217,124,74,0.08);
+  border-color: rgba(217,124,74,0.18);
+  color: var(--ink-3);
+}
+
+/* ── How it works ── */
+[data-theme="dark"] .how-step {
+  background: var(--paper-2);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .step-num {
+  background: var(--paper-3);
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] .step-label { color: var(--ink-2); }
+[data-theme="dark"] .step-desc  { color: var(--ink-4); }
+
+[data-theme="dark"] .how-title  { color: var(--ink-4); }
+
+/* ── Page header ── */
+[data-theme="dark"] .page-title    { color: var(--ink); }
+[data-theme="dark"] .page-subtitle { color: var(--ink-4); }
+
+/* ── Spinner ── */
+[data-theme="dark"] .progress-ring {
+  border-color: rgba(217,124,74,0.2);
+  border-top-color: var(--accent);
 }
