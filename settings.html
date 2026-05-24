@@ -1052,8 +1052,9 @@ function renderDonut() {
   }).join('');
 }
 
-function renderFolderBars() {
+function renderFolderBars(showAll) {
   const list = document.getElementById('folderBarList');
+  const LIMIT = 5;
 
   if (allFolders.length === 0) {
     list.innerHTML = '<div style="font-size:12px;color:var(--ink-5);text-align:center;padding:20px 0">Belum ada folder</div>';
@@ -1076,8 +1077,10 @@ function renderFolderBars() {
   }).sort((a, b) => b.files - a.files);
 
   const maxFiles = Math.max(...folderData.map(f => f.files), 1);
+  const visible = showAll ? folderData : folderData.slice(0, LIMIT);
+  const hasMore = folderData.length > LIMIT;
 
-  list.innerHTML = folderData.map(fd => {
+  list.innerHTML = visible.map(fd => {
     const pct = ((fd.files / maxFiles) * 100).toFixed(0);
     return `<div class="folder-bar-item">
       <div class="folder-bar-head">
@@ -1088,7 +1091,18 @@ function renderFolderBars() {
         <div class="folder-bar-fill" style="width:0%" data-pct="${pct}"></div>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + (hasMore ? `
+    <button onclick="renderFolderBars(${!showAll})" style="
+      width:100%;margin-top:10px;padding:7px 0;
+      background:transparent;border:1px solid rgba(15,14,13,0.12);
+      border-radius:8px;font-size:12px;color:var(--ink-4);
+      cursor:pointer;font-family:inherit;transition:all 0.2s;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+    " onmouseover="this.style.background='rgba(15,14,13,0.05)';this.style.color='var(--ink-2)'"
+       onmouseout="this.style.background='transparent';this.style.color='var(--ink-4)'">
+      <i class="ti ${showAll ? 'ti-chevron-up' : 'ti-chevron-down'}" style="font-size:13px"></i>
+      ${showAll ? 'Tampilkan lebih sedikit' : 'Lihat semua ' + folderData.length + ' folder'}
+    </button>` : '');
 
   // Animate bars after render
   setTimeout(() => {
