@@ -1754,10 +1754,11 @@ async function handleFolderDrop(e) {
     return;
   }
 
-  droppedFolderFiles = droppedEntryFiles;
+    droppedFolderFiles = droppedEntryFiles;
   showFolderInfo(droppedEntryFiles);
+  }
 
-function readDirectoryEntries(dirEntry, path, fileList) {
+  function readDirectoryEntries(dirEntry, path, fileList) {
   return new Promise(function(resolve) {
     var reader = dirEntry.createReader();
     var allEntries = [];
