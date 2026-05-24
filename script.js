@@ -1317,7 +1317,9 @@ async function confirmMoveFile() {
   if (btn) { btn.disabled = true; btn.textContent = 'Memindahkan...'; }
 
   const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
-  const newPath = targetFolder + '/' + Date.now() + '_' + file.name;
+  const { data: sd2 } = await sb.auth.getSession();
+  const uid2 = sd2 && sd2.session ? sd2.session.user.id : 'unknown';
+  const newPath = uid2 + '/' + targetFolderId + '/' + Date.now() + '_' + file.name;
 
   const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
   if (moveErr) {
@@ -1603,7 +1605,7 @@ async function uploadFile() {
       ? (file.size / (1024*1024)).toFixed(1) + ' MB'
       : (file.size / 1024).toFixed(0) + ' KB';
 
-    const filePath = folder + '/' + Date.now() + '_' + file.name;
+    const filePath = (uid || 'unknown') + '/' + folderId + '/' + Date.now() + '_' + file.name;
     const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
     if (uploadError) { console.error('Upload error:', uploadError.message); failCount++; continue; }
 
@@ -1619,7 +1621,11 @@ async function uploadFile() {
       storage_path: filePath,
       user_id: uid
     });
-    if (insertError) { console.error('Insert error:', insertError.message); failCount++; }
+    if (insertError) {
+      console.error('Insert error:', insertError.message);
+      await sb.storage.from('user-files').remove([filePath]);
+      failCount++;
+    }
     else successCount++;
   }
 
@@ -1719,7 +1725,7 @@ async function handleFolderDrop(e) {
   var items = e.dataTransfer.items;
   if (!items || items.length === 0) return;
 
-  var allFiles = [];
+  var droppedEntryFiles = [];
   var promises = [];
 
   for (var i = 0; i < items.length; i++) {
@@ -1743,14 +1749,13 @@ async function handleFolderDrop(e) {
 
   await Promise.all(promises);
 
-  if (allFiles.length === 0) {
+    if (droppedEntryFiles.length === 0) {
     showToast('Drop folder, bukan file biasa!');
     return;
   }
 
-  droppedFolderFiles = allFiles;
-  showFolderInfo(allFiles);
-}
+  droppedFolderFiles = droppedEntryFiles;
+  showFolderInfo(droppedEntryFiles);
 
 function readDirectoryEntries(dirEntry, path, fileList) {
   return new Promise(function(resolve) {
