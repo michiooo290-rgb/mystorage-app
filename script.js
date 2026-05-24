@@ -2242,8 +2242,17 @@ async function bulkDelete() {
 
 /* ── INIT ── */
 document.addEventListener('DOMContentLoaded', async function() {
+  // Sembunyikan konten sampai session terverifikasi — cegah flash konten
+  document.body.style.visibility = 'hidden';
+
   const { data: sessionData } = await sb.auth.getSession();
-  if (!sessionData || !sessionData.session) { window.location.href = 'login.html'; return; }
+  if (!sessionData || !sessionData.session) {
+    window.location.replace('login.html'); // replace: hapus dari history, tombol Back tidak bisa balik
+    return;
+  }
+
+  // Session valid — tampilkan konten
+  document.body.style.visibility = 'visible';
 
   const user = sessionData.session.user;
   const fullName = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name : user.email.split('@')[0];
@@ -2282,7 +2291,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       });
       if (confirmed) {
         await sb.auth.signOut();
-        window.location.href = 'login.html';
+        window.location.replace('login.html');
       }
     };
   }
@@ -2328,7 +2337,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   sb.auth.onAuthStateChange(function(event, session) {
     if (event === 'SIGNED_OUT' || !session) {
-      window.location.href = 'login.html';
+      window.location.replace('login.html');
     }
   });
 
