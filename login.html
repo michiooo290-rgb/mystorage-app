@@ -940,10 +940,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
 <script>
-  // supabase-config.js harus mendefinisikan window.SUPABASE_URL dan window.SUPABASE_ANON_KEY
-  // Lihat supabase-config.example.js untuk panduan konfigurasi
+  window.SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
+  window.SUPABASE_ANON_KEY = 'sb_publishable_IpViPmYP_YfGeia5GBLR-A_7Lt9b0WR';
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   /* ── SECURITY: Rate limiting untuk login ── */
