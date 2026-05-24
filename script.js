@@ -1,6 +1,6 @@
-const SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNnbW94cXZkaWhpZXdkZ3hxeGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyNjYzMjYsImV4cCI6MjA5NDg0MjMyNn0.VpifdxYoJFb-6HA6fNmK2g0rBJGZTNfklwTafCOci6U';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// SECURITY: Credentials dimuat dari supabase-config.js (jangan hardcode di sini)
+// Pastikan supabase-config.js dimuat sebelum script.js di Storage-dasboard.html
+const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
 const FOLDER_COLORS = [
   { color1: '#c7d2fe', color2: '#eef2ff', text: '#3730a3', sub: '#6366f1', av: '#6366f1' },
