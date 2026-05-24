@@ -124,6 +124,8 @@ let currentFolderId = null;       // UUID folder yang sedang dibuka (null = root
 let folderPath = [];              // breadcrumb: [{id, name}]
 let currentSort = 'newest';
 let currentViewMode = localStorage.getItem('myStorageViewMode') || 'grid';
+const MAX_FOLDERS_SHOWN = 4;      // Jumlah folder yang ditampilkan sebelum "Lihat Semua"
+let isFolderExpanded = false;
 
 /* ── VIEW MODE (grid / list) ── */
 function setViewMode(mode) {
@@ -407,10 +409,15 @@ function renderFolders() {
       '</p></div>';
     document.getElementById('folderCount').textContent = '0';
     populateFolderSelect();
+    var seeAllBtn = document.getElementById('btnLihatSemua');
+    if (seeAllBtn) seeAllBtn.style.display = 'none';
     return;
   }
 
-  grid.innerHTML = visible.map(function(f, i) {
+  // Tentukan folder yang ditampilkan berdasarkan status expand
+  const toShow = isFolderExpanded ? visible : visible.slice(0, MAX_FOLDERS_SHOWN);
+
+  grid.innerHTML = toShow.map(function(f, i) {
     const c = FOLDER_COLORS[i % FOLDER_COLORS.length];
     const fileCount = allFiles.filter(function(x) {
       return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name);
@@ -446,6 +453,43 @@ function renderFolders() {
 
   document.getElementById('folderCount').textContent = visible.length;
   populateFolderSelect();
+
+  // ── Tombol "Lihat Semua / Sembunyikan" ──
+  var seeAllBtn = document.getElementById('btnLihatSemua');
+  if (visible.length > MAX_FOLDERS_SHOWN) {
+    if (!seeAllBtn) {
+      seeAllBtn = document.createElement('button');
+      seeAllBtn.id = 'btnLihatSemua';
+      seeAllBtn.style.cssText = [
+        'display:flex', 'align-items:center', 'gap:5px',
+        'background:transparent', 'border:1.5px solid var(--border)',
+        'color:var(--text-muted)', 'border-radius:8px',
+        'padding:6px 14px', 'font-size:12.5px', 'cursor:pointer',
+        'margin-top:10px', 'transition:all .18s ease',
+        'font-family:inherit'
+      ].join(';');
+      seeAllBtn.onmouseenter = function() {
+        this.style.borderColor = 'var(--accent)';
+        this.style.color = 'var(--accent)';
+      };
+      seeAllBtn.onmouseleave = function() {
+        this.style.borderColor = 'var(--border)';
+        this.style.color = 'var(--text-muted)';
+      };
+      grid.parentNode.insertBefore(seeAllBtn, grid.nextSibling);
+    }
+    var remaining = visible.length - MAX_FOLDERS_SHOWN;
+    seeAllBtn.innerHTML = isFolderExpanded
+      ? '<i class="ti ti-chevron-up" style="font-size:13px"></i> Sembunyikan'
+      : '<i class="ti ti-chevron-down" style="font-size:13px"></i> Lihat Semua (' + remaining + ' lainnya)';
+    seeAllBtn.style.display = 'flex';
+    seeAllBtn.onclick = function() {
+      isFolderExpanded = !isFolderExpanded;
+      renderFolders();
+    };
+  } else {
+    if (seeAllBtn) seeAllBtn.style.display = 'none';
+  }
 }
 
 function renderFolderBreadcrumb() {
