@@ -1410,7 +1410,43 @@ function syncNightModeToggle() {
   const cb = document.getElementById('nightModeCheck');
   if (cb) cb.checked = NightMode.isDark();
 }
+
+function customConfirm({ title, message, confirmText, cancelText, icon, iconClass, confirmBtnClass } = {}) {
+  return new Promise(function(resolve) {
+    var overlay = document.getElementById('customConfirm');
+    var titleEl = document.getElementById('confirmTitle');
+    var msgEl = document.getElementById('confirmMsg');
+    var okBtn = document.getElementById('confirmOk');
+    var cancelBtn = document.getElementById('confirmCancel');
+    var iconEl = document.getElementById('confirmIcon');
+
+    titleEl.textContent = title || 'Konfirmasi';
+    msgEl.textContent = message || 'Apakah Anda yakin?';
+    okBtn.textContent = confirmText || 'Ya, Lanjutkan';
+    cancelBtn.textContent = cancelText || 'Batal';
+    iconEl.className = 'custom-dialog-icon' + (iconClass ? ' ' + iconClass : '');
+    iconEl.innerHTML = '<i class="ti ' + (icon || 'ti-alert-triangle') + '"></i>';
+    okBtn.className = 'custom-dialog-btn ' + (confirmBtnClass || 'confirm');
+
+    overlay.classList.add('show');
+
+    function cleanup() {
+      overlay.classList.remove('show');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+    }
+    function onOk() { cleanup(); resolve(true); }
+    function onCancel() { cleanup(); resolve(false); }
+    function onOverlay(e) { if (e.target === overlay) { cleanup(); resolve(false); } }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+  });
+}
 </script>
+
 
 </body>
 </html>
