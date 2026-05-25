@@ -1120,6 +1120,82 @@ function deleteFolderByName(btn) {
   if (fid) deleteFolderById(fid, fname);
 }
 
+/* ── RENAME FOLDER (double click) ── */
+function startFolderRename(folderId, folderName, el) {
+  // Cari elemen SVG text nama folder
+  const svg = el.querySelector('svg');
+  if (!svg) return;
+
+  // Buat input overlay di atas folder card
+  const rect = el.getBoundingClientRect();
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = folderName;
+  input.style.cssText = `
+    position: fixed;
+    left: ${rect.left + 10}px;
+    top: ${rect.top + rect.height * 0.45}px;
+    width: ${Math.min(rect.width - 20, 160)}px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    border: 2px solid var(--accent, #c8602a);
+    border-radius: 6px;
+    background: #fff;
+    color: #0f0e0d;
+    z-index: 9999;
+    outline: none;
+    box-shadow: 0 4px 16px rgba(200,96,42,0.25);
+  `;
+
+  document.body.appendChild(input);
+  input.focus();
+  input.select();
+
+  async function doRename() {
+    const newName = input.value.trim();
+    input.remove();
+
+    if (!newName || newName === folderName) return;
+
+    // Cek duplikat dalam parent yang sama
+    const folder = allFolders.find(function(f) { return f.id === folderId; });
+    const parentId = folder ? (folder.parent_id || null) : null;
+    const siblings = allFolders.filter(function(f) { return (f.parent_id || null) === parentId && f.id !== folderId; });
+    if (siblings.some(function(f) { return f.name.toLowerCase() === newName.toLowerCase(); })) {
+      showToast('Nama folder "' + newName + '" sudah ada!');
+      return;
+    }
+
+    showToast('Mengubah nama folder...');
+    const { error } = await sb.from('folders').update({ name: newName }).eq('id', folderId);
+    if (error) { showToast('Gagal rename: ' + error.message); return; }
+
+    // Update nama di allFolders lokal
+    const idx = allFolders.findIndex(function(f) { return f.id === folderId; });
+    if (idx !== -1) allFolders[idx].name = newName;
+
+    // Update breadcrumb jika folder ini sedang dibuka
+    const bcIdx = folderPath.findIndex(function(c) { return c.id === folderId; });
+    if (bcIdx !== -1) folderPath[bcIdx].name = newName;
+
+    showToast('📁 Folder berhasil diubah ke "' + newName + '"!');
+    await loadFolders();
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doRename();
+    if (e.key === 'Escape') input.remove();
+  });
+
+  input.addEventListener('blur', function() {
+    // Delay agar enter bisa diproses dulu
+    setTimeout(function() {
+      if (document.body.contains(input)) doRename();
+    }, 150);
+  });
+}
 async function deleteFolderById(folderId, folderName) {
   // Kumpulkan semua subfolder secara rekursif
   function collectSubIds(pid) {
