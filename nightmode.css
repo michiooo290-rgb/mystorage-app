@@ -434,3 +434,27 @@
   background: rgba(8,6,14,0.95);
   border-color: rgba(255,255,255,0.06);
 }
+/* ═══════════════════════════════════════════════════════
+   LOGIN — LEFT PANEL FIX
+   Left panel selalu gelap di kedua mode, teks harus tetap terlihat
+   ═══════════════════════════════════════════════════════ */
+
+/* Light mode: pastikan left panel tetap gelap & teks putih terlihat */
+.left-panel {
+  background: var(--ink) !important;
+}
+.left-panel .brand-headline,
+.left-panel .brand-name,
+.left-panel .brand-eyebrow,
+.left-panel .brand-desc,
+.left-panel .feature-item {
+  color: rgba(255,255,255,0.92) !important;
+}
+.left-panel .brand-desc {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+/* Dark mode: left panel lebih gelap */
+[data-theme="dark"] .left-panel {
+  background: #080706 !important;
+}
