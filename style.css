@@ -151,14 +151,9 @@ body::before {
 }
 
 .logo-icon {
-  width: 34px; height: 34px;
+  background: transparent;
+  border: none;
   border-radius: 10px;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.15);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  font-size: 17px;
-  color: #fff;
 }
 
 .logo-text {
