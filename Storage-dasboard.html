@@ -14,6 +14,55 @@
   <link rel="stylesheet" href="style.css"/>
   <link rel="stylesheet" href="nightmode.css"/>
   <script src="nightmode.js"></script>
+  <!-- Lordicon CDN -->
+  <script src="https://cdn.lordicon.com/lordicon.js"></script>
+  <style>
+    /* Lordicon sizing dalam nav */
+    .nav-item lord-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    /* Lordicon dalam stat-icon */
+    .stat-icon lord-icon {
+      width: 26px;
+      height: 26px;
+    }
+    /* Lordicon dalam ctx-menu */
+    .ctx-item lord-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    /* Lordicon dalam drop-zone */
+    .drop-zone lord-icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 4px;
+    }
+    /* Lordicon dalam btn-upload */
+    .btn-upload lord-icon {
+      width: 18px;
+      height: 18px;
+    }
+    /* Lordicon dalam logo */
+    .logo-icon lord-icon {
+      width: 22px;
+      height: 22px;
+    }
+    /* Lordicon topbar */
+    .btn-icon lord-icon {
+      width: 20px;
+      height: 20px;
+    }
+    /* Upload tab icons */
+    .tab-icon lord-icon {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+  </style>
 </head>
 <body>
 
@@ -32,47 +81,71 @@
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-icon">
-      <i class="ti ti-archive" style="color:#fff;font-size:18px"></i>
+      <!-- Logo: archive/storage animated -->
+      <lord-icon src="https://cdn.lordicon.com/lomfljuq.json" trigger="loop" delay="2000" colors="primary:#ffffff" style="width:22px;height:22px"></lord-icon>
     </div>
     <span class="logo-text">MyStorage</span>
   </div>
 
   <span class="nav-label">Menu</span>
+
+  <!-- Dashboard -->
   <div class="nav-item active" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'semua')">
-    <i class="ti ti-layout-dashboard"></i>Dashboard
+    <lord-icon src="https://cdn.lordicon.com/wmwqvixz.json" trigger="hover" colors="primary:#818cf8" style="width:20px;height:20px"></lord-icon>
+    Dashboard
     <span class="badge" id="badgeDashboard">0</span>
   </div>
+
+  <!-- Dibagikan -->
   <div class="nav-item" onclick="setNav(this); showSharedPanel()">
-    <i class="ti ti-share"></i>Dibagikan
+    <lord-icon src="https://cdn.lordicon.com/tyvtvbcy.json" trigger="hover" colors="primary:#fb923c" style="width:20px;height:20px"></lord-icon>
+    Dibagikan
     <span class="badge" id="badgeShared">0</span>
   </div>
+
+  <!-- Favorit -->
   <div class="nav-item" onclick="setNav(this); filterFavorites()">
-    <i class="ti ti-star"></i>Favorit
+    <lord-icon src="https://cdn.lordicon.com/ulnswvkx.json" trigger="hover" colors="primary:#fbbf24" style="width:20px;height:20px"></lord-icon>
+    Favorit
   </div>
 
   <div class="divider"></div>
   <span class="nav-label">Tipe File</span>
+
+  <!-- Dokumen -->
   <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=doc]'), 'doc')">
-    <i class="ti ti-file-type-pdf"></i>Dokumen
+    <lord-icon src="https://cdn.lordicon.com/sgeiaosi.json" trigger="hover" colors="primary:#c0392b" style="width:20px;height:20px"></lord-icon>
+    Dokumen
     <span class="badge" id="badgeDocs">0</span>
   </div>
+
+  <!-- Foto -->
   <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=foto]'), 'foto')">
-    <i class="ti ti-photo"></i>Foto
+    <lord-icon src="https://cdn.lordicon.com/dxjqoygy.json" trigger="hover" colors="primary:#2d6a4f" style="width:20px;height:20px"></lord-icon>
+    Foto
     <span class="badge" id="badgePhotos">0</span>
   </div>
+
+  <!-- Video -->
   <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=video]'), 'video')">
-    <i class="ti ti-video"></i>Video
+    <lord-icon src="https://cdn.lordicon.com/puvaffet.json" trigger="hover" colors="primary:#c8602a" style="width:20px;height:20px"></lord-icon>
+    Video
     <span class="badge" id="badgeVideos">0</span>
   </div>
+
+  <!-- Audio -->
   <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=audio]'), 'audio')">
-    <i class="ti ti-music"></i>Audio
+    <lord-icon src="https://cdn.lordicon.com/fhtaantg.json" trigger="hover" colors="primary:#7e22ce" style="width:20px;height:20px"></lord-icon>
+    Audio
     <span class="badge" id="badgeAudio">0</span>
   </div>
 
   <div class="divider"></div>
 
+  <!-- Pengaturan -->
   <div class="nav-item" onclick="window.location.href='settings.html'">
-    <i class="ti ti-settings"></i>Pengaturan
+    <lord-icon src="https://cdn.lordicon.com/hwjcdycb.json" trigger="hover" colors="primary:#9a9693" style="width:20px;height:20px"></lord-icon>
+    Pengaturan
   </div>
 
   <div class="user-chip">
@@ -113,18 +186,23 @@
       </button>
     </div>
     <div class="topbar-right">
+      <!-- Night mode -->
       <div class="btn-icon" id="nmTopbarBtn" title="Mode Malam" onclick="NightMode.toggle(); updateNmBtn()" aria-pressed="false">
         <i class="ti ti-moon" id="nmTopbarIcon"></i>
       </div>
+      <!-- Notifikasi -->
       <div class="btn-icon" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">
-        <i class="ti ti-bell"></i>
+        <lord-icon src="https://cdn.lordicon.com/lznlxwtc.json" trigger="hover" colors="primary:#5a5754" style="width:20px;height:20px"></lord-icon>
         <div class="notif-dot"></div>
       </div>
+      <!-- Refresh -->
       <div class="btn-icon" title="Refresh Data" onclick="loadAll(); showToast('Data diperbarui')">
-        <i class="ti ti-refresh"></i>
+        <lord-icon src="https://cdn.lordicon.com/jxhgzthg.json" trigger="hover" colors="primary:#5a5754" style="width:20px;height:20px"></lord-icon>
       </div>
+      <!-- Upload button -->
       <button class="btn-upload" onclick="openModal()">
-        <i class="ti ti-cloud-upload"></i>Upload
+        <lord-icon src="https://cdn.lordicon.com/fikcyfpp.json" trigger="hover" colors="primary:#ffffff" style="width:18px;height:18px"></lord-icon>
+        Upload
       </button>
       <div class="topbar-av" title="Pengaturan Profil" onclick="window.location.href='settings.html'" style="cursor:pointer">RZ</div>
     </div>
@@ -132,37 +210,42 @@
 
   <div class="content">
 
+    <!-- STAT CARDS -->
     <div class="stats-row">
+      <!-- Total File -->
       <div class="stat-card" style="animation-delay:0s">
         <div class="stat-icon" style="background:rgba(99,102,241,0.15)">
-          <i class="ti ti-files" style="color:#818cf8"></i>
+          <lord-icon src="https://cdn.lordicon.com/sgeiaosi.json" trigger="loop" delay="2000" colors="primary:#818cf8" style="width:26px;height:26px"></lord-icon>
         </div>
         <div>
           <div class="stat-value" id="statFiles">0</div>
           <div class="stat-label">Total File</div>
         </div>
       </div>
+      <!-- Folder -->
       <div class="stat-card" style="animation-delay:0.06s">
         <div class="stat-icon" style="background:rgba(34,197,94,0.15)">
-          <i class="ti ti-folder" style="color:#4ade80"></i>
+          <lord-icon src="https://cdn.lordicon.com/tqywkdcz.json" trigger="loop" delay="2000" colors="primary:#4ade80" style="width:26px;height:26px"></lord-icon>
         </div>
         <div>
           <div class="stat-value" id="statFolders">0</div>
           <div class="stat-label">Folder</div>
         </div>
       </div>
+      <!-- Dibagikan -->
       <div class="stat-card" style="animation-delay:0.12s">
         <div class="stat-icon" style="background:rgba(249,115,22,0.15)">
-          <i class="ti ti-share" style="color:#fb923c"></i>
+          <lord-icon src="https://cdn.lordicon.com/tyvtvbcy.json" trigger="loop" delay="2000" colors="primary:#fb923c" style="width:26px;height:26px"></lord-icon>
         </div>
         <div>
           <div class="stat-value" id="statShared">0</div>
           <div class="stat-label">Dibagikan</div>
         </div>
       </div>
+      <!-- Favorit -->
       <div class="stat-card" style="animation-delay:0.18s">
         <div class="stat-icon" style="background:rgba(245,158,11,0.15)">
-          <i class="ti ti-star" style="color:#fbbf24"></i>
+          <lord-icon src="https://cdn.lordicon.com/ulnswvkx.json" trigger="loop" delay="2000" colors="primary:#fbbf24" style="width:26px;height:26px"></lord-icon>
         </div>
         <div>
           <div class="stat-value" id="statFavorit">0</div>
@@ -196,12 +279,11 @@
           <i class="ti ti-plus" style="font-size:14px"></i>Folder baru
         </button>
       </div>
-      <div class="folder-grid" id="folderGrid">
-        </div>
+      <div class="folder-grid" id="folderGrid"></div>
     </div>
 
     <div>
-      <!-- Bulk action bar (muncul saat ada file terpilih) -->
+      <!-- Bulk action bar -->
       <div id="bulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(200,96,42,0.07);border:1.5px solid rgba(200,96,42,0.18);border-radius:var(--radius);margin-bottom:10px;">
         <input type="checkbox" id="checkSelectAll" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="toggleSelectAll(this.checked)">
         <span id="bulkCount" style="font-size:13px;font-weight:600;color:var(--ink-2);flex:1">0 file dipilih</span>
@@ -271,8 +353,7 @@
         <div class="lh-date" style="text-align:right">Tanggal</div>
         <div class="lh-menu"></div>
       </div>
-      <div class="file-grid" id="fileGrid">
-        </div>
+      <div class="file-grid" id="fileGrid"></div>
     </div>
 
     </div><!-- end mainPanel -->
@@ -280,6 +361,7 @@
   </div>
 </div>
 
+<!-- UPLOAD MODAL -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
     <div class="modal-title" id="modalTitle">Upload File</div>
@@ -287,18 +369,20 @@
 
     <!-- Upload Mode Tabs -->
     <div style="display:flex;gap:0;margin-bottom:14px;background:rgba(15,14,13,0.05);border-radius:10px;padding:3px">
-      <button id="tabFiles" onclick="switchUploadTab('files')" style="flex:1;padding:7px 0;border:none;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#0f0e0d;cursor:pointer;box-shadow:0 1px 4px rgba(15,14,13,0.08);transition:all 0.15s;font-family:inherit">
-        <i class="ti ti-files" style="font-size:13px;margin-right:5px;vertical-align:middle"></i>Upload File
+      <button id="tabFiles" onclick="switchUploadTab('files')" style="flex:1;padding:7px 0;border:none;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#0f0e0d;cursor:pointer;box-shadow:0 1px 4px rgba(15,14,13,0.08);transition:all 0.15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+        <lord-icon src="https://cdn.lordicon.com/sgeiaosi.json" trigger="hover" colors="primary:#0f0e0d" style="width:16px;height:16px"></lord-icon>
+        Upload File
       </button>
-      <button id="tabFolder" onclick="switchUploadTab('folder')" style="flex:1;padding:7px 0;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:500;color:#9a9693;cursor:pointer;transition:all 0.15s;font-family:inherit">
-        <i class="ti ti-folder-up" style="font-size:13px;margin-right:5px;vertical-align:middle"></i>Upload Folder
+      <button id="tabFolder" onclick="switchUploadTab('folder')" style="flex:1;padding:7px 0;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:500;color:#9a9693;cursor:pointer;transition:all 0.15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px">
+        <lord-icon src="https://cdn.lordicon.com/tqywkdcz.json" trigger="hover" colors="primary:#9a9693" style="width:16px;height:16px"></lord-icon>
+        Upload Folder
       </button>
     </div>
 
     <!-- Tab: Upload File -->
     <div id="tabFilesContent">
       <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <i class="ti ti-cloud-upload"></i>
+        <lord-icon src="https://cdn.lordicon.com/fikcyfpp.json" trigger="loop" delay="1500" colors="primary:#c8602a" style="width:48px;height:48px"></lord-icon>
         <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
         <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
       </div>
@@ -317,7 +401,7 @@
            ondragover="handleFolderDragOver(event)"
            ondragleave="handleFolderDragLeave(event)"
            ondrop="handleFolderDrop(event)">
-        <i class="ti ti-folder-up" style="font-size:36px;color:var(--accent);opacity:0.7"></i>
+        <lord-icon src="https://cdn.lordicon.com/tqywkdcz.json" trigger="loop" delay="1500" colors="primary:#c8602a" style="width:48px;height:48px"></lord-icon>
         <p style="margin-top:8px">Drag &amp; drop <span>folder</span> ke sini</p>
         <p style="font-size:11px;color:var(--ink-5);margin-top:3px">atau <span style="cursor:pointer;text-decoration:underline;color:var(--accent)">klik untuk pilih dari komputer</span></p>
         <p style="font-size:10.5px;color:var(--ink-5);margin-top:2px;opacity:0.7">Semua file &amp; sub-folder akan diupload</p>
@@ -338,6 +422,7 @@
   </div>
 </div>
 
+<!-- MOVE MODAL -->
 <div class="modal-overlay" id="moveModal">
   <div class="modal">
     <div class="modal-title">Pindah ke Folder</div>
@@ -353,14 +438,34 @@
     </div>
   </div>
 </div>
+
+<!-- CONTEXT MENU -->
 <div class="ctx-menu" id="ctxMenu">
-  <div class="ctx-item" onclick="downloadFile()"><i class="ti ti-download"></i>Download</div>
-  <div class="ctx-item" onclick="shareFile()"><i class="ti ti-share"></i>Bagikan Link</div>
-  <div class="ctx-item" onclick="renameFile()"><i class="ti ti-edit"></i>Rename File</div>
-  <div class="ctx-item" onclick="moveFile()"><i class="ti ti-folder-symlink"></i>Pindah ke Folder</div>
-  <div class="ctx-item" onclick="toggleFavorite()"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
+  <div class="ctx-item" onclick="downloadFile()">
+    <lord-icon src="https://cdn.lordicon.com/dicvhxpz.json" trigger="hover" colors="primary:#5a5754" style="width:18px;height:18px"></lord-icon>
+    Download
+  </div>
+  <div class="ctx-item" onclick="shareFile()">
+    <lord-icon src="https://cdn.lordicon.com/tyvtvbcy.json" trigger="hover" colors="primary:#5a5754" style="width:18px;height:18px"></lord-icon>
+    Bagikan Link
+  </div>
+  <div class="ctx-item" onclick="renameFile()">
+    <lord-icon src="https://cdn.lordicon.com/wkvhbqpn.json" trigger="hover" colors="primary:#5a5754" style="width:18px;height:18px"></lord-icon>
+    Rename File
+  </div>
+  <div class="ctx-item" onclick="moveFile()">
+    <lord-icon src="https://cdn.lordicon.com/tqywkdcz.json" trigger="hover" colors="primary:#5a5754" style="width:18px;height:18px"></lord-icon>
+    Pindah ke Folder
+  </div>
+  <div class="ctx-item" onclick="toggleFavorite()">
+    <lord-icon src="https://cdn.lordicon.com/ulnswvkx.json" trigger="hover" colors="primary:#5a5754" style="width:18px;height:18px"></lord-icon>
+    Tambah/Hapus Favorit
+  </div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus Permanen</div>
+  <div class="ctx-item danger" onclick="deleteFile()">
+    <lord-icon src="https://cdn.lordicon.com/jmkrnisz.json" trigger="hover" colors="primary:#c0392b" style="width:18px;height:18px"></lord-icon>
+    Hapus Permanen
+  </div>
 </div>
 
 <!-- Custom Confirm Dialog -->
@@ -401,10 +506,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  window.SUPABASE_URL = 'https://cgmoxqvdihiewdgxqxlh.supabase.co';
-  window.SUPABASE_ANON_KEY = 'sb_publishable_IpViPmYP_YfGeia5GBLR-A_7Lt9b0WR';
-</script>
+<script src="Supabase-config.js"></script>
 <script src="script.js"></script>
 <script>
   function updateNmBtn() {
@@ -416,7 +518,6 @@
     btn.title      = dark ? 'Mode Terang' : 'Mode Malam';
     btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
   }
-  // Sync icon on page load
   document.addEventListener('DOMContentLoaded', updateNmBtn);
 </script>
 </body>
