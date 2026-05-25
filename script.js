@@ -493,32 +493,33 @@ function renderFolders() {
 }
 
 function renderFolderBreadcrumb() {
-  // Tampilkan breadcrumb di atas folder grid jika sedang di dalam folder
   let bcEl = document.getElementById('folderBreadcrumb');
   if (!bcEl) {
     bcEl = document.createElement('div');
     bcEl.id = 'folderBreadcrumb';
-    bcEl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);margin-bottom:10px;flex-wrap:wrap';
+    bcEl.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-4);margin-bottom:10px;flex-wrap:wrap';
     const grid = document.getElementById('folderGrid');
     grid.parentNode.insertBefore(bcEl, grid);
   }
 
   if (folderPath.length === 0) {
     bcEl.style.display = 'none';
+    updateTopbarBreadcrumb();
     return;
   }
 
   bcEl.style.display = 'flex';
-  let html = '<span style="cursor:pointer;color:var(--accent);font-weight:500" onclick="navigateBreadcrumb(-1)"><i class="ti ti-home" style="font-size:13px;vertical-align:middle;margin-right:2px"></i>Root</span>';
+  let html = '<span style="cursor:pointer;color:var(--accent);font-weight:500" onclick="goToRoot()"><i class="ti ti-home" style="font-size:13px;vertical-align:middle;margin-right:2px"></i>Root</span>';
   folderPath.forEach(function(crumb, idx) {
-    html += '<i class="ti ti-chevron-right" style="font-size:11px;color:var(--text-faint)"></i>';
+    html += '<i class="ti ti-chevron-right" style="font-size:11px;color:var(--ink-5)"></i>';
     if (idx < folderPath.length - 1) {
       html += '<span style="cursor:pointer;color:var(--accent);font-weight:500" onclick="navigateBreadcrumb(' + idx + ')">' + escapeHtml(crumb.name) + '</span>';
     } else {
-      html += '<span style="color:var(--text-primary);font-weight:600">' + escapeHtml(crumb.name) + '</span>';
+      html += '<span style="color:var(--ink-2);font-weight:600">' + escapeHtml(crumb.name) + '</span>';
     }
   });
   bcEl.innerHTML = html;
+  updateTopbarBreadcrumb();
 }
 
 function navigateBreadcrumb(idx) {
@@ -537,6 +538,54 @@ function navigateBreadcrumb(idx) {
   renderFolders();
   renderFiles();
   updateFileSectionTitle();
+  updateTopbarBreadcrumb();
+}
+
+/* ── goToRoot: dipanggil dari breadcrumb topbar ── */
+function goToRoot() {
+  currentFolderId = null;
+  currentFolderFilter = null;
+  folderPath = [];
+  renderFolders();
+  renderFiles();
+  updateFileSectionTitle();
+  updateTopbarBreadcrumb();
+  // Reset active folder highlight
+  document.querySelectorAll('.folder-wrap').forEach(function(w) { w.classList.remove('active'); });
+  const bcEl = document.getElementById('folderBreadcrumb');
+  if (bcEl) bcEl.style.display = 'none';
+}
+
+/* ── Update breadcrumb di topbar ── */
+function updateTopbarBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  if (!bc) return;
+
+  if (folderPath.length === 0) {
+    // Di root: tampilkan ikon home + "Dashboard" (tidak clickable, sudah di sini)
+    bc.innerHTML = `
+      <i class="ti ti-home" style="font-size:15px;color:var(--ink-5)"></i>
+      <i class="ti ti-chevron-right" style="font-size:12px;color:var(--ink-5)"></i>
+      <span style="color:var(--ink-2);font-weight:500;font-size:12.5px">Dashboard</span>`;
+    return;
+  }
+
+  // Ada path: home (clickable) > folder1 > folder2 (aktif)
+  let html = `<i class="ti ti-home" style="font-size:15px;color:var(--accent);cursor:pointer" onclick="goToRoot()" title="Kembali ke root"></i>`;
+
+  folderPath.forEach(function(crumb, idx) {
+    html += `<i class="ti ti-chevron-right" style="font-size:12px;color:var(--ink-5)"></i>`;
+    const isLast = idx === folderPath.length - 1;
+    if (isLast) {
+      // Folder aktif — tidak clickable
+      html += `<span style="color:var(--ink-2);font-weight:600;font-size:12.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">${escapeHtml(crumb.name)}</span>`;
+    } else {
+      // Folder parent — clickable untuk naik level
+      html += `<span style="color:var(--accent);font-weight:500;font-size:12.5px;cursor:pointer;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle" onclick="navigateBreadcrumb(${idx})" title="${escapeHtml(crumb.name)}">${escapeHtml(crumb.name)}</span>`;
+    }
+  });
+
+  bc.innerHTML = html;
 }
 
 function updateFileSectionTitle() {
@@ -544,7 +593,7 @@ function updateFileSectionTitle() {
   const btnBack = document.getElementById('btnBackFolder');
   if (currentFolderId) {
     const cur = folderPath[folderPath.length - 1];
-    if (titleEl) titleEl.innerHTML = '<i class="ti ti-folder-open" style="font-size:15px;color:#a78bfa;margin-right:5px;vertical-align:middle"></i>' + escapeHtml(cur ? cur.name : '');
+    if (titleEl) titleEl.innerHTML = '<i class="ti ti-folder-open" style="font-size:15px;color:var(--accent);margin-right:5px;vertical-align:middle"></i>' + escapeHtml(cur ? cur.name : '');
     if (btnBack) btnBack.style.display = 'flex';
   } else {
     if (titleEl) titleEl.textContent = 'File Terbaru';
@@ -597,6 +646,7 @@ function openFolderById(folderId, folderName) {
   renderFolders();
   renderFiles();
   updateFileSectionTitle();
+  updateTopbarBreadcrumb();
 
   setTimeout(function() {
     const fileSection = document.getElementById('fileGrid');
@@ -621,6 +671,7 @@ function closeFolder() {
   renderFolders();
   renderFiles();
   updateFileSectionTitle();
+  updateTopbarBreadcrumb();
 }
 
 // Legacy openFolder (masih dipakai dari sidebar nav chips)
