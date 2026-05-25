@@ -1379,9 +1379,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // Sidebar user chip → logout
   document.getElementById('userChip').onclick = async function() {
-    if (confirm('Yakin ingin logout?')) {
+    const ok = await customConfirm({
+      title: 'Logout',
+      message: 'Yakin ingin keluar dari akun Anda?',
+      icon: 'ti-logout',
+      iconClass: 'logout',
+      confirmText: 'Ya, Logout',
+      confirmBtnClass: 'logout-confirm'
+    });
+    if (ok) {
       await sb.auth.signOut();
-      window.location.href = 'login.html';
+      window.location.replace('login.html');
     }
   };
 
