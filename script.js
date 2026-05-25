@@ -1880,7 +1880,18 @@ async function uploadFolderFiles() {
     // Pisahkan menjadi bagian folder dan nama file
     var pathParts = relPath.replace(/\\/g, '/').split('/');
     var fileName  = pathParts[pathParts.length - 1];
-    var folderParts = pathParts.slice(0, pathParts.length - 1); // bisa kosong jika tidak ada subfolder
+    var folderParts = pathParts.slice(0, pathParts.length - 1);
+
+    // Skip folder sistem & file tersembunyi
+    const SKIP_FOLDERS = [
+      'build','node_modules','.git','.gradle','intermediates',
+      'out','debug','release','tmp','.idea','.dart_tool',
+      'generated','obj','bin','.vs','__pycache__','.cache'
+    ];
+    const hasSkipFolder = folderParts.some(function(p) {
+      return SKIP_FOLDERS.includes(p.toLowerCase()) || p.startsWith('.');
+    });
+    if (hasSkipFolder || fileName.startsWith('.')) { failCount++; continue; }
 
     if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
 
