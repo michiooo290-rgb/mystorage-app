@@ -281,6 +281,9 @@
   <div class="nav-item active">
     <i class="ti ti-settings"></i>Pengaturan
   </div>
+  <div class="nav-item nav-logout" onclick="doLogout()">
+    <i class="ti ti-logout"></i>Keluar
+  </div>
 
   <div class="user-chip" id="userChip">
     <div class="user-av" id="sidebarAv">??</div>
@@ -304,9 +307,15 @@
   </div>
 </aside>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <div class="main">
 
   <header class="topbar">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
+      <i class="ti ti-menu-2"></i>
+    </button>
     <div class="breadcrumb" style="margin-right:16px">
       <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
@@ -705,14 +714,12 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="Supabase-config.js"></script>
 <script>
 /* ────────────────────────
    INIT SUPABASE
 ──────────────────────── */
-const sb = window.supabase.createClient(
-  'https://cgmoxqvdihiewdgxqxlh.supabase.co',
-  'sb_publishable_IpViPmYP_YfGeia5GBLR-A_7Lt9b0WR'
-);
+const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
 /* ────────────────────────
    STATE
@@ -1445,6 +1452,32 @@ function customConfirm({ title, message, confirmText, cancelText, icon, iconClas
     cancelBtn.addEventListener('click', onCancel);
     overlay.addEventListener('click', onOverlay);
   });
+}
+
+/* ── Hamburger / Sidebar Toggle ── */
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+/* ── Logout (dipanggil dari sidebar nav) ── */
+async function doLogout() {
+  const ok = await customConfirm({
+    title: 'Logout',
+    message: 'Yakin ingin keluar dari akun Anda?',
+    icon: 'ti-logout',
+    iconClass: 'logout',
+    confirmText: 'Ya, Logout',
+    confirmBtnClass: 'logout-confirm'
+  });
+  if (ok) {
+    await sb.auth.signOut();
+    window.location.replace('login.html');
+  }
 }
 </script>
 

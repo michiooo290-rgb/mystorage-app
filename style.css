@@ -1247,7 +1247,6 @@ body::before {
    ═══════════════════════════ */
 @media (max-width: 1100px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
   .main { margin-left: 0; }
   .stats-row { grid-template-columns: 1fr 1fr; }
   .topbar { padding: 0 16px; }
@@ -1524,3 +1523,106 @@ body::before {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* ═══════════════════════════════════════════
+   LOGOUT NAV ITEM
+   ═══════════════════════════════════════════ */
+.nav-logout {
+  margin-top: 4px;
+}
+.nav-logout i {
+  color: rgba(248,113,113,0.7) !important;
+  opacity: 1 !important;
+}
+.nav-logout:hover {
+  background: rgba(248,113,113,0.10) !important;
+  color: #f87171 !important;
+}
+.nav-logout:hover i {
+  color: #f87171 !important;
+}
+
+/* ═══════════════════════════════════════════
+   HAMBURGER MENU BUTTON
+   ═══════════════════════════════════════════ */
+.hamburger-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--ink-3);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease-smooth);
+  flex-shrink: 0;
+  padding: 0;
+}
+.hamburger-btn:hover {
+  background: var(--paper-2);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+/* ═══════════════════════════════════════════
+   SIDEBAR OVERLAY (mobile)
+   ═══════════════════════════════════════════ */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 14, 13, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 19;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.sidebar-overlay.open {
+  display: block;
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE — Sidebar + Hamburger
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.19,1,0.22,1);
+    box-shadow: none;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 8px 0 40px rgba(15,14,13,0.25);
+  }
+}
+
+/* ── Dark mode overrides ── */
+[data-theme="dark"] .hamburger-btn {
+  background: var(--paper-2);
+  border-color: var(--border);
+  color: var(--ink-4);
+}
+[data-theme="dark"] .hamburger-btn:hover {
+  background: var(--paper-3);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+[data-theme="dark"] .sidebar-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+[data-theme="dark"] .nav-logout:hover {
+  background: rgba(248,113,113,0.12) !important;
+}

@@ -403,6 +403,7 @@
     #panelRegister .field-group:nth-child(1) { animation-delay: 0.2s; }
     #panelRegister .field-group:nth-child(2) { animation-delay: 0.3s; }
     #panelRegister .field-group:nth-child(3) { animation-delay: 0.4s; }
+    #panelRegister .field-group:nth-child(4) { animation-delay: 0.5s; }
     @keyframes fieldSlideIn {
       from { opacity:0; transform:translateX(-16px); }
       to   { opacity:1; transform:translateX(0); }
@@ -788,6 +789,18 @@
         <div class="field-err" id="regPassErr">Password minimal 8 karakter.</div>
       </div>
 
+      <div class="field-group">
+        <label class="field-label">Konfirmasi Password</label>
+        <div class="field-wrap">
+          <i class="ti ti-lock-check field-icon"></i>
+          <input class="field-input" id="regPassConfirm" type="password" placeholder="Ketik ulang password" style="padding-right:40px" autocomplete="new-password"/>
+          <button class="eye-btn" onclick="toggleEye('regPassConfirm','eyeRegConfirm')">
+            <i class="ti ti-eye" id="eyeRegConfirm"></i>
+          </button>
+        </div>
+        <div class="field-err" id="regPassConfirmErr">Password tidak cocok.</div>
+      </div>
+
       <div class="field-err" id="regGeneralErr" style="margin-bottom:12px"></div>
 
       <button class="btn-submit" id="btnRegister" onclick="doRegister()">
@@ -946,16 +959,19 @@
     const name  = document.getElementById('regName').value.trim();
     const email = document.getElementById('regEmail').value.trim();
     const pass  = document.getElementById('regPass').value;
+    const passConfirm = document.getElementById('regPassConfirm').value;
     const nameErr = document.getElementById('regNameErr');
     const emailErr = document.getElementById('regEmailErr');
     const passErr  = document.getElementById('regPassErr');
+    const passConfirmErr = document.getElementById('regPassConfirmErr');
     const genErr   = document.getElementById('regGeneralErr');
-    [nameErr, emailErr, passErr, genErr].forEach(e => e.classList.remove('show'));
+    [nameErr, emailErr, passErr, passConfirmErr, genErr].forEach(e => e.classList.remove('show'));
 
     let valid = true;
     if (!name) { nameErr.classList.add('show'); valid = false; }
     if (!email || !isValidEmail(email)) { emailErr.classList.add('show'); valid = false; }
     if (!isValidPassword(pass)) { passErr.textContent = 'Password minimal 8 karakter.'; passErr.classList.add('show'); valid = false; }
+    if (pass !== passConfirm) { passConfirmErr.textContent = 'Password tidak cocok.'; passConfirmErr.classList.add('show'); valid = false; }
     if (!valid) return;
 
     const btn = document.getElementById('btnRegister');

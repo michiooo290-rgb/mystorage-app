@@ -247,6 +247,9 @@
   <div class="nav-item" onclick="window.location.href='settings.html'">
     <i class="ti ti-settings icon-settings"></i>Pengaturan
   </div>
+  <div class="nav-item nav-logout" onclick="doLogout()">
+    <i class="ti ti-logout"></i>Keluar
+  </div>
 
   <div class="user-chip">
     <div class="user-av">RZ</div>
@@ -270,9 +273,15 @@
   </div>
 </aside>
 
+<!-- SIDEBAR OVERLAY (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
 <div class="main">
 
   <header class="topbar">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
+      <i class="ti ti-menu-2"></i>
+    </button>
     <div class="breadcrumb" id="breadcrumb" style="margin-right:16px">
       <i class="ti ti-home" style="font-size:15px;color:var(--ink-5);cursor:pointer" onclick="goToRoot()"></i>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
@@ -577,6 +586,32 @@
     btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
   }
   document.addEventListener('DOMContentLoaded', updateNmBtn);
+
+  /* ── Hamburger / Sidebar Toggle ── */
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+  }
+  function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
+
+  /* ── Logout (dipanggil dari sidebar nav) ── */
+  async function doLogout() {
+    const confirmed = await customConfirm({
+      title: 'Logout',
+      message: 'Yakin ingin keluar dari akun Anda?',
+      icon: 'ti-logout',
+      iconClass: 'logout',
+      confirmText: 'Ya, Logout',
+      confirmBtnClass: 'logout-confirm'
+    });
+    if (confirmed) {
+      await sb.auth.signOut();
+      window.location.replace('login.html');
+    }
+  }
 </script>
 </body>
 </html>
