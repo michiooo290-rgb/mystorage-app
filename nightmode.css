@@ -6,7 +6,10 @@
    ═══════════════════════════════════════════════════════ */
 
 /* ── Smooth transition on theme switch ── */
-*, *::before, *::after {
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
   transition:
     background-color 0.28s ease,
     color            0.28s ease,

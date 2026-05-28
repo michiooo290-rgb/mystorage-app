@@ -23,6 +23,8 @@
 
   /* ── Save & toggle ── */
   function toggleNightMode() {
+    document.documentElement.classList.add('theme-switching');
+    setTimeout(() => document.documentElement.classList.remove('theme-switching'), 350);
     const dark = !isDark();
     localStorage.setItem(KEY, dark);
     applyTheme(dark);
@@ -82,7 +84,7 @@
         outline: none;
       }
       .nm-float:hover {
-        transform: scale(1.12) rotate(-12deg);
+        transform: scale(1.10) rotate(-8deg);
         border-color: var(--accent, #c8602a);
         color: var(--accent, #c8602a);
         box-shadow: 0 6px 20px rgba(200,96,42,0.2);

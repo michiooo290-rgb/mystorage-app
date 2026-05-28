@@ -422,8 +422,8 @@ body::before {
 }
 .btn-upload:hover {
   background: var(--ink-2);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 .btn-upload:active { transform: translateY(0); }
 .btn-upload i { font-size: 15px; }
@@ -1625,4 +1625,4 @@ body::before {
 }
 [data-theme="dark"] .nav-logout:hover {
   background: rgba(248,113,113,0.12) !important;
-}
+}
