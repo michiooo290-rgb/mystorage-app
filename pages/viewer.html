@@ -369,6 +369,13 @@
 <script>
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
+  /* ── Safe HTML escape (prevents XSS) ── */
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = String(str || '');
+    return d.innerHTML;
+  }
+
   let signedUrl = null;
 
   const params      = new URLSearchParams(window.location.search);
@@ -414,8 +421,8 @@
     document.getElementById('viewerWrap').innerHTML = `
       <div class="error-state">
         <i class="ti ti-file-alert"></i>
-        <h3>${msg}</h3>
-        <p>${detail || ''}</p>
+        <h3>${escapeHtml(msg)}</h3>
+        <p>${escapeHtml(detail)}</p>
         <a href="../Storage-dashboard.html" class="btn-action" style="margin-top:8px">
           <i class="ti ti-arrow-left"></i> Kembali ke Dashboard
         </a>
@@ -426,12 +433,12 @@
     const wrap = document.getElementById('viewerWrap');
 
     if (type === 'pdf') {
-      wrap.innerHTML = `<iframe class="pdf-viewer" src="${url}" title="${name}"></iframe>`;
+      wrap.innerHTML = `<iframe class="pdf-viewer" src="${escapeHtml(url)}" title="${escapeHtml(name)}"></iframe>`;
     }
     else if (type === 'foto') {
       wrap.innerHTML = `
         <div class="img-viewer-wrap">
-          <img src="${url}" alt="${name}" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.4s ease"/>
+          <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.4s ease"/>
         </div>`;
     }
     else if (type === 'video') {
@@ -439,34 +446,30 @@
         <div class="video-viewer-wrap">
           <video controls autoplay>
             <source src="${url}">
+            <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran video.
           </video>
         </div>`;
     }
     else if (type === 'audio') {
-      const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const nameEsc = escapeHtml(name);
       wrap.innerHTML = `
         <div class="audio-viewer-wrap">
           <div class="audio-icon-big"><i class="ti ti-music"></i></div>
           <div class="audio-name">${nameEsc}</div>
           <audio controls autoplay>
-            <source src="${url}">
+            <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran audio.
           </audio>
         </div>`;
     }
     else if (type === 'spreadsheet' || type === 'doc') {
-      const ext = name.split('.').pop().toLowerCase();
-
-      if (ext === 'txt') {
-        wrap.innerHTML = `<iframe class="pdf-viewer" src="${url}" title="${name}" style="background:var(--white)"></iframe>`;
-        return;
-      }
-
-      const officeExts = ['docx','doc','pptx','ppt','xlsx','xls','csv'];
-      if (officeExts.includes(ext)) {
+      const ext = name.split('.').pop() || '';
+      const officeExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+      if (officeExts.includes(ext.toLowerCase())) {
         const gdocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-        const nameEsc  = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const nameEsc  = escapeHtml(name);
+        const gdocsEsc = escapeHtml(gdocsUrl);
         wrap.innerHTML = `
           <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;">
             <div id="officeLoadingOverlay" style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
@@ -477,14 +480,14 @@
             </div>
             <iframe
               id="officeFrame"
-              src="${gdocsUrl}"
+              src="${gdocsEsc}"
               title="${nameEsc}"
               style="flex:1;border:none;background:#fff;"
               onload="hideOfficeLoading()"
             ></iframe>
             <div class="office-bottom-bar">
               <span style="font-size:12px;color:var(--ink-4)">Preview tidak muncul?</span>
-              <button class="btn-action" onclick="reloadOfficePreview('${gdocsUrl}')">
+              <button class="btn-action" onclick="reloadOfficePreview('${gdocsEsc}')">
                 <i class="ti ti-refresh"></i> Muat Ulang
               </button>
               <button class="btn-action primary" onclick="downloadFile()">
@@ -495,7 +498,7 @@
         return;
       }
 
-      const nameEsc  = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const nameEsc  = escapeHtml(name);
       const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
       wrap.innerHTML = `
         <div class="generic-viewer">
@@ -503,7 +506,7 @@
             <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
           </div>
           <h3>${nameEsc}</h3>
-          <p>Format <strong>${ext.toUpperCase()}</strong> tidak bisa ditampilkan langsung.<br>Gunakan tombol di bawah untuk mengunduh.</p>
+          <p>Format <strong>${escapeHtml(ext.toUpperCase())}</strong> tidak bisa ditampilkan langsung.<br>Gunakan tombol di bawah untuk mengunduh.</p>
           <button class="btn-action primary" onclick="downloadFile()" style="margin-top:8px">
             <i class="ti ti-download"></i> Download File
           </button>
@@ -511,7 +514,7 @@
     }
     else {
       const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-      const nameEsc = name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const nameEsc = escapeHtml(name);
       wrap.innerHTML = `
         <div class="generic-viewer">
           <div class="generic-icon-box" style="background:${iconInfo.bg}">
