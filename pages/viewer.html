@@ -4,12 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MyStorage — Viewer</title>
-  <link rel="icon" type="image/png" href="Logo.png">
+  <link rel="icon" type="image/png" href="../assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <link rel="stylesheet" href="nightmode.css"/>
-  <script src="nightmode.js"></script>
+  <link rel="stylesheet" href="../styles/nightmode.css"/>
+  <script src="../scripts/nightmode.js"></script>
   <style>
     /* ══════════════════════════════════════════════
        MyStorage — viewer.html
@@ -328,12 +328,12 @@
 
 <!-- Topbar -->
 <div class="topbar">
-  <a class="topbar-logo" href="Storage-dasboard.html">
-    <div class="topbar-logo-icon"><img src="Logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;"></div>
+  <a class="topbar-logo" href="../Storage-dashboard.html">
+    <div class="topbar-logo-icon"><img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;"></div>
     <span class="topbar-logo-name">MyStorage</span>
   </a>
   <div class="topbar-divider"></div>
-  <a class="btn-back" href="Storage-dasboard.html">
+  <a class="btn-back" href="../Storage-dashboard.html">
     <i class="ti ti-arrow-left"></i> Kembali
   </a>
   <div class="file-info">
@@ -365,7 +365,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="Supabase-config.js"></script>
+<script src="../scripts/supabase-config.js"></script>
 <script>
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
@@ -416,7 +416,7 @@
         <i class="ti ti-file-alert"></i>
         <h3>${msg}</h3>
         <p>${detail || ''}</p>
-        <a href="Storage-dasboard.html" class="btn-action" style="margin-top:8px">
+        <a href="../Storage-dashboard.html" class="btn-action" style="margin-top:8px">
           <i class="ti ti-arrow-left"></i> Kembali ke Dashboard
         </a>
       </div>`;
@@ -571,7 +571,7 @@
   document.addEventListener('DOMContentLoaded', async function() {
     const { data: sessionData } = await sb.auth.getSession();
     if (!sessionData || !sessionData.session) {
-      window.location.href = 'login.html';
+      window.location.href = '../pages/login.html';
       return;
     }
 

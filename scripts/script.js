@@ -823,7 +823,7 @@ function openFile(id) {
     type: file.type || 'doc',
     size: file.size || ''
   });
-  window.open('viewer.html?' + params.toString(), '_blank');
+  window.open('pages/viewer.html?' + params.toString(), '_blank');
 }
 
 /* ── SHARED PANEL ── */
@@ -2481,7 +2481,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   sb.auth.onAuthStateChange(function(event, session) {
     if (event === 'SIGNED_OUT' || !session) {
-      window.location.replace('login.html');
+      window.location.replace('pages/login.html');
     }
   });
 

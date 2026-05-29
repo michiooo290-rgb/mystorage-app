@@ -4,15 +4,15 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MyStorage — Pengaturan</title>
-  <link rel="icon" type="image/png" href="Logo.png">
+  <link rel="icon" type="image/png" href="../assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="settings.css"/>
-  <link rel="stylesheet" href="nightmode.css"/>
-  <script src="nightmode.js"></script>
+  <link rel="stylesheet" href="../styles/style.css"/>
+  <link rel="stylesheet" href="../styles/settings.css"/>
+  <link rel="stylesheet" href="../styles/nightmode.css"/>
+  <script src="../scripts/nightmode.js"></script>
   <style>
     .avatar-wrapper {
       position: relative;
@@ -245,34 +245,34 @@
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-icon" style="background:transparent;border:none;box-shadow:none;">
-      <img src="Logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
+      <img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
     </div>
     <span class="logo-text">MyStorage</span>
   </div>
 
   <span class="nav-label">Menu</span>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-layout-dashboard"></i>Dashboard
   </div>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-share"></i>Dibagikan
   </div>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-star"></i>Favorit
   </div>
 
   <div class="divider"></div>
   <span class="nav-label">Tipe File</span>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-file-type-pdf"></i>Dokumen
   </div>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-photo"></i>Foto
   </div>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-video"></i>Video
   </div>
-  <div class="nav-item" onclick="window.location.href='Storage-dasboard.html'">
+  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
     <i class="ti ti-music"></i>Audio
   </div>
 
@@ -319,12 +319,12 @@
     <div class="breadcrumb" style="margin-right:16px">
       <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
-      <a href="Storage-dasboard.html" style="color:var(--ink-4);text-decoration:none;font-size:12.5px">Dashboard</a>
+      <a href="../Storage-dashboard.html" style="color:var(--ink-4);text-decoration:none;font-size:12.5px">Dashboard</a>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
       <span>Pengaturan</span>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <div class="btn-icon" title="Kembali ke Dashboard" onclick="window.location.href='Storage-dasboard.html'">
+      <div class="btn-icon" title="Kembali ke Dashboard" onclick="window.location.href='../Storage-dashboard.html'">
         <i class="ti ti-arrow-left"></i>
       </div>
       <div class="topbar-av" id="topbarAv">??</div>
@@ -714,7 +714,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="Supabase-config.js"></script>
+<script src="../scripts/supabase-config.js"></script>
 <script>
 /* ────────────────────────
    INIT SUPABASE
@@ -1372,7 +1372,7 @@ function checkStorageWarning() {
 document.addEventListener('DOMContentLoaded', async function() {
   const { data: sessionData } = await sb.auth.getSession();
   if (!sessionData || !sessionData.session) {
-    window.location.href = 'login.html';
+    window.location.href = '../pages/login.html';
     return;
   }
 
@@ -1397,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     if (ok) {
       await sb.auth.signOut();
-      window.location.replace('login.html');
+      window.location.replace('../pages/login.html');
     }
   };
 
@@ -1407,7 +1407,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   });
 
   sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'SIGNED_OUT' || !session) window.location.href = 'login.html';
+    if (event === 'SIGNED_OUT' || !session) window.location.href = '../pages/login.html';
   });
 
   // Sync night mode toggle checkbox
@@ -1476,7 +1476,7 @@ async function doLogout() {
   });
   if (ok) {
     await sb.auth.signOut();
-    window.location.replace('login.html');
+    window.location.replace('../pages/login.html');
   }
 }
 </script>

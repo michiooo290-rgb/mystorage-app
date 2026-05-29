@@ -7,14 +7,14 @@
   <meta http-equiv="Pragma" content="no-cache"/>
   <meta http-equiv="Expires" content="0"/>
   <title>MyStorage — Dashboard</title>
-  <link rel="icon" type="image/png" href="Logo.png">
+  <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <link rel="stylesheet" href="style.css"/>
-  <link rel="stylesheet" href="nightmode.css"/>
-  <script src="nightmode.js"></script>
+  <link rel="stylesheet" href="styles/style.css"/>
+  <link rel="stylesheet" href="styles/nightmode.css"/>
+  <script src="scripts/nightmode.js"></script>
   <style>
     /* ═══════════════════════════════════════
        ICON ANIMATION SYSTEM
@@ -206,7 +206,7 @@
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-icon" style="background:transparent;border:none;box-shadow:none;">
-      <img src="Logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
+      <img src="assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
     </div>
     <span class="logo-text">MyStorage</span>
   </div>
@@ -244,7 +244,7 @@
   </div>
 
   <div class="divider"></div>
-  <div class="nav-item" onclick="window.location.href='settings.html'">
+  <div class="nav-item" onclick="window.location.href='pages/settings.html'">
     <i class="ti ti-settings icon-settings"></i>Pengaturan
   </div>
   <div class="nav-item nav-logout" onclick="doLogout()">
@@ -308,7 +308,7 @@
       <button class="btn-upload" onclick="openModal()">
         <i class="ti ti-cloud-upload"></i>Upload
       </button>
-      <div class="topbar-av" title="Pengaturan Profil" onclick="window.location.href='settings.html'" style="cursor:pointer">RZ</div>
+      <div class="topbar-av" title="Pengaturan Profil" onclick="window.location.href='pages/settings.html'" style="cursor:pointer">RZ</div>
     </div>
   </header>
 
@@ -573,8 +573,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="Supabase-config.js"></script>
-<script src="script.js"></script>
+<script src="scripts/supabase-config.js"></script>
+<script src="scripts/script.js"></script>
 <script>
   function updateNmBtn() {
     var dark = NightMode.isDark();
@@ -609,7 +609,7 @@
     });
     if (confirmed) {
       await sb.auth.signOut();
-      window.location.replace('login.html');
+      window.location.replace('pages/login.html');
     }
   }
 </script>

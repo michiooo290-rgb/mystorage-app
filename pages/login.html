@@ -4,13 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MyStorage — Masuk</title>
-  <link rel="icon" type="image/png" href="Logo.png">
+  <link rel="icon" type="image/png" href="../assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <link rel="stylesheet" href="nightmode.css"/>
-  <script src="nightmode.js"></script>
+  <link rel="stylesheet" href="../styles/nightmode.css"/>
+  <script src="../scripts/nightmode.js"></script>
   <style>
     /* ══════════════════════════════════════════════
        MyStorage — login.html
@@ -681,7 +681,7 @@
   </div>
 
   <div class="brand-logo">
-    <div class="brand-icon" style="background:transparent;border:none;box-shadow:none;width:auto;height:auto;"><img src="Logo.png" alt="MyStorage" style="width:52px;height:52px;object-fit:contain;display:block;"></div>
+    <div class="brand-icon" style="background:transparent;border:none;box-shadow:none;width:auto;height:auto;"><img src="../assets/logo.png" alt="MyStorage" style="width:52px;height:52px;object-fit:contain;display:block;"></div>
     <span class="brand-name">MyStorage</span>
   </div>
 
@@ -851,7 +851,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="Supabase-config.js"></script>
+<script src="../scripts/supabase-config.js"></script>
 <script>
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
@@ -952,7 +952,7 @@
     }
     resetLoginAttempts();
     btn.innerHTML = '<i class="ti ti-check"></i>Berhasil!';
-    setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 700);
+    setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 700);
   }
 
   async function doRegister() {
@@ -994,7 +994,7 @@
 
     if (data.session) {
       showToast('Akun berhasil dibuat!');
-      setTimeout(() => { window.location.href = 'Storage-dasboard.html'; }, 900);
+      setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 900);
     } else {
       showToast('Cek email untuk konfirmasi!');
       switchTab('login');
@@ -1039,7 +1039,7 @@
     btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;width:13px;height:13px;border-width:2px;border-style:solid;border-radius:50%;animation:spin 0.7s linear infinite"></span> Mengirim...';
     btn.style.pointerEvents = 'none';
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/Storage-dasboard.html'
+      redirectTo: window.location.origin + '/Storage-dashboard.html'
     });
     btn.innerHTML = 'Kirim Link';
     btn.style.pointerEvents = '';
