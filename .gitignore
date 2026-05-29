@@ -2,8 +2,9 @@
 # .gitignore — MyStorage
 # ============================================================
  
-# WAJIB: Jangan pernah commit file credentials ini ke repository!
-supabase-config.js
+# NOTE: supabase-config.js sengaja tidak di-ignore karena SUPABASE_ANON_KEY
+# adalah publishable key yang aman untuk frontend (bukan service_role key).
+# Pastikan RLS (Row Level Security) aktif di semua tabel Supabase.
  
 # Environment files
 .env
