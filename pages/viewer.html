@@ -403,26 +403,41 @@
     const wrap = document.getElementById('viewerWrap');
     const ext  = (name || '').split('.').pop().toLowerCase();
 
-    // ── PDF — buka di tab baru (iframe diblokir CSP Supabase) ──
+    // ── PDF — fetch as blob → iframe lokal (bypass CSP frame-src) ──
     if (type === 'pdf' || ext === 'pdf') {
-      window.open(url, '_blank');
       wrap.innerHTML = `
-        <div class="generic-viewer">
-          <div class="generic-icon-box" style="background:rgba(192,57,43,0.08)">
-            <i class="ti ti-file-type-pdf" style="color:#c0392b"></i>
-          </div>
-          <span class="ext-badge">PDF</span>
-          <h3>${escapeHtml(name)}</h3>
-          <p>PDF telah dibuka di tab baru.<br>Jika tidak terbuka, klik tombol di bawah.</p>
-          <div class="btn-group">
-            <button class="btn-action primary" onclick="window.open('${escapeHtml(url)}', '_blank')">
-              <i class="ti ti-external-link"></i> Buka PDF
-            </button>
-            <button class="btn-action" onclick="downloadFile()">
-              <i class="ti ti-download"></i> Download
-            </button>
-          </div>
+        <div class="loading-state" id="pdfLoadingState">
+          <div class="spinner"></div>
+          <p>Memuat PDF...</p>
         </div>`;
+
+      (async () => {
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error('Gagal fetch PDF: ' + resp.status);
+          const blob = await resp.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          wrap.innerHTML = `<iframe class="pdf-viewer" src="${blobUrl}" title="${escapeHtml(name)}"></iframe>`;
+        } catch(e) {
+          wrap.innerHTML = `
+            <div class="generic-viewer">
+              <div class="generic-icon-box" style="background:rgba(192,57,43,0.08)">
+                <i class="ti ti-file-type-pdf" style="color:#c0392b"></i>
+              </div>
+              <span class="ext-badge">PDF</span>
+              <h3>${escapeHtml(name)}</h3>
+              <p>Tidak bisa menampilkan PDF langsung.<br>Silakan buka di tab baru atau download.</p>
+              <div class="btn-group">
+                <button class="btn-action primary" onclick="window.open('${escapeHtml(url)}', '_blank')">
+                  <i class="ti ti-external-link"></i> Buka di Tab Baru
+                </button>
+                <button class="btn-action" onclick="downloadFile()">
+                  <i class="ti ti-download"></i> Download
+                </button>
+              </div>
+            </div>`;
+        }
+      })();
       return;
     }
 
