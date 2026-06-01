@@ -403,9 +403,26 @@
     const wrap = document.getElementById('viewerWrap');
     const ext  = (name || '').split('.').pop().toLowerCase();
 
-    // ── PDF — browser native viewer ──
+    // ── PDF — buka di tab baru (iframe diblokir CSP Supabase) ──
     if (type === 'pdf' || ext === 'pdf') {
-      wrap.innerHTML = `<iframe class="pdf-viewer" src="${escapeHtml(url)}" title="${escapeHtml(name)}"></iframe>`;
+      window.open(url, '_blank');
+      wrap.innerHTML = `
+        <div class="generic-viewer">
+          <div class="generic-icon-box" style="background:rgba(192,57,43,0.08)">
+            <i class="ti ti-file-type-pdf" style="color:#c0392b"></i>
+          </div>
+          <span class="ext-badge">PDF</span>
+          <h3>${escapeHtml(name)}</h3>
+          <p>PDF telah dibuka di tab baru.<br>Jika tidak terbuka, klik tombol di bawah.</p>
+          <div class="btn-group">
+            <button class="btn-action primary" onclick="window.open('${escapeHtml(url)}', '_blank')">
+              <i class="ti ti-external-link"></i> Buka PDF
+            </button>
+            <button class="btn-action" onclick="downloadFile()">
+              <i class="ti ti-download"></i> Download
+            </button>
+          </div>
+        </div>`;
       return;
     }
 
