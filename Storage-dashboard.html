@@ -386,6 +386,9 @@
       <div id="bulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(200,96,42,0.07);border:1.5px solid rgba(200,96,42,0.18);border-radius:var(--radius);margin-bottom:10px;">
         <input type="checkbox" id="checkSelectAll" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="toggleSelectAll(this.checked)">
         <span id="bulkCount" style="font-size:13px;font-weight:600;color:var(--ink-2);flex:1">0 file dipilih</span>
+        <button onclick="bulkDownload()" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#2d6a4f;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
+          <i class="ti ti-download" style="font-size:13px"></i>Download Terpilih
+        </button>
         <button onclick="bulkDelete()" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#c8602a;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
           <i class="ti ti-trash" style="font-size:13px"></i>Hapus Terpilih
         </button>

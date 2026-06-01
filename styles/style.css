@@ -683,6 +683,14 @@ body::before {
 }
 .file-card:hover .file-icon-box { transform: scale(1.06) rotate(-3deg); }
 
+/* Thumbnail box untuk file gambar */
+.file-thumb-box {
+  width: 42px; height: 42px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+.file-card:hover .file-thumb-box { transform: scale(1.06) rotate(-3deg); }
+
 .file-menu {
   width: 26px; height: 26px;
   display: flex; align-items: center; justify-content: center;

@@ -685,13 +685,52 @@ function openFolder(name) {
 
 /* ── SORTING ── */
 function toggleSort() {
-  const modes = ['newest', 'oldest', 'az', 'za'];
-  const labels = ['Terbaru', 'Terlama', 'A-Z', 'Z-A'];
-  let idx = modes.indexOf(currentSort);
-  let nextIdx = (idx + 1) % modes.length;
-  currentSort = modes[nextIdx];
-  document.getElementById('sortLabel').textContent = labels[nextIdx];
-  showToast('Diurutkan berdasarkan: ' + labels[nextIdx]);
+  // Tampilkan dropdown sort
+  var existing = document.getElementById('sortDropdown');
+  if (existing) { existing.remove(); return; }
+
+  var btn = document.querySelector('[onclick="toggleSort()"]');
+  var rect = btn.getBoundingClientRect();
+
+  var options = [
+    { mode: 'newest',  label: 'Terbaru diunggah',  icon: 'ti-clock-down' },
+    { mode: 'oldest',  label: 'Terlama diunggah',   icon: 'ti-clock-up' },
+    { mode: 'az',      label: 'Nama A → Z',          icon: 'ti-sort-ascending-letters' },
+    { mode: 'za',      label: 'Nama Z → A',          icon: 'ti-sort-descending-letters' },
+    { mode: 'largest', label: 'Ukuran terbesar',     icon: 'ti-arrow-big-down' },
+    { mode: 'smallest',label: 'Ukuran terkecil',     icon: 'ti-arrow-big-up' },
+  ];
+
+  var dd = document.createElement('div');
+  dd.id = 'sortDropdown';
+  dd.style.cssText = 'position:fixed;z-index:999;background:var(--white);border:1px solid var(--border-2);border-radius:var(--radius);box-shadow:var(--shadow-lg);padding:6px;min-width:210px;top:' + (rect.bottom + 6) + 'px;right:' + (window.innerWidth - rect.right) + 'px;';
+
+  dd.innerHTML = '<div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-5);padding:4px 10px 6px;font-family:\'JetBrains Mono\',monospace;">Urutkan berdasarkan</div>' +
+    options.map(function(o) {
+      var isActive = currentSort === o.mode;
+      return '<div onclick="setSortMode(\'' + o.mode + '\')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:' + (isActive ? 'var(--accent)' : 'var(--ink-2)') + ';background:' + (isActive ? 'rgba(200,96,42,0.07)' : 'transparent') + ';font-weight:' + (isActive ? '600' : '400') + ';transition:background 0.15s;" onmouseover="this.style.background=\'' + (isActive ? 'rgba(200,96,42,0.10)' : 'var(--paper-2)') + '\'" onmouseout="this.style.background=\'' + (isActive ? 'rgba(200,96,42,0.07)' : 'transparent') + '\'">' +
+        '<i class="ti ' + o.icon + '" style="font-size:15px;flex-shrink:0;opacity:0.7"></i>' + o.label +
+        (isActive ? '<i class="ti ti-check" style="margin-left:auto;font-size:13px;color:var(--accent)"></i>' : '') +
+      '</div>';
+    }).join('');
+
+  document.body.appendChild(dd);
+
+  // Tutup jika klik di luar
+  setTimeout(function() {
+    document.addEventListener('click', function closeDd(e) {
+      if (!dd.contains(e.target)) { dd.remove(); document.removeEventListener('click', closeDd); }
+    });
+  }, 10);
+}
+
+function setSortMode(mode) {
+  var labels = { newest: 'Terbaru', oldest: 'Terlama', az: 'A-Z', za: 'Z-A', largest: 'Terbesar', smallest: 'Terkecil' };
+  currentSort = mode;
+  document.getElementById('sortLabel').textContent = labels[mode] || 'Urutkan';
+  var dd = document.getElementById('sortDropdown');
+  if (dd) dd.remove();
+  showToast('Diurutkan: ' + labels[mode]);
   renderFiles();
 }
 
@@ -719,10 +758,12 @@ function renderFiles() {
   });
 
   filtered.sort(function(a, b) {
-    if (currentSort === 'newest') return new Date(b.created_at) - new Date(a.created_at);
-    if (currentSort === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
-    if (currentSort === 'az') return a.name.localeCompare(b.name);
-    if (currentSort === 'za') return b.name.localeCompare(a.name);
+    if (currentSort === 'newest')   return new Date(b.created_at) - new Date(a.created_at);
+    if (currentSort === 'oldest')   return new Date(a.created_at) - new Date(b.created_at);
+    if (currentSort === 'az')       return a.name.localeCompare(b.name);
+    if (currentSort === 'za')       return b.name.localeCompare(a.name);
+    if (currentSort === 'largest')  return (b.size || 0) - (a.size || 0);
+    if (currentSort === 'smallest') return (a.size || 0) - (b.size || 0);
     return 0;
   });
 
@@ -745,6 +786,8 @@ function renderFiles() {
     FOLDER_BADGE[f.name] = badgeColors[i % badgeColors.length];
   });
 
+  const IMG_EXTS = ['jpg','jpeg','png','gif','webp','svg'];
+
   grid.innerHTML = filtered.map(function(f, i) {
     const badge = FOLDER_BADGE[f.folder_name] || { bg: '#f3f4f6', color: '#6b7280' };
     const iconInfo = getFileIconInfo(f.name, f.type);
@@ -756,6 +799,8 @@ function renderFiles() {
     const safeName = escapeHtml(f.name);
     const safeFolder = escapeHtml(f.folder_name || '-');
     const isFav = favs.includes(String(f.id));
+    const ext = (f.name || '').split('.').pop().toLowerCase();
+    const isImage = f.type === 'foto' || IMG_EXTS.includes(ext);
 
     var isSelected = selectedFileIds.has(String(f.id));
     var selectedStyle = isSelected ? 'outline:2.5px solid #c8602a;outline-offset:2px;background:rgba(200,96,42,0.05);' : '';
@@ -789,14 +834,26 @@ function renderFiles() {
     }
 
     // ── GRID VIEW CARD (default) ──
+    var iconBox;
+    if (isImage) {
+      // Thumbnail — gambar di-load lazy via data attribute, diisi oleh loadThumbnails()
+      iconBox =
+        '<div class="file-icon-box file-thumb-box" style="background:var(--paper-2);overflow:hidden;position:relative;" data-thumb-id="' + safeId + '">' +
+        '<i class="ti ti-photo" style="color:var(--ink-5);opacity:0.4;font-size:22px;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)"></i>' +
+        '<img class="file-thumb-img" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.3s ease;" alt="" />' +
+        '</div>';
+    } else {
+      iconBox = '<div class="file-icon-box" style="background:' + iconBg + '">' +
+        '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>';
+    }
+
     return (
       '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')" ondragstart="fileCardDragStart(event, \'' + safeId + '\')" ondragend="fileCardDragEnd(event, this)">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
       '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
       '<div class="file-top">' +
       '<div style="position:relative;display:inline-block">' +
-      '<div class="file-icon-box" style="background:' + iconBg + '">' +
-      '<i class="ti ' + icon + '" style="color:' + iconColor + '"></i></div>' +
+      iconBox +
       '</div>' +
       '<div style="display:flex; gap:6px; align-items:center;">' +
       (isFav ? '<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>' : '') +
@@ -810,6 +867,38 @@ function renderFiles() {
   }).join('');
 
   document.getElementById('fileCount').textContent = filtered.length;
+
+  // Load thumbnail untuk file gambar
+  if (currentViewMode !== 'list') loadThumbnails(filtered);
+}
+
+/* ── THUMBNAIL LOADER ── */
+async function loadThumbnails(files) {
+  const IMG_EXTS = ['jpg','jpeg','png','gif','webp','svg'];
+  const imageFiles = files.filter(function(f) {
+    const ext = (f.name || '').split('.').pop().toLowerCase();
+    return f.type === 'foto' || IMG_EXTS.includes(ext);
+  });
+  if (imageFiles.length === 0) return;
+
+  // Proses max 6 thumbnail sekaligus
+  var batch = 6;
+  for (var i = 0; i < imageFiles.length; i += batch) {
+    var chunk = imageFiles.slice(i, i + batch);
+    await Promise.all(chunk.map(async function(f) {
+      try {
+        var box = document.querySelector('[data-thumb-id="' + escapeAttr(String(f.id)) + '"]');
+        if (!box) return;
+        var path = f.storage_path || (f.folder_name + '/' + f.name);
+        var result = await sb.storage.from('user-files').createSignedUrl(path, 300);
+        if (result.error || !result.data) return;
+        var img = box.querySelector('.file-thumb-img');
+        if (!img) return;
+        img.onload = function() { this.style.opacity = '1'; };
+        img.src = result.data.signedUrl;
+      } catch(e) {}
+    }));
+  }
 }
 
 /* ── OPEN FILE (viewer) ── */
@@ -2381,6 +2470,59 @@ async function bulkDelete() {
       renderStats();
     }
   });
+      await loadFiles();
+      renderStats();
+    }
+
+/* ── BULK DOWNLOAD ── */
+async function bulkDownload() {
+  if (selectedFileIds.size === 0) { showToast('Pilih file dulu!'); return; }
+
+  var ids = Array.from(selectedFileIds);
+  var filesToDownload = ids.map(function(id) {
+    return allFiles.find(function(f) { return String(f.id) === id; });
+  }).filter(Boolean);
+
+  var total = filesToDownload.length;
+  var success = 0;
+  var fail = 0;
+
+  showToast('⬇️ Memulai download ' + total + ' file...', { duration: 3000 });
+
+  for (var i = 0; i < filesToDownload.length; i++) {
+    var file = filesToDownload[i];
+    var path = file.storage_path || (file.folder_name + '/' + file.name);
+
+    showToast('⬇️ Mengunduh ' + (i + 1) + ' / ' + total + ': ' + file.name, { duration: 4000 });
+
+    try {
+      var result = await sb.storage.from('user-files').download(path);
+      if (result.error) { fail++; continue; }
+
+      var url = URL.createObjectURL(result.data);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      success++;
+
+      // Jeda kecil agar browser tidak blokir multiple download
+      await new Promise(function(res) { setTimeout(res, 600); });
+    } catch(e) {
+      fail++;
+    }
+  }
+
+  exitSelectMode();
+
+  if (fail === 0) {
+    showToast('✅ ' + success + ' file berhasil didownload!');
+  } else {
+    showToast('✅ ' + success + ' berhasil, ' + fail + ' gagal.');
+  }
 }
 
 
