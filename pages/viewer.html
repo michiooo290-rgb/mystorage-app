@@ -11,11 +11,6 @@
   <link rel="stylesheet" href="../styles/nightmode.css"/>
   <script src="../scripts/nightmode.js"></script>
   <style>
-    /* ══════════════════════════════════════════════
-       MyStorage — viewer.html
-       Tema: Warm Paper / Ink — seragam dengan dashboard
-       ══════════════════════════════════════════════ */
-
     :root {
       --ink:     #0f0e0d;
       --ink-2:   #2a2825;
@@ -55,7 +50,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Grain texture — sama dengan dashboard */
     body::before {
       content: '';
       position: fixed; inset: 0;
@@ -65,7 +59,6 @@
       z-index: 0;
     }
 
-    /* ── Topbar — gaya sama dengan dashboard topbar ── */
     .topbar {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       height: 60px;
@@ -76,19 +69,13 @@
       box-shadow: var(--shadow-sm);
     }
 
-    /* Logo area kecil di kiri */
     .topbar-logo {
       display: flex; align-items: center; gap: 8px;
-      text-decoration: none;
-      flex-shrink: 0;
+      text-decoration: none; flex-shrink: 0;
     }
     .topbar-logo-icon {
-      width: auto; height: auto;
-      background: transparent;
-      border: none;
-      border-radius: 8px;
+      background: transparent; border: none; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 15px; color: #fff;
       transition: transform 0.25s var(--ease-spring);
     }
     .topbar-logo:hover .topbar-logo-icon { transform: rotate(-8deg) scale(1.08); }
@@ -98,13 +85,11 @@
       color: rgba(255,255,255,0.92);
       letter-spacing: -0.03em;
     }
-
     .topbar-divider {
       width: 1px; height: 20px;
       background: rgba(255,255,255,0.12);
       flex-shrink: 0;
     }
-
     .btn-back {
       display: flex; align-items: center; gap: 7px;
       padding: 7px 12px;
@@ -114,11 +99,8 @@
       color: rgba(255,255,255,0.6);
       font-family: inherit;
       font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.2s;
-      white-space: nowrap;
-      flex-shrink: 0;
+      cursor: pointer; text-decoration: none;
+      transition: all 0.2s; white-space: nowrap; flex-shrink: 0;
     }
     .btn-back:hover {
       background: var(--accent-light);
@@ -139,13 +121,10 @@
     }
     .file-meta {
       font-size: 11px; color: rgba(255,255,255,0.45);
-      font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
+      font-family: 'JetBrains Mono', monospace; white-space: nowrap;
     }
 
-    .topbar-actions {
-      display: flex; gap: 8px; align-items: center; flex-shrink: 0;
-    }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
     .btn-action {
       display: flex; align-items: center; gap: 6px;
@@ -156,10 +135,8 @@
       color: rgba(255,255,255,0.6);
       font-family: inherit;
       font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      white-space: nowrap;
+      cursor: pointer; transition: all 0.2s;
+      text-decoration: none; white-space: nowrap;
     }
     .btn-action:hover {
       background: var(--accent-light);
@@ -168,21 +145,19 @@
     }
     .btn-action i { transition: transform 0.25s var(--ease-spring); }
     .btn-action:hover i { transform: scale(1.15); }
-
     .btn-action.primary {
-      background: var(--ink);
-      border-color: var(--ink);
-      color: var(--white);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
     }
     .btn-action.primary:hover {
-      background: var(--ink-2);
-      border-color: var(--ink-2);
-      color: var(--white);
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+      color: #fff;
       transform: translateY(-1px);
       box-shadow: var(--shadow-md);
     }
 
-    /* ── Viewer content area ── */
     .viewer-wrap {
       position: fixed;
       top: 60px; left: 0; right: 0; bottom: 0;
@@ -193,12 +168,11 @@
       overflow: hidden;
     }
 
-    /* ── Loading state ── */
+    /* Loading */
     .loading-state {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      gap: 16px;
-      color: var(--ink-4);
+      gap: 16px; color: var(--ink-4);
     }
     .spinner {
       width: 40px; height: 40px;
@@ -207,10 +181,10 @@
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .loading-state p { font-size: 14px; color: var(--ink-4); }
 
-    /* ── Error state ── */
+    /* Error */
     .error-state {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -220,19 +194,17 @@
     .error-state h3 { font-size: 18px; font-weight: 600; color: var(--ink); font-family: 'Outfit', sans-serif; }
     .error-state p { font-size: 13px; color: var(--ink-4); max-width: 380px; line-height: 1.6; }
 
-    /* ── PDF viewer ── */
+    /* PDF */
     iframe.pdf-viewer {
       width: 100%; height: 100%;
-      border: none;
-      background: #fff;
+      border: none; background: #fff;
     }
 
-    /* ── Image viewer ── */
+    /* Image */
     .img-viewer-wrap {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-      overflow: auto;
+      padding: 24px; overflow: auto;
     }
     .img-viewer-wrap img {
       max-width: 100%; max-height: 100%;
@@ -241,12 +213,11 @@
       box-shadow: var(--shadow-lg);
     }
 
-    /* ── Video player ── */
+    /* Video */
     .video-viewer-wrap {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      padding: 24px;
-      background: var(--ink);
+      padding: 24px; background: var(--ink);
     }
     video {
       max-width: 100%; max-height: 100%;
@@ -254,7 +225,7 @@
       box-shadow: 0 8px 48px rgba(15,14,13,0.5);
     }
 
-    /* ── Audio player ── */
+    /* Audio */
     .audio-viewer-wrap {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -280,7 +251,7 @@
     }
     audio { width: 380px; max-width: 90vw; accent-color: var(--accent); }
 
-    /* ── Generic / unsupported ── */
+    /* Office / Generic — tidak bisa preview langsung */
     .generic-viewer {
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
@@ -294,18 +265,22 @@
       border: 1px solid var(--border-2);
     }
     .generic-viewer h3 { font-size: 18px; font-weight: 600; color: var(--ink); font-family: 'Outfit', sans-serif; }
-    .generic-viewer p { font-size: 13px; color: var(--ink-4); max-width: 340px; line-height: 1.7; }
-
-    /* Office preview bottom bar */
-    .office-bottom-bar {
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; padding: 10px 16px;
-      background: var(--white);
-      border-top: 1px solid var(--border-2);
-      flex-shrink: 0; flex-wrap: wrap;
+    .generic-viewer p { font-size: 13px; color: var(--ink-4); max-width: 360px; line-height: 1.7; }
+    .generic-viewer .ext-badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      background: var(--paper-2);
+      border: 1px solid var(--border-2);
+      color: var(--ink-3);
+      letter-spacing: 0.06em;
     }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
 
-    /* ── Toast ── */
+    /* Toast */
     .toast {
       position: fixed; bottom: 28px; left: 50%;
       transform: translateX(-50%) translateY(20px);
@@ -321,15 +296,16 @@
       opacity: 0; pointer-events: none;
       transition: all 0.3s var(--ease-spring);
     }
-    .toast.show { opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0); }
+    .toast.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
 <body>
 
-<!-- Topbar -->
 <div class="topbar">
   <a class="topbar-logo" href="../Storage-dashboard.html">
-    <div class="topbar-logo-icon"><img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;"></div>
+    <div class="topbar-logo-icon">
+      <img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
+    </div>
     <span class="topbar-logo-name">MyStorage</span>
   </a>
   <div class="topbar-divider"></div>
@@ -350,7 +326,6 @@
   </div>
 </div>
 
-<!-- Viewer -->
 <div class="viewer-wrap" id="viewerWrap">
   <div class="loading-state" id="loadingState">
     <div class="spinner"></div>
@@ -358,7 +333,6 @@
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast">
   <i class="ti ti-check" style="font-size:16px;flex-shrink:0" id="toastIcon"></i>
   <span id="toastMsg">Berhasil!</span>
@@ -369,7 +343,6 @@
 <script>
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
-  /* ── Safe HTML escape (prevents XSS) ── */
   function escapeHtml(str) {
     const d = document.createElement('div');
     d.textContent = String(str || '');
@@ -393,17 +366,13 @@
     audio:       { icon: 'ti-music',         color: '#7e22ce', bg: 'rgba(126,34,206,0.08)' },
   };
 
-  function hideOfficeLoading() {
-    const overlay = document.getElementById('officeLoadingOverlay');
-    if (overlay) overlay.style.display = 'none';
-  }
+  // Ekstensi yang bisa di-preview langsung oleh browser
+  const BROWSER_PREVIEW_EXTS = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
+                                 'mp4', 'webm', 'ogg', 'mov',
+                                 'mp3', 'wav', 'flac', 'aac'];
 
-  function reloadOfficePreview(gdocsUrl) {
-    const frame = document.getElementById('officeFrame');
-    const overlay = document.getElementById('officeLoadingOverlay');
-    if (overlay) overlay.style.display = 'flex';
-    if (frame) { frame.src = ''; setTimeout(() => { frame.src = gdocsUrl; }, 300); }
-  }
+  // Ekstensi office yang TIDAK bisa di-iframe langsung
+  const OFFICE_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
 
   function showToast(msg, isError) {
     const t = document.getElementById('toast');
@@ -417,7 +386,8 @@
   }
 
   function showError(msg, detail) {
-    document.getElementById('loadingState').remove();
+    const ls = document.getElementById('loadingState');
+    if (ls) ls.remove();
     document.getElementById('viewerWrap').innerHTML = `
       <div class="error-state">
         <i class="ti ti-file-alert"></i>
@@ -429,104 +399,85 @@
       </div>`;
   }
 
-  async function renderViewer(url, type, name) {
+  function renderViewer(url, type, name) {
     const wrap = document.getElementById('viewerWrap');
+    const ext  = (name || '').split('.').pop().toLowerCase();
 
-    if (type === 'pdf') {
+    // ── PDF — browser native viewer ──
+    if (type === 'pdf' || ext === 'pdf') {
       wrap.innerHTML = `<iframe class="pdf-viewer" src="${escapeHtml(url)}" title="${escapeHtml(name)}"></iframe>`;
+      return;
     }
-    else if (type === 'foto') {
+
+    // ── Gambar ──
+    if (type === 'foto' || ['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
       wrap.innerHTML = `
         <div class="img-viewer-wrap">
-          <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" onload="this.style.opacity=1" style="opacity:0;transition:opacity 0.4s ease"/>
+          <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}"
+               onload="this.style.opacity=1"
+               style="opacity:0;transition:opacity 0.4s ease"/>
         </div>`;
+      return;
     }
-    else if (type === 'video') {
+
+    // ── Video ──
+    if (type === 'video' || ['mp4','webm','ogg','mov'].includes(ext)) {
       wrap.innerHTML = `
         <div class="video-viewer-wrap">
           <video controls autoplay>
-            <source src="${url}">
             <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran video.
           </video>
         </div>`;
+      return;
     }
-    else if (type === 'audio') {
-      const nameEsc = escapeHtml(name);
+
+    // ── Audio ──
+    if (type === 'audio' || ['mp3','wav','flac','aac','ogg'].includes(ext)) {
       wrap.innerHTML = `
         <div class="audio-viewer-wrap">
           <div class="audio-icon-big"><i class="ti ti-music"></i></div>
-          <div class="audio-name">${nameEsc}</div>
+          <div class="audio-name">${escapeHtml(name)}</div>
           <audio controls autoplay>
             <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran audio.
           </audio>
         </div>`;
+      return;
     }
-    else if (type === 'spreadsheet' || type === 'doc') {
-      const ext = name.split('.').pop() || '';
-      const officeExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
-      if (officeExts.includes(ext.toLowerCase())) {
-        const gdocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-        const nameEsc  = escapeHtml(name);
-        const gdocsEsc = escapeHtml(gdocsUrl);
-        wrap.innerHTML = `
-          <div style="position:relative;width:100%;height:100%;display:flex;flex-direction:column;">
-            <div id="officeLoadingOverlay" style="position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;
-              align-items:center;justify-content:center;gap:14px;background:var(--paper);pointer-events:none;">
-              <div class="spinner"></div>
-              <p style="font-size:14px;color:var(--ink-4)">Memuat preview via Google Docs...</p>
-              <p style="font-size:12px;color:var(--ink-5)">Mungkin perlu beberapa detik</p>
-            </div>
-            <iframe
-              id="officeFrame"
-              src="${gdocsEsc}"
-              title="${nameEsc}"
-              style="flex:1;border:none;background:#fff;"
-              onload="hideOfficeLoading()"
-            ></iframe>
-            <div class="office-bottom-bar">
-              <span style="font-size:12px;color:var(--ink-4)">Preview tidak muncul?</span>
-              <button class="btn-action" onclick="reloadOfficePreview('${gdocsEsc}')">
-                <i class="ti ti-refresh"></i> Muat Ulang
-              </button>
-              <button class="btn-action primary" onclick="downloadFile()">
-                <i class="ti ti-download"></i> Download File
-              </button>
-            </div>
-          </div>`;
-        return;
-      }
 
-      const nameEsc  = escapeHtml(name);
-      const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-      wrap.innerHTML = `
-        <div class="generic-viewer">
-          <div class="generic-icon-box" style="background:${iconInfo.bg}">
-            <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
-          </div>
-          <h3>${nameEsc}</h3>
-          <p>Format <strong>${escapeHtml(ext.toUpperCase())}</strong> tidak bisa ditampilkan langsung.<br>Gunakan tombol di bawah untuk mengunduh.</p>
-          <button class="btn-action primary" onclick="downloadFile()" style="margin-top:8px">
-            <i class="ti ti-download"></i> Download File
-          </button>
-        </div>`;
-    }
-    else {
-      const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-      const nameEsc = escapeHtml(name);
-      wrap.innerHTML = `
-        <div class="generic-viewer">
-          <div class="generic-icon-box" style="background:${iconInfo.bg}">
-            <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
-          </div>
-          <h3>${nameEsc}</h3>
-          <p>Tipe file ini tidak bisa ditampilkan langsung di browser.<br>Gunakan tombol <strong>Download</strong> untuk membuka file ini di aplikasi yang sesuai.</p>
+    // ── Office / Doc / Spreadsheet ──
+    // Google Docs Viewer tidak bisa load Supabase URLs (CSP blocked).
+    // Tampilkan fallback download yang informatif.
+    const iconInfo  = FILE_ICONS[type] || FILE_ICONS['doc'];
+    const isOffice  = OFFICE_EXTS.includes(ext);
+    const extLabel  = ext ? ext.toUpperCase() : (type || 'FILE').toUpperCase();
+
+    const officeNote = isOffice
+      ? `File <strong>${extLabel}</strong> tidak bisa ditampilkan langsung di browser karena keterbatasan keamanan browser.<br>Silakan download untuk membuka dengan aplikasi yang sesuai.`
+      : `Tipe file ini tidak bisa ditampilkan langsung di browser.<br>Gunakan tombol <strong>Download</strong> untuk membuka file ini.`;
+
+    wrap.innerHTML = `
+      <div class="generic-viewer">
+        <div class="generic-icon-box" style="background:${iconInfo.bg}">
+          <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
+        </div>
+        <span class="ext-badge">${escapeHtml(extLabel)}</span>
+        <h3>${escapeHtml(name)}</h3>
+        <p>${officeNote}</p>
+        <div class="btn-group">
           <button class="btn-action primary" onclick="downloadFile()">
             <i class="ti ti-download"></i> Download File
           </button>
-        </div>`;
-    }
+          <button class="btn-action" onclick="openInNewTab()">
+            <i class="ti ti-external-link"></i> Buka di Tab Baru
+          </button>
+        </div>
+      </div>`;
+  }
+
+  function openInNewTab() {
+    if (signedUrl) window.open(signedUrl, '_blank');
   }
 
   async function downloadFile() {
@@ -550,7 +501,7 @@
 
     try {
       let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-      saved = saved.filter(function(s) { return s.fileId !== storagePath; });
+      saved = saved.filter(s => s.fileId !== storagePath);
       saved.unshift({
         fileId: storagePath,
         name: fileName || 'File',
@@ -591,7 +542,7 @@
 
     const { data, error } = await sb.storage.from('user-files').createSignedUrl(storagePath, 3600);
     if (error) {
-      showError('Gagal membuka file', 'Tidak dapat membuat link akses: ' + error.message + '. Pastikan Anda memiliki akses ke file ini.');
+      showError('Gagal membuka file', 'Tidak dapat membuat link akses: ' + error.message);
       return;
     }
 
