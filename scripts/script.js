@@ -2385,6 +2385,153 @@ async function bulkDelete() {
 
 
 /* ── INIT ── */
+/* ════════════════════════════════════════
+   SCROLL REVEAL — IntersectionObserver
+════════════════════════════════════════ */
+function initScrollReveal() {
+  var els = document.querySelectorAll('.scroll-reveal');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(function(el) { el.classList.add('visible'); });
+    return;
+  }
+  var scrollRoot = document.querySelector('.main');
+  var obs = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        obs.unobserve(entry.target);
+      }
+    });
+  }, {
+    root: scrollRoot,
+    threshold: 0.06,
+    rootMargin: '0px 0px -20px 0px'
+  });
+  els.forEach(function(el) { obs.observe(el); });
+}
+
+/* ════════════════════════════════════════
+   SCROLL PROGRESS BAR
+════════════════════════════════════════ */
+function initScrollProgress() {
+  var main = document.querySelector('.main');
+  var fill = document.getElementById('scrollProgressFill');
+  if (!main || !fill) return;
+  main.addEventListener('scroll', function() {
+    var max = main.scrollHeight - main.clientHeight;
+    var pct = max > 0 ? (main.scrollTop / max) * 100 : 0;
+    fill.style.width = pct + '%';
+  }, { passive: true });
+}
+
+/* ════════════════════════════════════════
+   SMOOTH PASS SCROLL — LERP Physics Engine
+════════════════════════════════════════ */
+function setupSmoothScroll() {
+  // Skip di mobile/touch — native scroll lebih baik
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
+
+  // Skip jika user prefer reduced motion
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var main = document.querySelector('.main');
+  if (!main) return;
+
+  // ── LERP CONFIG ──
+  var LERP_FACTOR     = 0.085; // Makin kecil = makin smooth (0.05–0.15)
+  var WHEEL_MULT      = 1.0;
+  var STOP_THRESHOLD  = 0.05;  // px — batas berhenti animasi
+
+  var targetY  = main.scrollTop;
+  var currentY = main.scrollTop;
+  var rafId    = null;
+  var animating = false;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function animate() {
+    var delta = targetY - currentY;
+    if (Math.abs(delta) < STOP_THRESHOLD) {
+      currentY = targetY;
+      main.scrollTop = currentY;
+      animating = false;
+      rafId = null;
+      return;
+    }
+    currentY = lerp(currentY, targetY, LERP_FACTOR);
+    main.scrollTop = currentY;
+    rafId = requestAnimationFrame(animate);
+  }
+
+  function clampTarget(val) {
+    return Math.max(0, Math.min(val, main.scrollHeight - main.clientHeight));
+  }
+
+  // ── Wheel handler ──
+  main.addEventListener('wheel', function(e) {
+    e.preventDefault();
+
+    var delta = e.deltaY;
+    if (e.deltaMode === 1) delta *= 32;   // Firefox line mode
+    if (e.deltaMode === 2) delta *= 300;  // Page mode
+    delta = Math.sign(delta) * Math.min(Math.abs(delta), 200) * WHEEL_MULT;
+
+    if (!animating) { currentY = main.scrollTop; animating = true; }
+    targetY = clampTarget(targetY + delta);
+    if (!rafId) rafId = requestAnimationFrame(animate);
+  }, { passive: false });
+
+  // ── Keyboard handler ──
+  document.addEventListener('keydown', function(e) {
+    var focused = document.activeElement;
+    var isInput = focused && (focused.tagName === 'INPUT' || focused.tagName === 'SELECT' || focused.tagName === 'TEXTAREA');
+    if (isInput) return;
+
+    var maxScroll = main.scrollHeight - main.clientHeight;
+    var delta = 0;
+    switch(e.key) {
+      case 'ArrowDown': delta =  80; break;
+      case 'ArrowUp':   delta = -80; break;
+      case 'PageDown':  delta =  main.clientHeight * 0.85; break;
+      case 'PageUp':    delta = -main.clientHeight * 0.85; break;
+      case 'End':       delta =  maxScroll - targetY; break;
+      case 'Home':      delta = -targetY; break;
+      default: return;
+    }
+    if (delta === 0) return;
+    e.preventDefault();
+    if (!animating) { currentY = main.scrollTop; animating = true; }
+    targetY = clampTarget(targetY + delta);
+    if (!rafId) rafId = requestAnimationFrame(animate);
+  });
+
+  // ── Override scrollIntoView agar tetap smooth ──
+  var origScrollIntoView = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = function(options) {
+    if (options && options.behavior === 'smooth' && main.contains(this)) {
+      var containerRect = main.getBoundingClientRect();
+      var elemRect      = this.getBoundingClientRect();
+      var offset        = elemRect.top - containerRect.top + main.scrollTop;
+      if (!animating) { currentY = main.scrollTop; animating = true; }
+      targetY = clampTarget(offset - 20);
+      if (!rafId) rafId = requestAnimationFrame(animate);
+    } else {
+      origScrollIntoView.call(this, options);
+    }
+  };
+
+  // ── Topbar shadow saat scroll ──
+  var topbar = document.querySelector('.topbar');
+  (function tickShadow() {
+    if (topbar) {
+      topbar.style.boxShadow = targetY > 10
+        ? '0 4px 24px rgba(15,14,13,0.08)'
+        : 'none';
+    }
+    requestAnimationFrame(tickShadow);
+  })();
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   // Sembunyikan konten sampai session terverifikasi — cegah flash konten
   document.body.style.visibility = 'hidden';
@@ -2489,4 +2636,9 @@ document.addEventListener('DOMContentLoaded', async function() {
   setViewMode(currentViewMode);
 
   loadAll();
+
+  // ── Smooth scroll init ──
+  initScrollReveal();
+  initScrollProgress();
+  setupSmoothScroll();
 });
