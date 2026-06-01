@@ -2388,13 +2388,16 @@ async function bulkDelete() {
 /* ════════════════════════════════════════
    SCROLL REVEAL — IntersectionObserver
 ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   SCROLL REVEAL — IntersectionObserver
+   Pakai window sebagai root (viewport)
+════════════════════════════════════════ */
 function initScrollReveal() {
   var els = document.querySelectorAll('.scroll-reveal');
   if (!('IntersectionObserver' in window)) {
     els.forEach(function(el) { el.classList.add('visible'); });
     return;
   }
-  var scrollRoot = document.querySelector('.main');
   var obs = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
@@ -2402,30 +2405,27 @@ function initScrollReveal() {
         obs.unobserve(entry.target);
       }
     });
-  }, {
-    root: scrollRoot,
-    threshold: 0.06,
-    rootMargin: '0px 0px -20px 0px'
-  });
+  }, { threshold: 0.06, rootMargin: '0px 0px -20px 0px' });
   els.forEach(function(el) { obs.observe(el); });
 }
 
 /* ════════════════════════════════════════
    SCROLL PROGRESS BAR
+   Pakai window scroll
 ════════════════════════════════════════ */
 function initScrollProgress() {
-  var main = document.querySelector('.main');
   var fill = document.getElementById('scrollProgressFill');
-  if (!main || !fill) return;
-  main.addEventListener('scroll', function() {
-    var max = main.scrollHeight - main.clientHeight;
-    var pct = max > 0 ? (main.scrollTop / max) * 100 : 0;
+  if (!fill) return;
+  window.addEventListener('scroll', function() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = max > 0 ? (window.scrollY / max) * 100 : 0;
     fill.style.width = pct + '%';
   }, { passive: true });
 }
 
 /* ════════════════════════════════════════
    SMOOTH PASS SCROLL — LERP Physics Engine
+   Pakai window.scrollY — tidak perlu ubah CSS
 ════════════════════════════════════════ */
 function setupSmoothScroll() {
   // Skip di mobile/touch — native scroll lebih baik
@@ -2434,41 +2434,54 @@ function setupSmoothScroll() {
   // Skip jika user prefer reduced motion
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  var main = document.querySelector('.main');
-  if (!main) return;
-
   // ── LERP CONFIG ──
-  var LERP_FACTOR     = 0.085; // Makin kecil = makin smooth (0.05–0.15)
-  var WHEEL_MULT      = 1.0;
-  var STOP_THRESHOLD  = 0.05;  // px — batas berhenti animasi
+  var LERP_FACTOR    = 0.085; // Makin kecil = makin smooth (0.05–0.15)
+  var WHEEL_MULT     = 1.0;
+  var STOP_THRESHOLD = 0.05;  // px — batas berhenti animasi
 
-  var targetY  = main.scrollTop;
-  var currentY = main.scrollTop;
-  var rafId    = null;
+  var targetY   = window.scrollY;
+  var currentY  = window.scrollY;
+  var rafId     = null;
   var animating = false;
 
   function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function getMaxScroll() {
+    return document.documentElement.scrollHeight - window.innerHeight;
+  }
+
+  function clamp(val) {
+    return Math.max(0, Math.min(val, getMaxScroll()));
+  }
 
   function animate() {
     var delta = targetY - currentY;
     if (Math.abs(delta) < STOP_THRESHOLD) {
       currentY = targetY;
-      main.scrollTop = currentY;
+      window.scrollTo(0, currentY);
       animating = false;
       rafId = null;
       return;
     }
     currentY = lerp(currentY, targetY, LERP_FACTOR);
-    main.scrollTop = currentY;
+    window.scrollTo(0, currentY);
     rafId = requestAnimationFrame(animate);
   }
 
-  function clampTarget(val) {
-    return Math.max(0, Math.min(val, main.scrollHeight - main.clientHeight));
-  }
+  // ── Wheel handler pada document ──
+  document.addEventListener('wheel', function(e) {
+    // Jangan intercept scroll di dalam elemen yang punya overflow scroll sendiri
+    // (misal: sidebar, modal, select dropdown)
+    var el = e.target;
+    while (el && el !== document.body) {
+      var style = window.getComputedStyle(el);
+      var overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+        return; // biarkan elemen itu scroll sendiri
+      }
+      el = el.parentElement;
+    }
 
-  // ── Wheel handler ──
-  main.addEventListener('wheel', function(e) {
     e.preventDefault();
 
     var delta = e.deltaY;
@@ -2476,60 +2489,56 @@ function setupSmoothScroll() {
     if (e.deltaMode === 2) delta *= 300;  // Page mode
     delta = Math.sign(delta) * Math.min(Math.abs(delta), 200) * WHEEL_MULT;
 
-    if (!animating) { currentY = main.scrollTop; animating = true; }
-    targetY = clampTarget(targetY + delta);
+    if (!animating) { currentY = window.scrollY; animating = true; }
+    targetY = clamp(targetY + delta);
     if (!rafId) rafId = requestAnimationFrame(animate);
   }, { passive: false });
 
   // ── Keyboard handler ──
   document.addEventListener('keydown', function(e) {
     var focused = document.activeElement;
-    var isInput = focused && (focused.tagName === 'INPUT' || focused.tagName === 'SELECT' || focused.tagName === 'TEXTAREA');
+    var isInput = focused && (
+      focused.tagName === 'INPUT' ||
+      focused.tagName === 'SELECT' ||
+      focused.tagName === 'TEXTAREA'
+    );
     if (isInput) return;
 
-    var maxScroll = main.scrollHeight - main.clientHeight;
     var delta = 0;
-    switch(e.key) {
+    switch (e.key) {
       case 'ArrowDown': delta =  80; break;
       case 'ArrowUp':   delta = -80; break;
-      case 'PageDown':  delta =  main.clientHeight * 0.85; break;
-      case 'PageUp':    delta = -main.clientHeight * 0.85; break;
-      case 'End':       delta =  maxScroll - targetY; break;
+      case 'PageDown':  delta =  window.innerHeight * 0.85; break;
+      case 'PageUp':    delta = -window.innerHeight * 0.85; break;
+      case 'End':       delta =  getMaxScroll() - targetY; break;
       case 'Home':      delta = -targetY; break;
       default: return;
     }
     if (delta === 0) return;
     e.preventDefault();
-    if (!animating) { currentY = main.scrollTop; animating = true; }
-    targetY = clampTarget(targetY + delta);
+    if (!animating) { currentY = window.scrollY; animating = true; }
+    targetY = clamp(targetY + delta);
     if (!rafId) rafId = requestAnimationFrame(animate);
   });
 
-  // ── Override scrollIntoView agar tetap smooth ──
-  var origScrollIntoView = Element.prototype.scrollIntoView;
-  Element.prototype.scrollIntoView = function(options) {
-    if (options && options.behavior === 'smooth' && main.contains(this)) {
-      var containerRect = main.getBoundingClientRect();
-      var elemRect      = this.getBoundingClientRect();
-      var offset        = elemRect.top - containerRect.top + main.scrollTop;
-      if (!animating) { currentY = main.scrollTop; animating = true; }
-      targetY = clampTarget(offset - 20);
-      if (!rafId) rafId = requestAnimationFrame(animate);
-    } else {
-      origScrollIntoView.call(this, options);
+  // ── Sync targetY kalau ada scroll eksternal (klik anchor, dll) ──
+  window.addEventListener('scroll', function() {
+    if (!animating) {
+      targetY  = window.scrollY;
+      currentY = window.scrollY;
     }
-  };
+  }, { passive: true });
 
   // ── Topbar shadow saat scroll ──
   var topbar = document.querySelector('.topbar');
-  (function tickShadow() {
-    if (topbar) {
-      topbar.style.boxShadow = targetY > 10
+  if (topbar) {
+    topbar.style.transition = (topbar.style.transition || '') + ', box-shadow 0.28s ease';
+    window.addEventListener('scroll', function() {
+      topbar.style.boxShadow = window.scrollY > 10
         ? '0 4px 24px rgba(15,14,13,0.08)'
         : 'none';
-    }
-    requestAnimationFrame(tickShadow);
-  })();
+    }, { passive: true });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
