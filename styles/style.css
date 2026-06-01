@@ -65,6 +65,7 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 99px; }
@@ -320,6 +321,7 @@ body::before {
   min-height: 100vh;
   position: relative;
   z-index: 5;
+  overscroll-behavior: none;
 }
 
 /* ── Topbar ── */
