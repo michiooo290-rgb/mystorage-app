@@ -9,7 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="../styles/nightmode.css"/>
-  <script src="../scripts/nightmode.js"></script>
+  <script src="../scripts/theme-boot.js"></script>
+  <script src="../scripts/nightmode.js" defer></script>
   <style>
     :root {
       --ink:     #0f0e0d;
@@ -317,10 +318,10 @@
     <div class="file-meta" id="fileMeta"></div>
   </div>
   <div class="topbar-actions">
-    <button class="btn-action" id="btnShare" onclick="shareFile()">
+    <button class="btn-action" id="btnShare">
       <i class="ti ti-share"></i> Bagikan
     </button>
-    <button class="btn-action primary" id="btnDownload" onclick="downloadFile()">
+    <button class="btn-action primary" id="btnDownload">
       <i class="ti ti-download"></i> Download
     </button>
   </div>
@@ -340,212 +341,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../scripts/supabase-config.js"></script>
-<script>
-  const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = String(str || '');
-    return d.innerHTML;
-  }
-
-  let signedUrl = null;
-
-  const params      = new URLSearchParams(window.location.search);
-  const storagePath = params.get('path');
-  const fileName    = params.get('name');
-  const fileType    = params.get('type');
-  const fileSize    = params.get('size');
-
-  const FILE_ICONS = {
-    pdf:         { icon: 'ti-file-type-pdf', color: '#c0392b', bg: 'rgba(192,57,43,0.08)' },
-    doc:         { icon: 'ti-file-text',     color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)' },
-    foto:        { icon: 'ti-photo',         color: '#2d6a4f', bg: 'rgba(45,106,79,0.08)' },
-    video:       { icon: 'ti-video',         color: '#c8602a', bg: 'rgba(200,96,42,0.08)' },
-    spreadsheet: { icon: 'ti-table',         color: '#0369a1', bg: 'rgba(3,105,161,0.08)' },
-    audio:       { icon: 'ti-music',         color: '#7e22ce', bg: 'rgba(126,34,206,0.08)' },
-  };
-
-  // Ekstensi yang bisa di-preview langsung oleh browser
-  const BROWSER_PREVIEW_EXTS = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',
-                                 'mp4', 'webm', 'ogg', 'mov',
-                                 'mp3', 'wav', 'flac', 'aac'];
-
-  // Ekstensi office yang TIDAK bisa di-iframe langsung
-  const OFFICE_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
-
-  function showToast(msg, isError) {
-    const t = document.getElementById('toast');
-    const icon = document.getElementById('toastIcon');
-    document.getElementById('toastMsg').textContent = msg;
-    icon.className = isError ? 'ti ti-alert-circle' : 'ti ti-check';
-    icon.style.color = isError ? '#f87171' : '#4ade80';
-    t.classList.add('show');
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
-  }
-
-  function showError(msg, detail) {
-    const ls = document.getElementById('loadingState');
-    if (ls) ls.remove();
-    document.getElementById('viewerWrap').innerHTML = `
-      <div class="error-state">
-        <i class="ti ti-file-alert"></i>
-        <h3>${escapeHtml(msg)}</h3>
-        <p>${escapeHtml(detail)}</p>
-        <a href="../Storage-dashboard.html" class="btn-action" style="margin-top:8px">
-          <i class="ti ti-arrow-left"></i> Kembali ke Dashboard
-        </a>
-      </div>`;
-  }
-
-  function renderViewer(url, type, name) {
-    const wrap = document.getElementById('viewerWrap');
-    const ext  = (name || '').split('.').pop().toLowerCase();
-
-    // ── PDF — browser native viewer ──
-    if (type === 'pdf' || ext === 'pdf') {
-      wrap.innerHTML = `<iframe class="pdf-viewer" src="${escapeHtml(url)}" title="${escapeHtml(name)}"></iframe>`;
-      return;
-    }
-
-    // ── Gambar ──
-    if (type === 'foto' || ['jpg','jpeg','png','gif','webp','svg'].includes(ext)) {
-      wrap.innerHTML = `
-        <div class="img-viewer-wrap">
-          <img src="${escapeHtml(url)}" alt="${escapeHtml(name)}"
-               onload="this.style.opacity=1"
-               style="opacity:0;transition:opacity 0.4s ease"/>
-        </div>`;
-      return;
-    }
-
-    // ── Video ──
-    if (type === 'video' || ['mp4','webm','ogg','mov'].includes(ext)) {
-      wrap.innerHTML = `
-        <div class="video-viewer-wrap">
-          <video controls autoplay>
-            <source src="${escapeHtml(url)}">
-            Browser Anda tidak mendukung pemutaran video.
-          </video>
-        </div>`;
-      return;
-    }
-
-    // ── Audio ──
-    if (type === 'audio' || ['mp3','wav','flac','aac','ogg'].includes(ext)) {
-      wrap.innerHTML = `
-        <div class="audio-viewer-wrap">
-          <div class="audio-icon-big"><i class="ti ti-music"></i></div>
-          <div class="audio-name">${escapeHtml(name)}</div>
-          <audio controls autoplay>
-            <source src="${escapeHtml(url)}">
-            Browser Anda tidak mendukung pemutaran audio.
-          </audio>
-        </div>`;
-      return;
-    }
-
-    // ── Office / Doc / Spreadsheet ──
-    // Google Docs Viewer tidak bisa load Supabase URLs (CSP blocked).
-    // Tampilkan fallback download yang informatif.
-    const iconInfo  = FILE_ICONS[type] || FILE_ICONS['doc'];
-    const isOffice  = OFFICE_EXTS.includes(ext);
-    const extLabel  = ext ? ext.toUpperCase() : (type || 'FILE').toUpperCase();
-
-    const officeNote = isOffice
-      ? `File <strong>${extLabel}</strong> tidak bisa ditampilkan langsung di browser karena keterbatasan keamanan browser.<br>Silakan download untuk membuka dengan aplikasi yang sesuai.`
-      : `Tipe file ini tidak bisa ditampilkan langsung di browser.<br>Gunakan tombol <strong>Download</strong> untuk membuka file ini.`;
-
-    wrap.innerHTML = `
-      <div class="generic-viewer">
-        <div class="generic-icon-box" style="background:${iconInfo.bg}">
-          <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
-        </div>
-        <span class="ext-badge">${escapeHtml(extLabel)}</span>
-        <h3>${escapeHtml(name)}</h3>
-        <p>${officeNote}</p>
-        <div class="btn-group">
-          <button class="btn-action primary" onclick="downloadFile()">
-            <i class="ti ti-download"></i> Download File
-          </button>
-        </div>
-      </div>`;
-  }
-
-  function openInNewTab() {
-    if (signedUrl) window.open(signedUrl, '_blank');
-  }
-
-  async function downloadFile() {
-    if (!storagePath) return;
-    showToast('Menyiapkan download...');
-    const { data, error } = await sb.storage.from('user-files').download(storagePath);
-    if (error) { showToast('Gagal download: ' + error.message, true); return; }
-    const url = URL.createObjectURL(data);
-    const a = document.createElement('a');
-    a.href = url; a.download = fileName || 'file';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Download dimulai!');
-  }
-
-  async function shareFile() {
-    if (!storagePath) return;
-    showToast('Membuat link...');
-    const { data, error } = await sb.storage.from('user-files').createSignedUrl(storagePath, 604800);
-    if (error) { showToast('Gagal membuat link: ' + error.message, true); return; }
-
-    try {
-      let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-      saved = saved.filter(s => s.fileId !== storagePath);
-      saved.unshift({
-        fileId: storagePath,
-        name: fileName || 'File',
-        url: data.signedUrl,
-        type: fileType || 'doc',
-        folder: storagePath.split('/')[0] || '',
-        createdAt: Date.now()
-      });
-      if (saved.length > 50) saved = saved.slice(0, 50);
-      localStorage.setItem('myStorageShared', JSON.stringify(saved));
-    } catch(e) { console.warn('Gagal simpan shared link:', e); }
-
-    try {
-      await navigator.clipboard.writeText(data.signedUrl);
-      showToast('Link berhasil disalin ke clipboard!');
-    } catch {
-      prompt('Salin link berikut:', data.signedUrl);
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', async function() {
-    const { data: sessionData } = await sb.auth.getSession();
-    if (!sessionData || !sessionData.session) {
-      window.location.href = '../pages/login.html';
-      return;
-    }
-
-    if (!storagePath || !fileName) {
-      showError('File tidak ditemukan', 'Parameter file tidak valid. Silakan kembali ke dashboard dan pilih file lagi.');
-      return;
-    }
-
-    document.title = 'MyStorage — ' + fileName;
-    document.getElementById('fileTitle').textContent = fileName;
-    document.getElementById('fileMeta').textContent = fileSize
-      ? fileSize + ' · ' + (fileType || '').toUpperCase()
-      : (fileType || '').toUpperCase();
-
-    const { data, error } = await sb.storage.from('user-files').createSignedUrl(storagePath, 3600);
-    if (error) {
-      showError('Gagal membuka file', 'Tidak dapat membuat link akses: ' + error.message);
-      return;
-    }
-
-    signedUrl = data.signedUrl;
-    renderViewer(signedUrl, fileType, fileName);
-  });
-</script>
+<script src="../scripts/viewer.js" defer></script>
 </body>
 </html>
