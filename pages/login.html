@@ -10,7 +10,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
   <link rel="stylesheet" href="../styles/nightmode.css"/>
-  <script src="../scripts/nightmode.js"></script>
+  <!-- Terapkan dark mode SEBELUM browser render, cegah FOUC -->
+  <script>
+    (function () {
+      if (localStorage.getItem('myStorage_nightMode') === 'true')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <script src="../scripts/nightmode.js" defer></script>
   <style>
     /* ══════════════════════════════════════════════
        MyStorage — login.html
@@ -1062,8 +1069,9 @@
     const btn = document.getElementById('btnForgot');
     btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;width:13px;height:13px;border-width:2px;border-style:solid;border-radius:50%;animation:spin 0.7s linear infinite"></span> Mengirim...';
     btn.style.pointerEvents = 'none';
+    const RESET_REDIRECT = 'https://michio-vault.vercel.app/Storage-dashboard.html';
     const { error } = await sb.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '/Storage-dashboard.html'
+      redirectTo: RESET_REDIRECT
     });
     btn.innerHTML = 'Kirim Link';
     btn.style.pointerEvents = '';

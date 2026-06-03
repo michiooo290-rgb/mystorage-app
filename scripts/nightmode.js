@@ -26,7 +26,7 @@
     document.documentElement.classList.add('theme-switching');
     setTimeout(() => document.documentElement.classList.remove('theme-switching'), 350);
     const dark = !isDark();
-    localStorage.setItem(KEY, dark);
+    localStorage.setItem(KEY, String(dark));
     applyTheme(dark);
     updateAllToggles(dark);
     return dark;

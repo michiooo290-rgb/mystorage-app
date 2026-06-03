@@ -222,22 +222,22 @@
 [data-theme="dark"] select,
 [data-theme="dark"] .field-input,
 [data-theme="dark"] .search-bar input {
-  background: var(--paper-2) !important;
-  border-color: var(--border-2) !important;
-  color: var(--ink) !important;
+  background: var(--paper-2);
+  border-color: var(--border-2);
+  color: var(--ink);
 }
 
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder,
 [data-theme="dark"] .field-input::placeholder {
-  color: var(--ink-4) !important;
+  color: var(--ink-4);
 }
 
 [data-theme="dark"] input:focus,
 [data-theme="dark"] .field-input:focus {
-  border-color: var(--accent) !important;
-  background: var(--paper-3) !important;
-  box-shadow: 0 0 0 3px rgba(217,124,74,0.12) !important;
+  border-color: var(--accent);
+  background: var(--paper-3);
+  box-shadow: 0 0 0 3px rgba(217,124,74,0.12);
 }
 
 [data-theme="dark"] .field-label {

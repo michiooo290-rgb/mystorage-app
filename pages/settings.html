@@ -12,7 +12,14 @@
   <link rel="stylesheet" href="../styles/style.css"/>
   <link rel="stylesheet" href="../styles/settings.css"/>
   <link rel="stylesheet" href="../styles/nightmode.css"/>
-  <script src="../scripts/nightmode.js"></script>
+  <!-- Terapkan dark mode SEBELUM browser render, cegah FOUC -->
+  <script>
+    (function () {
+      if (localStorage.getItem('myStorage_nightMode') === 'true')
+        document.documentElement.setAttribute('data-theme', 'dark');
+    })();
+  </script>
+  <script src="../scripts/nightmode.js" defer></script>
   <style>
     .avatar-wrapper {
       position: relative;
@@ -184,6 +191,36 @@
       0%, 100% { transform: scale(1.2) rotate(0deg); }
       25%       { transform: scale(1.2) rotate(-8deg); }
       75%       { transform: scale(1.2) rotate(8deg); }
+    }
+
+    /* Folder toggle button */
+    .btn-folder-toggle {
+      width: 100%;
+      margin-top: 10px;
+      padding: 7px 0;
+      background: transparent;
+      border: 1px solid rgba(15,14,13,0.12);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--ink-4);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-folder-toggle:hover {
+      background: rgba(15,14,13,0.05);
+      color: var(--ink-2);
+    }
+    [data-theme="dark"] .btn-folder-toggle {
+      border-color: rgba(255,255,255,0.1);
+    }
+    [data-theme="dark"] .btn-folder-toggle:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--ink-2);
     }
 
     /* Settings gear di nav active: spin */
@@ -974,13 +1011,13 @@ function setupCropDrag() {
     cropDragStartY = e.clientY - cropOffsetY;
     e.preventDefault();
   };
-  window.onmousemove = (e) => {
+  window.addEventListener('mousemove', (e) => {
     if (!cropIsDragging) return;
     cropOffsetX = e.clientX - cropDragStartX;
     cropOffsetY = e.clientY - cropDragStartY;
     updateCrop();
-  };
-  window.onmouseup = () => { cropIsDragging = false; };
+  });
+  window.addEventListener('mouseup', () => { cropIsDragging = false; });
 
   // Touch support
   vp.ontouchstart = (e) => {
@@ -1236,14 +1273,7 @@ function renderFolderBars(showAll) {
       </div>
     </div>`;
   }).join('') + (hasMore ? `
-    <button onclick="renderFolderBars(${!showAll})" style="
-      width:100%;margin-top:10px;padding:7px 0;
-      background:transparent;border:1px solid rgba(15,14,13,0.12);
-      border-radius:8px;font-size:12px;color:var(--ink-4);
-      cursor:pointer;font-family:inherit;transition:all 0.2s;
-      display:flex;align-items:center;justify-content:center;gap:6px;
-    " onmouseover="this.style.background='rgba(15,14,13,0.05)';this.style.color='var(--ink-2)'"
-       onmouseout="this.style.background='transparent';this.style.color='var(--ink-4)'">
+    <button onclick="renderFolderBars(${!showAll})" class="btn-folder-toggle">
       <i class="ti ${showAll ? 'ti-chevron-up' : 'ti-chevron-down'}" style="font-size:13px"></i>
       ${showAll ? 'Tampilkan lebih sedikit' : 'Lihat semua ' + folderData.length + ' folder'}
     </button>` : '');
@@ -1386,20 +1416,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   await loadAll();
 
   // Sidebar user chip → logout
-  document.getElementById('userChip').onclick = async function() {
-    const ok = await customConfirm({
-      title: 'Logout',
-      message: 'Yakin ingin keluar dari akun Anda?',
-      icon: 'ti-logout',
-      iconClass: 'logout',
-      confirmText: 'Ya, Logout',
-      confirmBtnClass: 'logout-confirm'
-    });
-    if (ok) {
-      await sb.auth.signOut();
-      window.location.replace('../pages/login.html');
-    }
-  };
+  document.getElementById('userChip').onclick = doLogout;
 
   // Close color picker on overlay click
   document.getElementById('colorPickerDialog').addEventListener('click', function(e) {
