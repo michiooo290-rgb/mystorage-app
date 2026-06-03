@@ -1797,3 +1797,184 @@ body::before {
   max-height: 0;
   opacity: 0;
 }
+/* ═══════════════════════════════════════════
+   PERBAIKAN UI/UX — PATCH
+   ═══════════════════════════════════════════ */
+
+/* 1. Badge: default hidden, shown via JS when > 0 */
+.nav-item .badge {
+  display: none;
+}
+
+/* 2. Loading spinner yang proper untuk enterCurtain */
+.ec-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.12);
+  border-top-color: #c8602a;
+  border-radius: 50%;
+  animation: ecSpin 0.7s linear infinite;
+}
+@keyframes ecSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* 3. Dark Mode — tema gelap penuh */
+[data-theme="dark"] {
+  --ink:     #f2f0ed;
+  --ink-2:   #d6d3cf;
+  --ink-3:   #9a9693;
+  --ink-4:   #6a6764;
+  --ink-5:   #4a4845;
+  --paper:   #1a1917;
+  --paper-2: #222120;
+  --paper-3: #2a2826;
+  --white:   #1e1c1a;
+  --border:   rgba(255,255,255,0.07);
+  --border-2: rgba(255,255,255,0.11);
+  --border-3: rgba(255,255,255,0.17);
+  --shadow-xs: 0 1px 4px rgba(0,0,0,0.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.35);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.4);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] body {
+  background: var(--paper);
+  color: var(--ink-2);
+}
+
+[data-theme="dark"] .topbar {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .search {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+}
+[data-theme="dark"] .search:focus-within {
+  background: var(--paper-3);
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .file-card,
+[data-theme="dark"] .shared-item,
+[data-theme="dark"] .modal,
+[data-theme="dark"] .custom-dialog {
+  background: var(--white);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .filter-chip {
+  background: var(--white);
+  border-color: var(--border-2);
+  color: var(--ink-4);
+}
+[data-theme="dark"] .filter-chip.active {
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.9);
+}
+[data-theme="dark"] .filter-chip:hover {
+  background: var(--paper-3);
+}
+
+[data-theme="dark"] .btn-new,
+[data-theme="dark"] .btn-back-folder {
+  background: var(--white);
+  border-color: var(--border-2);
+  color: var(--ink-3);
+}
+[data-theme="dark"] .btn-new:hover {
+  background: rgba(255,255,255,0.15);
+  color: var(--ink);
+}
+
+[data-theme="dark"] .ctx-menu {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+}
+[data-theme="dark"] .ctx-item { color: var(--ink-3); }
+[data-theme="dark"] .ctx-item:hover { background: var(--paper-3); color: var(--ink); }
+[data-theme="dark"] .ctx-divider { background: var(--border); }
+
+[data-theme="dark"] .modal-select {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+  color: var(--ink);
+}
+[data-theme="dark"] .drop-zone {
+  background: var(--paper-2);
+  border-color: var(--border-2);
+}
+[data-theme="dark"] .drop-zone:hover {
+  background: var(--paper-3);
+}
+
+[data-theme="dark"] .section-count {
+  background: var(--paper-2);
+  border-color: var(--border);
+  color: var(--ink-4);
+}
+
+[data-theme="dark"] .btn-upload {
+  background: rgba(255,255,255,0.12);
+}
+[data-theme="dark"] .btn-upload:hover {
+  background: rgba(255,255,255,0.18);
+}
+
+[data-theme="dark"] .empty-state__btn-secondary {
+  border-color: var(--border-2);
+  color: var(--ink-3);
+}
+
+/* 4. Context menu — tampilkan nama file di header */
+.ctx-header {
+  padding: 8px 11px 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
+[data-theme="dark"] .ctx-header {
+  color: var(--ink-4);
+  border-color: var(--border);
+}
+
+/* 5. Loading overlay yang lebih rapi */
+#enterCurtain .ec-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+#enterCurtain .ec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c8602a;
+  animation: ecDotPulse 1.2s ease-in-out infinite;
+}
+#enterCurtain .ec-dot:nth-child(2) { animation-delay: 0.2s; }
+#enterCurtain .ec-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ecDotPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+/* 6. File card — tambah border kiri warna saat hover */
+.file-card:hover {
+  border-left-color: var(--accent);
+}
+
+/* 7. Modal konfirmasi hapus — highlight nama file */
+#confirmMsg strong {
+  color: var(--ink);
+  font-weight: 600;
+}

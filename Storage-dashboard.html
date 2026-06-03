@@ -381,6 +381,7 @@
 
 <!-- CONTEXT MENU -->
 <div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-header" id="ctxFileName">—</div>
   <div class="ctx-item" onclick="downloadFile()"><i class="ti ti-download"></i>Download</div>
   <div class="ctx-item" onclick="shareFile()"><i class="ti ti-share"></i>Bagikan Link</div>
   <div class="ctx-item" onclick="renameFile()"><i class="ti ti-edit"></i>Rename File</div>
@@ -510,23 +511,15 @@
     font-size: 15px; font-weight: 600;
     letter-spacing: -0.025em;
   ">MyStorage</div>
-  <div style="
-    width: 120px; height: 2px;
-    background: rgba(255,255,255,0.07);
-    border-radius: 99px; overflow: hidden;
-  ">
-    <div style="
-      height: 100%; width: 36%;
-      background: #c8602a;
-      border-radius: 99px;
-      animation: ecBar 0.9s cubic-bezier(0.45,0,0.55,1) infinite;
-    "></div>
+  <div class="ec-dots" style="display:flex;gap:6px;align-items:center;margin-top:4px">
+    <div class="ec-dot" style="width:7px;height:7px;border-radius:50%;background:#c8602a;animation:ecDotPulse 1.2s ease-in-out infinite;"></div>
+    <div class="ec-dot" style="width:7px;height:7px;border-radius:50%;background:#c8602a;animation:ecDotPulse 1.2s ease-in-out infinite;animation-delay:0.2s"></div>
+    <div class="ec-dot" style="width:7px;height:7px;border-radius:50%;background:#c8602a;animation:ecDotPulse 1.2s ease-in-out infinite;animation-delay:0.4s"></div>
   </div>
   <div style="
     font-family: 'Inter', sans-serif;
     color: rgba(255,255,255,0.32);
     font-size: 12px; letter-spacing: 0.02em;
-    animation: ecDots 1.5s ease-in-out infinite;
   ">Memuat dashboard</div>
 </div>
 
@@ -542,6 +535,10 @@
 @keyframes ecDots {
   0%, 100% { opacity: 0.28; }
   50%       { opacity: 0.65; }
+}
+@keyframes ecDotPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%       { opacity: 1; transform: scale(1.1); }
 }
 </style>
 

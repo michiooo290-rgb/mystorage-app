@@ -322,12 +322,22 @@ function renderStats() {
   if (document.getElementById('statShared')) document.getElementById('statShared').textContent = sharedCount;
   if (document.getElementById('statFavorit')) document.getElementById('statFavorit').textContent = favCount;
 
-  if (document.getElementById('badgeDashboard')) document.getElementById('badgeDashboard').textContent = totalFiles;
-  if (document.getElementById('badgeDocs')) document.getElementById('badgeDocs').textContent = allFiles.filter(f => f.type === 'doc' || f.type === 'pdf').length;
-  if (document.getElementById('badgePhotos')) document.getElementById('badgePhotos').textContent = allFiles.filter(f => f.type === 'foto').length;
-  if (document.getElementById('badgeVideos')) document.getElementById('badgeVideos').textContent = allFiles.filter(f => f.type === 'video').length;
-  if (document.getElementById('badgeAudio')) document.getElementById('badgeAudio').textContent = allFiles.filter(f => f.type === 'audio').length;
-  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = sharedCount;
+  function setBadge(id, count) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count;
+      el.style.display = '';
+    } else {
+      el.style.display = 'none';
+    }
+  }
+  setBadge('badgeDashboard', totalFiles);
+  setBadge('badgeDocs', allFiles.filter(f => f.type === 'doc' || f.type === 'pdf').length);
+  setBadge('badgePhotos', allFiles.filter(f => f.type === 'foto').length);
+  setBadge('badgeVideos', allFiles.filter(f => f.type === 'video').length);
+  setBadge('badgeAudio', allFiles.filter(f => f.type === 'audio').length);
+  setBadge('badgeShared', sharedCount);
 
   let usedBytes = 0;
   allFiles.forEach(f => {
@@ -1044,7 +1054,8 @@ function renderShared() {
 
   if (document.getElementById('sharedCount')) document.getElementById('sharedCount').textContent = sharedLinks.length;
   if (document.getElementById('statShared')) document.getElementById('statShared').textContent = sharedLinks.length;
-  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = sharedLinks.length;
+  var bShared = document.getElementById('badgeShared');
+  if (bShared) { if (sharedLinks.length > 0) { bShared.textContent = sharedLinks.length; bShared.style.display = ''; } else { bShared.style.display = 'none'; } }
 
   if (sharedLinks.length === 0) {
     list.innerHTML = '<div class="empty-state"><i class="ti ti-share-off"></i><p>Belum ada file yang dibagikan. Klik kanan file lalu pilih "Bagikan Link".</p></div>';
@@ -1500,7 +1511,14 @@ function showCtx(e, id) {
   e.stopPropagation();
   ctxTarget = String(id);
   const menu = document.getElementById('ctxMenu');
-  const menuH = 200;
+  // Tampilkan nama file di header context menu
+  const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
+  var fnEl = document.getElementById('ctxFileName');
+  if (fnEl && file) {
+    var name = file.name || '—';
+    fnEl.textContent = name.length > 28 ? name.substring(0, 26) + '…' : name;
+  }
+  const menuH = 220;
   const menuW = 190;
   const x = Math.min(e.clientX, window.innerWidth - menuW - 8);
   const y = Math.min(e.clientY, window.innerHeight - menuH - 8);
@@ -1551,7 +1569,8 @@ async function shareFile() {
   localStorage.setItem('myStorageShared', JSON.stringify(saved));
 
   // Update badge
-  if (document.getElementById('badgeShared')) document.getElementById('badgeShared').textContent = saved.length;
+  var bSh = document.getElementById('badgeShared');
+  if (bSh) { if (saved.length > 0) { bSh.textContent = saved.length; bSh.style.display = ''; } else { bSh.style.display = 'none'; } }
   if (document.getElementById('statShared')) document.getElementById('statShared').textContent = saved.length;
 
   try {
