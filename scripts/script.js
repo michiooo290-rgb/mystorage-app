@@ -462,9 +462,10 @@ function renderFolders() {
                   '<span style="' + lineStyle + 'width:65%"></span>';
 
     // Kanan-belakang → tengah → kiri-depan, persis seperti referensi Scripts icon
-    const doc3 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-10%) rotate(10deg);z-index:1;">' + lines + '</div>';
-    const doc2 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-50%) rotate(2deg);z-index:2;">' + lines + '</div>';
-    const doc1 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-90%) rotate(-7deg);z-index:3;">' + lines + '</div>';
+    // class folder-doc-r/m/l dipakai CSS untuk animasi fan-out hover
+    const doc3 = '<div class="folder-doc-r" style="' + docBase + ';top:12%;left:50%;transform:translateX(-10%) rotate(10deg);z-index:1;">' + lines + '</div>';
+    const doc2 = '<div class="folder-doc-m" style="' + docBase + ';top:12%;left:50%;transform:translateX(-50%) rotate(2deg);z-index:2;">' + lines + '</div>';
+    const doc1 = '<div class="folder-doc-l" style="' + docBase + ';top:12%;left:50%;transform:translateX(-90%) rotate(-7deg);z-index:3;">' + lines + '</div>';
 
     // Frosted pocket tinggi (60%) — blur kuat agar dokumen di belakang terlihat kabur
     const pocketStyle = [

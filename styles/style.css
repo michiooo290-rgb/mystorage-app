@@ -1448,7 +1448,23 @@ body::before {
 [data-theme="dark"] .file-grid.list-view .file-card:hover {
   background: var(--paper-3);
 }
-/* ── FOLDER PIN BUTTON ── */
+/* ── FOLDER DOC FAN-OUT HOVER ANIMATION ── */
+.folder-doc-r,
+.folder-doc-m,
+.folder-doc-l {
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Kursor masuk ke folder-wrap → dokumen mengembang seperti kipas */
+.folder-wrap:hover .folder-doc-r {
+  transform: translateX(-10%) rotate(24deg) translateY(-10px) !important;
+}
+.folder-wrap:hover .folder-doc-m {
+  transform: translateX(-50%) rotate(2deg) translateY(-14px) !important;
+}
+.folder-wrap:hover .folder-doc-l {
+  transform: translateX(-90%) rotate(-20deg) translateY(-10px) !important;
+}
 .folder-pin-btn {
   position: absolute;
   top: 7px;
