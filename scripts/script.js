@@ -271,6 +271,44 @@ function getFavs() {
   return JSON.parse(localStorage.getItem('myStorageFavs') || '[]');
 }
 
+
+/* ── SECURITY HELPERS ──
+   Semua path di Supabase Storage dibuat konsisten:
+   user_id/folder_id/nama_file
+   Ini cocok dengan RLS Storage: folder pertama harus auth.uid().
+*/
+function sanitizeStorageFileName(fileName) {
+  var base = String(fileName || 'file').trim();
+  // Jangan biarkan slash/backslash atau karakter path berbahaya masuk ke object name.
+  base = base.replace(/[\\/\x00-\x1F\x7F?%*:|"<>]/g, '_');
+  // Rapikan spasi berlebihan agar path lebih stabil.
+  base = base.replace(/\s+/g, ' ');
+  return base || 'file';
+}
+
+function buildStoragePathForUser(userId, folderId, fileName) {
+  if (!userId || userId === 'unknown') {
+    throw new Error('User belum login. Silakan login ulang.');
+  }
+  var folderPart = folderId || 'root';
+  return userId + '/' + folderPart + '/' + Date.now() + '_' + sanitizeStorageFileName(fileName);
+}
+
+async function getCurrentUserId() {
+  const { data } = await sb.auth.getSession();
+  const userId = data && data.session && data.session.user ? data.session.user.id : null;
+  if (!userId) throw new Error('User belum login. Silakan login ulang.');
+  return userId;
+}
+
+async function buildStoragePath(folderId, fileName) {
+  return buildStoragePathForUser(await getCurrentUserId(), folderId, fileName);
+}
+
+function getFileStoragePath(file) {
+  return file.storage_path || (file.folder_name ? (file.folder_name + '/' + file.name) : file.name);
+}
+
 /* ── LOAD DATA ── */
 async function loadAll() {
   await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
@@ -703,7 +741,7 @@ function populateFolderSelect() {
         return option + buildOptions(f.id, indent + '　');
       }).join('');
   }
-  sel.innerHTML = '<option value="">Pilih folder...</option>' + buildOptions(null, '');
+  sel.innerHTML = '<option value="">Upload ke root (Dashboard)</option>' + buildOptions(null, '');
   // Auto-select folder aktif
   if (currentFolderId) sel.value = currentFolderId;
 }
@@ -1022,7 +1060,7 @@ async function loadThumbnails(files) {
 function openFile(id) {
   const file = allFiles.find(function(f) { return String(f.id) === String(id); });
   if (!file) return;
-  const path = file.storage_path || (file.folder_name + '/' + file.name);
+  const path = getFileStoragePath(file);
   const params = new URLSearchParams({
     path: path,
     name: file.name,
@@ -1115,11 +1153,20 @@ function copySharedLink(idx) {
   }
 }
 
-function removeSharedLink(idx) {
+async function removeSharedLink(idx) {
   sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-  sharedLinks.splice(parseInt(idx), 1);
+  var removed = sharedLinks.splice(parseInt(idx), 1)[0];
   localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
-  showToast('Link dihapus dari daftar.');
+
+  if (removed && removed.sharedId) {
+    try {
+      await sb.from('shared_links').update({ revoked_at: new Date().toISOString() }).eq('id', removed.sharedId);
+    } catch (e) {
+      console.warn('Gagal menandai shared link sebagai revoked:', e && e.message ? e.message : e);
+    }
+  }
+
+  showToast('Link dihapus dari daftar. Signed URL lama tetap aktif sampai expired.');
   renderShared();
 }
 
@@ -1357,8 +1404,16 @@ async function addFolder() {
     return;
   }
 
-  const { data: authData } = await sb.auth.getSession();
-  const uid = authData && authData.session ? authData.session.user.id : null;
+  let uid;
+  try {
+    uid = await getCurrentUserId();
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    btnConfirm.disabled = false;
+    btnCancel.disabled = false;
+    btnConfirm.textContent = 'Upload';
+    return;
+  }
   const insertObj = { name: name.trim(), user_id: uid };
   if (currentFolderId) insertObj.parent_id = currentFolderId;
 
@@ -1488,7 +1543,7 @@ async function deleteFolderById(folderId, folderName) {
   showToast('Menghapus folder...');
   // Hapus semua file di dalamnya
   for (const file of filesInside) {
-    const path = file.storage_path || (file.folder_name + '/' + file.name);
+    const path = getFileStoragePath(file);
     await sb.storage.from('user-files').remove([path]);
     await sb.from('files').delete().eq('id', file.id);
   }
@@ -1538,7 +1593,7 @@ async function downloadFile() {
   if (!file) return;
   document.getElementById('ctxMenu').classList.remove('show');
   showToast('Menyiapkan file download...');
-  const path = file.storage_path || (file.folder_name + '/' + file.name);
+  const path = getFileStoragePath(file);
   const { data, error } = await sb.storage.from('user-files').download(path);
   if (error) { showToast('Gagal mengunduh: ' + error.message); return; }
   const url = URL.createObjectURL(data);
@@ -1556,7 +1611,7 @@ async function shareFile() {
   const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
   if (!file) return;
   document.getElementById('ctxMenu').classList.remove('show');
-  const path = file.storage_path || (file.folder_name + '/' + file.name);
+  const path = getFileStoragePath(file);
   const { data, error } = await sb.storage.from('user-files').createSignedUrl(path, 604800);
   if (error) { showToast('Gagal membuat link: ' + error.message); return; }
 
@@ -1564,7 +1619,26 @@ async function shareFile() {
   let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
   // Hindari duplikat berdasarkan file id
   saved = saved.filter(function(s) { return s.fileId !== String(file.id); });
-  saved.unshift({ fileId: String(file.id), name: file.name, url: data.signedUrl, type: file.type || 'doc', folder: file.folder_name || '', createdAt: Date.now() });
+  let sharedRowId = null;
+  try {
+    const userId = await getCurrentUserId();
+    const { data: sharedRow, error: sharedInsertError } = await sb
+      .from('shared_links')
+      .insert({
+        file_id: file.id,
+        user_id: userId,
+        signed_url: data.signedUrl,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      })
+      .select('id')
+      .single();
+    if (!sharedInsertError && sharedRow) sharedRowId = sharedRow.id;
+  } catch (e) {
+    // shared_links bersifat opsional. Jika tabel belum dibuat, fitur share tetap memakai signed URL.
+    console.warn('shared_links metadata tidak tersimpan:', e && e.message ? e.message : e);
+  }
+
+  saved.unshift({ fileId: String(file.id), sharedId: sharedRowId, name: file.name, url: data.signedUrl, type: file.type || 'doc', folder: file.folder_name || '', createdAt: Date.now() });
   if (saved.length > 50) saved = saved.slice(0, 50);
   localStorage.setItem('myStorageShared', JSON.stringify(saved));
 
@@ -1606,8 +1680,14 @@ async function renameFile() {
   });
   if (!newName || newName.trim() === '' || newName.trim() === file.name) return;
   showToast('Mengubah nama file...');
-  const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
-  const newPath = file.folder_name + '/' + Date.now() + '_' + newName.trim();
+  const oldPath = getFileStoragePath(file);
+  let newPath;
+  try {
+    newPath = await buildStoragePath(file.folder_id || null, newName.trim());
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    return;
+  }
   const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
   if (moveErr) { showToast('Gagal mengubah di Storage: ' + moveErr.message); return; }
   const { error: dbErr } = await sb.from('files').update({ name: newName.trim(), storage_path: newPath }).eq('id', file.id);
@@ -1658,10 +1738,15 @@ async function confirmMoveFile() {
   const btn = document.querySelector('#moveModal .btn-confirm');
   if (btn) { btn.disabled = true; btn.textContent = 'Memindahkan...'; }
 
-  const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
-  const { data: sd2 } = await sb.auth.getSession();
-  const uid2 = sd2 && sd2.session ? sd2.session.user.id : 'unknown';
-  const newPath = uid2 + '/' + targetFolderId + '/' + Date.now() + '_' + file.name;
+  const oldPath = getFileStoragePath(file);
+  let newPath;
+  try {
+    newPath = await buildStoragePath(targetFolderId, file.name);
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
+    return;
+  }
 
   const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
   if (moveErr) {
@@ -1722,7 +1807,7 @@ async function deleteFile() {
   document.getElementById('ctxMenu').classList.remove('show');
 
   const fileId = ctxTarget;
-  const pathToDelete = file.storage_path || (file.folder_name + '/' + file.name);
+  const pathToDelete = getFileStoragePath(file);
 
   // Hapus dari DB segera (bisa di-restore dengan re-insert, tapi lebih mudah: hapus storage tertunda)
   const { error } = await sb.from('files').delete().eq('id', fileId);
@@ -1852,11 +1937,10 @@ function showToast(msg, opts) {
 
 /* ── UPLOAD FILE ── */
 async function uploadFile() {
-  const folderId = document.getElementById('folderSelect').value;
-  if (!folderId) { showToast('Pilih folder tujuan dulu!'); return; }
-  // Cari nama folder berdasarkan ID
-  const folderObj = allFolders.find(function(f) { return f.id === folderId; });
-  const folder = folderObj ? folderObj.name : folderId; // fallback ke value lama jika nama
+  const folderId = document.getElementById('folderSelect').value || currentFolderId || null;
+  // Cari nama folder berdasarkan ID. Jika kosong, upload ke root/Dashboard.
+  const folderObj = folderId ? allFolders.find(function(f) { return f.id === folderId; }) : null;
+  const folder = folderObj ? folderObj.name : null;
 
   const fileInput = document.getElementById('fileInput');
   const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
@@ -1947,14 +2031,14 @@ async function uploadFile() {
       ? (file.size / (1024*1024)).toFixed(1) + ' MB'
       : (file.size / 1024).toFixed(0) + ' KB';
 
-    const filePath = (uid || 'unknown') + '/' + folderId + '/' + Date.now() + '_' + file.name;
+    const filePath = buildStoragePathForUser(uid, folderId, file.name);
     const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
     if (uploadError) { console.error('Upload error:', uploadError.message); failCount++; continue; }
 
     const { error: insertError } = await sb.from('files').insert({
       name: file.name,
       folder_name: folder,
-      folder_id: folderId,
+      folder_id: folderId || null,
       type: type,
       size: sizeStr,
       icon: iconInfo.icon,
@@ -1987,7 +2071,7 @@ async function uploadFile() {
 
   if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal diupload.');
   else if (failCount > 0 && successCount === 0) showToast('Gagal mengupload ' + failCount + ' file. Cek koneksi atau storage.');
-  else showToast('File berhasil diupload ke ' + folder + '!');
+  else showToast('File berhasil diupload ke ' + (folder || 'Dashboard') + '!');
 
   await loadFiles();
   renderStats();
@@ -2075,13 +2159,13 @@ async function handleFolderDrop(e) {
     if (item.kind === 'file') {
       var entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
       if (entry && entry.isDirectory) {
-        promises.push(readDirectoryEntries(entry, entry.name, allFiles));
+        promises.push(readDirectoryEntries(entry, entry.name, droppedEntryFiles));
       } else if (entry && entry.isFile) {
         promises.push(new Promise(function(resolve) {
           entry.file(function(file) {
             // Simulasikan webkitRelativePath
             Object.defineProperty(file, 'webkitRelativePath', { value: entry.name + '/' + file.name, writable: false });
-            allFiles.push(file);
+            droppedEntryFiles.push(file);
             resolve();
           });
         }));
@@ -2207,8 +2291,15 @@ async function uploadFolderFiles() {
   folderIdCache = {};
 
   // Auth session (ambil sekali di luar loop)
-  var { data: sd } = await sb.auth.getSession();
-  var userId = sd && sd.session ? sd.session.user.id : 'unknown';
+  var userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
+    if (btnCancel) btnCancel.disabled = false;
+    return;
+  }
 
   var successCount = 0;
   var failCount = 0;
@@ -2249,7 +2340,7 @@ async function uploadFolderFiles() {
       }
 
       // Storage path unik
-      var storagePath = userId + '/' + (targetFolderId || 'root') + '/' + Date.now() + '_' + fileName;
+      var storagePath = buildStoragePathForUser(userId, targetFolderId || null, fileName);
 
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
       if (upErr) { console.error('Storage upload error:', upErr.message); failCount++; continue; }
@@ -2356,8 +2447,14 @@ async function folderCardDrop(e, el) {
     if (file.folder_id === targetFolderId) { showToast('File sudah ada di folder ini.'); return; }
 
     showToast('Memindahkan ke ' + targetFolderName + '...');
-    const oldPath = file.storage_path || (file.folder_name + '/' + file.name);
-    const newPath = targetFolderName + '/' + Date.now() + '_' + file.name;
+    const oldPath = getFileStoragePath(file);
+    let newPath;
+    try {
+      newPath = await buildStoragePath(targetFolderId, file.name);
+    } catch (authErr) {
+      showToast(authErr.message || 'User belum login.');
+      return;
+    }
 
     const { error: moveErr } = await sb.storage.from('user-files').move(oldPath, newPath);
     if (moveErr) { showToast('Gagal pindah storage: ' + moveErr.message); return; }
@@ -2378,8 +2475,13 @@ async function folderCardDrop(e, el) {
   var files = e.dataTransfer.files;
   if (!files || files.length === 0) return;
 
-  var { data: sd } = await sb.auth.getSession();
-  var userId = sd && sd.session ? sd.session.user.id : 'unknown';
+  var userId;
+  try {
+    userId = await getCurrentUserId();
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    return;
+  }
   var successCount = 0;
   var failCount = 0;
 
@@ -2387,7 +2489,7 @@ async function folderCardDrop(e, el) {
 
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
-    var storagePath = userId + '/' + targetFolderId + '/' + Date.now() + '_' + file.name;
+    var storagePath = buildStoragePathForUser(userId, targetFolderId, file.name);
 
     try {
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
@@ -2617,7 +2719,7 @@ async function bulkDownload() {
 
   for (var i = 0; i < filesToDownload.length; i++) {
     var file = filesToDownload[i];
-    var path = file.storage_path || (file.folder_name + '/' + file.name);
+    var path = getFileStoragePath(file);
 
     showToast('⬇️ Mengunduh ' + (i + 1) + ' / ' + total + ': ' + file.name, { duration: 4000 });
 
