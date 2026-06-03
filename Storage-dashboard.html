@@ -77,47 +77,47 @@
   </div>
 
   <span class="nav-label">Menu</span>
-  <div class="nav-item active" onclick="setNav(this); setFilter(document.querySelector('.filter-chip'), 'semua')">
+  <div class="nav-item active" data-action="nav-dashboard">
     <i class="ti ti-layout-dashboard"></i>Dashboard
     <span class="badge" id="badgeDashboard">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); showSharedPanel()">
+  <div class="nav-item" data-action="nav-shared">
     <i class="ti ti-share"></i>Dibagikan
     <span class="badge" id="badgeShared">0</span>
   </div>
-  <div class="nav-item" onclick="setNav(this); filterFavorites()">
+  <div class="nav-item" data-action="nav-favorites">
     <i class="ti ti-star"></i>Favorit
   </div>
 
   <div class="divider"></div>
-  <div class="nav-group-header" id="navGroupFileType" onclick="toggleNavGroup(this)">
+  <div class="nav-group-header" id="navGroupFileType" data-action="toggle-nav-group">
     <span class="nav-label" style="padding:0;pointer-events:none">Tipe File</span>
     <i class="ti ti-chevron-down nav-group-chevron"></i>
   </div>
   <div class="nav-group-body" id="navGroupFileTypeBody">
-    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=doc]'), 'doc')">
+    <div class="nav-item" data-action="nav-file-type" data-filter="doc">
       <i class="ti ti-file-type-pdf"></i>Dokumen
       <span class="badge" id="badgeDocs">0</span>
     </div>
-    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=foto]'), 'foto')">
+    <div class="nav-item" data-action="nav-file-type" data-filter="foto">
       <i class="ti ti-photo"></i>Foto
       <span class="badge" id="badgePhotos">0</span>
     </div>
-    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=video]'), 'video')">
+    <div class="nav-item" data-action="nav-file-type" data-filter="video">
       <i class="ti ti-video"></i>Video
       <span class="badge" id="badgeVideos">0</span>
     </div>
-    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=audio]'), 'audio')">
+    <div class="nav-item" data-action="nav-file-type" data-filter="audio">
       <i class="ti ti-music"></i>Audio
       <span class="badge" id="badgeAudio">0</span>
     </div>
   </div>
 
   <div class="divider"></div>
-  <div class="nav-item" onclick="window.location.href='pages/settings.html'">
+  <div class="nav-item" data-action="go-settings">
     <i class="ti ti-settings icon-settings"></i>Pengaturan
   </div>
-  <div class="nav-item nav-logout" onclick="doLogout()">
+  <div class="nav-item nav-logout" data-action="logout">
     <i class="ti ti-logout"></i>Keluar
   </div>
 
@@ -143,40 +143,40 @@
   </div>
 </aside>
 
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" data-action="close-sidebar"></div>
 
 <div class="main">
   <header class="topbar">
-    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
+    <button class="hamburger-btn" id="hamburgerBtn" data-action="toggle-sidebar" aria-label="Buka menu">
       <i class="ti ti-menu-2"></i>
     </button>
     <div class="breadcrumb" id="breadcrumb" style="margin-right:16px">
-      <i class="ti ti-home" style="font-size:15px;color:var(--ink-5);cursor:pointer" onclick="goToRoot()"></i>
+      <i class="ti ti-home" style="font-size:15px;color:var(--ink-5);cursor:pointer" data-action="go-root"></i>
       <i class="ti ti-chevron-right" style="font-size:12px"></i>
-      <span class="breadcrumb-item" onclick="goToRoot()" style="cursor:pointer">Dashboard</span>
+      <span class="breadcrumb-item" data-action="go-root" style="cursor:pointer">Dashboard</span>
     </div>
     <div class="search">
       <i class="ti ti-search"></i>
-      <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" oninput="filterFiles(); toggleClearBtn()"/>
-      <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Hapus pencarian" style="display:none">
+      <input type="text" id="searchInput" placeholder="Cari file atau folder... (Ctrl+K)" data-action="search-files"/>
+      <button class="search-clear" id="searchClear" data-action="clear-search" title="Hapus pencarian" style="display:none">
         <i class="ti ti-x"></i>
       </button>
     </div>
     <div class="topbar-right">
-      <div class="btn-icon" id="nmTopbarBtn" title="Mode Malam" onclick="NightMode.toggle(); updateNmBtn()" aria-pressed="false">
+      <div class="btn-icon" id="nmTopbarBtn" title="Mode Malam" data-action="toggle-night-mode" aria-pressed="false">
         <i class="ti ti-moon" id="nmTopbarIcon"></i>
       </div>
-      <div class="btn-icon notif-btn" title="Notifikasi" onclick="showToast('Belum ada notifikasi')">
+      <div class="btn-icon notif-btn" title="Notifikasi" data-action="show-empty-notif">
         <i class="ti ti-bell"></i>
         <div class="notif-dot"></div>
       </div>
-      <div class="btn-icon refresh-btn" title="Refresh Data" onclick="loadAll(); showToast('Data diperbarui')">
+      <div class="btn-icon refresh-btn" title="Refresh Data" data-action="refresh-data">
         <i class="ti ti-refresh"></i>
       </div>
-      <button class="btn-upload" onclick="openModal()">
+      <button class="btn-upload" data-action="open-upload">
         <i class="ti ti-cloud-upload"></i>Upload
       </button>
-      <div class="topbar-av" title="Pengaturan Profil" onclick="window.location.href='pages/settings.html'" style="cursor:pointer">RZ</div>
+      <div class="topbar-av" title="Pengaturan Profil" data-action="go-settings" style="cursor:pointer">RZ</div>
     </div>
   </header>
 
@@ -238,7 +238,7 @@
           <span class="section-title">Folders</span>
           <span class="section-count" id="folderCount">0</span>
         </div>
-        <button class="btn-new" onclick="addFolder()">
+        <button class="btn-new" data-action="new-folder">
           <i class="ti ti-plus" style="font-size:14px"></i>Folder baru
         </button>
       </div>
@@ -247,15 +247,15 @@
 
     <div>
       <div id="bulkBar" style="display:none;align-items:center;gap:10px;padding:8px 12px;background:rgba(200,96,42,0.07);border:1.5px solid rgba(200,96,42,0.18);border-radius:var(--radius);margin-bottom:10px;">
-        <input type="checkbox" id="checkSelectAll" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" onchange="toggleSelectAll(this.checked)">
+        <input type="checkbox" id="checkSelectAll" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent)" data-action="select-all">
         <span id="bulkCount" style="font-size:13px;font-weight:600;color:var(--ink-2);flex:1">0 file dipilih</span>
-        <button onclick="bulkDownload()" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#2d6a4f;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
+        <button data-action="bulk-download" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#2d6a4f;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
           <i class="ti ti-download" style="font-size:13px"></i>Download Terpilih
         </button>
-        <button onclick="bulkDelete()" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#c8602a;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
+        <button data-action="bulk-delete" style="display:flex;align-items:center;gap:5px;padding:5px 13px;border:none;background:#c8602a;color:#fff;border-radius:8px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit">
           <i class="ti ti-trash" style="font-size:13px"></i>Hapus Terpilih
         </button>
-        <button onclick="exitSelectMode()" style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1.5px solid var(--border-2);background:transparent;color:var(--ink-3);border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit">
+        <button data-action="exit-select-mode" style="display:flex;align-items:center;gap:5px;padding:5px 11px;border:1.5px solid var(--border-2);background:transparent;color:var(--ink-3);border-radius:8px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit">
           Batal
         </button>
       </div>
@@ -266,20 +266,20 @@
           <span class="section-count" id="fileCount">0</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <div class="btn-back-folder" id="btnBackFolder" onclick="closeFolder()" style="display:none">
+          <div class="btn-back-folder" id="btnBackFolder" data-action="close-folder" style="display:none">
             <i class="ti ti-arrow-left" style="font-size:14px"></i>Semua File
           </div>
-          <div class="btn-icon" id="btnSelectMode" title="Pilih file" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="enterSelectMode()">
+          <div class="btn-icon" id="btnSelectMode" title="Pilih file" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" data-action="enter-select-mode">
             <i class="ti ti-checkbox" style="font-size:15px"></i> <span>Pilih</span>
           </div>
-          <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" onclick="toggleSort()">
+          <div class="btn-icon" style="border-radius:var(--radius-sm);width:auto;padding:0 11px;gap:6px;font-size:12.5px;color:var(--text-muted)" data-action="toggle-sort">
             <i class="ti ti-arrows-sort" style="font-size:15px"></i> <span id="sortLabel">Urutkan</span>
           </div>
           <div class="view-toggle" id="viewToggle" title="Ganti tampilan">
-            <button class="view-toggle-btn active" id="btnGridView" onclick="setViewMode('grid')" title="Grid View">
+            <button class="view-toggle-btn active" id="btnGridView" data-action="set-view-mode" data-mode="grid" title="Grid View">
               <i class="ti ti-layout-grid"></i>
             </button>
-            <button class="view-toggle-btn" id="btnListView" onclick="setViewMode('list')" title="List View">
+            <button class="view-toggle-btn" id="btnListView" data-action="set-view-mode" data-mode="list" title="List View">
               <i class="ti ti-layout-list"></i>
             </button>
           </div>
@@ -287,13 +287,13 @@
       </div>
 
       <div class="filter-row">
-        <button class="filter-chip active" onclick="setFilter(this,'semua')"><i class="ti ti-layout-grid"></i>Semua</button>
-        <button class="filter-chip" onclick="setFilter(this,'pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button>
-        <button class="filter-chip" onclick="setFilter(this,'doc')"><i class="ti ti-file-text"></i>Dokumen</button>
-        <button class="filter-chip" onclick="setFilter(this,'foto')"><i class="ti ti-photo"></i>Foto</button>
-        <button class="filter-chip" onclick="setFilter(this,'video')"><i class="ti ti-video"></i>Video</button>
-        <button class="filter-chip" onclick="setFilter(this,'spreadsheet')"><i class="ti ti-table"></i>Spreadsheet</button>
-        <button class="filter-chip" onclick="setFilter(this,'audio')"><i class="ti ti-music"></i>Audio</button>
+        <button class="filter-chip active" data-action="set-filter" data-filter="semua"><i class="ti ti-layout-grid"></i>Semua</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="pdf"><i class="ti ti-file-type-pdf"></i>PDF</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="doc"><i class="ti ti-file-text"></i>Dokumen</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="foto"><i class="ti ti-photo"></i>Foto</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="video"><i class="ti ti-video"></i>Video</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="spreadsheet"><i class="ti ti-table"></i>Spreadsheet</button>
+        <button class="filter-chip" data-action="set-filter" data-filter="audio"><i class="ti ti-music"></i>Audio</button>
       </div>
 
       <div class="file-list-header" id="fileListHeader">
@@ -316,18 +316,18 @@
     <div class="modal-title" id="modalTitle">Upload File</div>
     <div class="modal-sub" id="modalSub">Pilih file dan tentukan kategori folder tujuan.</div>
     <div style="display:flex;gap:0;margin-bottom:14px;background:rgba(15,14,13,0.05);border-radius:10px;padding:3px">
-      <button id="tabFiles" onclick="switchUploadTab('files')" style="flex:1;padding:7px 0;border:none;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#0f0e0d;cursor:pointer;box-shadow:0 1px 4px rgba(15,14,13,0.08);transition:all 0.15s;font-family:inherit">
+      <button id="tabFiles" data-action="switch-upload-tab" data-tab="files" style="flex:1;padding:7px 0;border:none;background:#fff;border-radius:8px;font-size:12.5px;font-weight:600;color:#0f0e0d;cursor:pointer;box-shadow:0 1px 4px rgba(15,14,13,0.08);transition:all 0.15s;font-family:inherit">
         <i class="ti ti-files" style="font-size:13px;margin-right:5px;vertical-align:middle"></i>Upload File
       </button>
-      <button id="tabFolder" onclick="switchUploadTab('folder')" style="flex:1;padding:7px 0;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:500;color:#9a9693;cursor:pointer;transition:all 0.15s;font-family:inherit">
+      <button id="tabFolder" data-action="switch-upload-tab" data-tab="folder" style="flex:1;padding:7px 0;border:none;background:transparent;border-radius:8px;font-size:12.5px;font-weight:500;color:#9a9693;cursor:pointer;transition:all 0.15s;font-family:inherit">
         <i class="ti ti-folder-up" style="font-size:13px;margin-right:5px;vertical-align:middle"></i>Upload Folder
       </button>
     </div>
     <div id="tabFilesContent">
-      <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <div class="drop-zone" id="dropZone" data-action="pick-file">
         <i class="ti ti-cloud-upload" style="font-size:36px;color:var(--accent)"></i>
         <p>Drag &amp; drop file di sini atau <span>klik untuk pilih</span></p>
-        <input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(this)"/>
+        <input type="file" id="fileInput" multiple style="display:none" data-action="file-select"/>
       </div>
       <div id="selectedFiles" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;margin-top:8px;"></div>
       <div class="modal-row">
@@ -338,15 +338,12 @@
     </div>
     <div id="tabFolderContent" style="display:none">
       <div class="drop-zone" id="dropZoneFolder"
-           onclick="document.getElementById('folderInput').click()"
-           ondragover="handleFolderDragOver(event)"
-           ondragleave="handleFolderDragLeave(event)"
-           ondrop="handleFolderDrop(event)">
+           data-action="pick-folder">
         <i class="ti ti-folder-up" style="font-size:36px;color:var(--accent);opacity:0.7"></i>
         <p style="margin-top:8px">Drag &amp; drop <span>folder</span> ke sini</p>
         <p style="font-size:11px;color:var(--ink-5);margin-top:3px">atau <span style="cursor:pointer;text-decoration:underline;color:var(--accent)">klik untuk pilih dari komputer</span></p>
         <p style="font-size:10.5px;color:var(--ink-5);margin-top:2px;opacity:0.7">Semua file &amp; sub-folder akan diupload</p>
-        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" onchange="handleFolderSelect(this)"/>
+        <input type="file" id="folderInput" webkitdirectory directory multiple style="display:none" data-action="folder-select"/>
       </div>
       <div id="selectedFolder" style="font-size:12px;color:var(--text-muted);margin-top:8px;margin-bottom:4px;min-height:18px;"></div>
       <div class="modal-row" style="margin-top:6px">
@@ -356,8 +353,8 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Batal</button>
-      <button class="btn-confirm" id="uploadBtn" onclick="doUpload()">Upload</button>
+      <button class="btn-cancel" data-action="close-modal">Batal</button>
+      <button class="btn-confirm" id="uploadBtn" data-action="do-upload">Upload</button>
     </div>
   </div>
 </div>
@@ -373,8 +370,8 @@
       </select>
     </div>
     <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeMoveModal()">Batal</button>
-      <button class="btn-confirm" onclick="confirmMoveFile()">Pindahkan</button>
+      <button class="btn-cancel" data-action="close-move-modal">Batal</button>
+      <button class="btn-confirm" data-action="confirm-move-file">Pindahkan</button>
     </div>
   </div>
 </div>
@@ -382,13 +379,13 @@
 <!-- CONTEXT MENU -->
 <div class="ctx-menu" id="ctxMenu">
   <div class="ctx-header" id="ctxFileName">—</div>
-  <div class="ctx-item" onclick="downloadFile()"><i class="ti ti-download"></i>Download</div>
-  <div class="ctx-item" onclick="shareFile()"><i class="ti ti-share"></i>Bagikan Link</div>
-  <div class="ctx-item" onclick="renameFile()"><i class="ti ti-edit"></i>Rename File</div>
-  <div class="ctx-item" onclick="moveFile()"><i class="ti ti-folder-symlink"></i>Pindah ke Folder</div>
-  <div class="ctx-item" onclick="toggleFavorite()"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
+  <div class="ctx-item" data-action="ctx-download"><i class="ti ti-download"></i>Download</div>
+  <div class="ctx-item" data-action="ctx-share"><i class="ti ti-share"></i>Bagikan Link</div>
+  <div class="ctx-item" data-action="ctx-rename"><i class="ti ti-edit"></i>Rename File</div>
+  <div class="ctx-item" data-action="ctx-move"><i class="ti ti-folder-symlink"></i>Pindah ke Folder</div>
+  <div class="ctx-item" data-action="ctx-favorite"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item danger" onclick="deleteFile()"><i class="ti ti-trash"></i>Hapus Permanen</div>
+  <div class="ctx-item danger" data-action="ctx-delete"><i class="ti ti-trash"></i>Hapus Permanen</div>
 </div>
 
 <!-- Custom Confirm Dialog -->

@@ -309,23 +309,131 @@ function getFileStoragePath(file) {
   return file.storage_path || (file.folder_name ? (file.folder_name + '/' + file.name) : file.name);
 }
 
+
+/* ── SIZE & UI STATE HELPERS ── */
+function parseSizeString(size) {
+  if (!size) return 0;
+  var text = String(size).trim();
+  var num = parseFloat(text.replace(',', '.'));
+  if (!isFinite(num)) return 0;
+  var upper = text.toUpperCase();
+  if (upper.includes('GB')) return Math.round(num * 1024 * 1024 * 1024);
+  if (upper.includes('MB')) return Math.round(num * 1024 * 1024);
+  if (upper.includes('KB')) return Math.round(num * 1024);
+  return Math.round(num);
+}
+
+function getFileSizeBytes(file) {
+  if (!file) return 0;
+  if (typeof file.size_bytes === 'number' && isFinite(file.size_bytes)) return file.size_bytes;
+  if (typeof file.size_bytes === 'string' && file.size_bytes.trim() !== '') {
+    var parsed = parseInt(file.size_bytes, 10);
+    if (isFinite(parsed)) return parsed;
+  }
+  return parseSizeString(file.size);
+}
+
+function calcTotalUsedBytes() {
+  return allFiles.reduce(function(total, file) {
+    return total + getFileSizeBytes(file);
+  }, 0);
+}
+
+function formatFileSizeFromBytes(bytes) {
+  bytes = Number(bytes) || 0;
+  if (bytes < 1024) return bytes.toFixed(0) + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
+
+function cleanupLegacyAvatarKeys() {
+  // Hapus cache avatar lama yang global supaya foto akun A tidak muncul di akun B.
+  localStorage.removeItem('myStorageAvatarPhoto');
+  localStorage.removeItem('myStorageAvatarColor');
+}
+
+function ensureAppStateUI() {
+  if (!document.getElementById('appLoadingState')) {
+    var loading = document.createElement('div');
+    loading.id = 'appLoadingState';
+    loading.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:99999;display:none;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ink,#0f0e0d);color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:13px;font-family:Inter,system-ui,sans-serif;';
+    loading.innerHTML = '<i class="ti ti-loader-2" style="font-size:17px;animation:spin .8s linear infinite"></i><span id="appLoadingMsg">Memuat...</span>';
+    document.body.appendChild(loading);
+  }
+  if (!document.getElementById('appErrorState')) {
+    var error = document.createElement('div');
+    error.id = 'appErrorState';
+    error.style.cssText = 'position:fixed;left:50%;top:74px;transform:translateX(-50%);z-index:99999;display:none;max-width:min(560px,calc(100vw - 28px));padding:12px 14px;border-radius:14px;background:#fff7f7;color:#7f1d1d;border:1px solid rgba(192,57,43,.22);box-shadow:0 10px 30px rgba(127,29,29,.12);font-size:13px;font-family:Inter,system-ui,sans-serif;';
+    error.innerHTML = '<div style="display:flex;align-items:flex-start;gap:10px"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;margin-top:1px"></i><div style="flex:1;min-width:0"><strong id="appErrorTitle" style="display:block;margin-bottom:2px">Terjadi error</strong><span id="appErrorMsg"></span></div><button id="appErrorClose" type="button" style="border:0;background:transparent;color:#7f1d1d;cursor:pointer;font-size:18px;line-height:1">&times;</button></div>';
+    document.body.appendChild(error);
+    error.querySelector('#appErrorClose').addEventListener('click', function() { error.style.display = 'none'; });
+  }
+}
+
+function showAppLoading(message) {
+  ensureAppStateUI();
+  var box = document.getElementById('appLoadingState');
+  var msg = document.getElementById('appLoadingMsg');
+  if (msg) msg.textContent = message || 'Memuat...';
+  if (box) box.style.display = 'flex';
+}
+
+function hideAppLoading() {
+  var box = document.getElementById('appLoadingState');
+  if (box) box.style.display = 'none';
+}
+
+function showAppError(title, message) {
+  ensureAppStateUI();
+  var box = document.getElementById('appErrorState');
+  var titleEl = document.getElementById('appErrorTitle');
+  var msgEl = document.getElementById('appErrorMsg');
+  if (titleEl) titleEl.textContent = title || 'Terjadi error';
+  if (msgEl) msgEl.textContent = message || 'Coba ulangi beberapa saat lagi.';
+  if (box) box.style.display = 'block';
+}
+
+function clearAppError() {
+  var box = document.getElementById('appErrorState');
+  if (box) box.style.display = 'none';
+}
+
 /* ── LOAD DATA ── */
 async function loadAll() {
-  await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
-  await loadFiles();
-  renderStats();
+  showAppLoading('Memuat data storage...');
+  clearAppError();
+  try {
+    await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
+    await loadFiles();
+    renderStats();
+  } catch (err) {
+    console.error('Load data error:', err);
+    showAppError('Gagal memuat data', err.message || 'Cek koneksi internet atau policy Supabase.');
+    showToast('Gagal memuat data storage.');
+  } finally {
+    hideAppLoading();
+  }
 }
 
 async function loadFolders() {
   const { data, error } = await sb.from('folders').select('*').order('created_at');
-  if (error) { showToast('Gagal load folder: ' + error.message); return; }
+  if (error) {
+    showAppError('Gagal load folder', error.message);
+    showToast('Gagal load folder: ' + error.message);
+    throw error;
+  }
   allFolders = data || [];
   renderFolders();
 }
 
 async function loadFiles() {
   const { data, error } = await sb.from('files').select('*').order('created_at', { ascending: false });
-  if (error) { showToast('Gagal load file: ' + error.message); return; }
+  if (error) {
+    showAppError('Gagal load file', error.message);
+    showToast('Gagal load file: ' + error.message);
+    throw error;
+  }
   allFiles = data || [];
 
   // Auto-migrasi file lama: jika punya folder_name tapi belum folder_id, link ke folder yang sesuai
@@ -377,22 +485,11 @@ function renderStats() {
   setBadge('badgeAudio', allFiles.filter(f => f.type === 'audio').length);
   setBadge('badgeShared', sharedCount);
 
-  let usedBytes = 0;
-  allFiles.forEach(f => {
-    if (f.size) {
-      const num = parseFloat(f.size);
-      if (f.size.includes('MB')) usedBytes += num * 1024 * 1024;
-      else if (f.size.includes('KB')) usedBytes += num * 1024;
-      else if (f.size.includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
-    }
-  });
+  const usedBytes = calcTotalUsedBytes();
   const usedMB = usedBytes / (1024 * 1024);
   const totalMB = 1024;
   const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
-  const usedStr = usedBytes < 1024 ? usedBytes.toFixed(0) + ' B' :
-                  usedBytes < 1024*1024 ? (usedBytes/1024).toFixed(0) + ' KB' :
-                  usedBytes < 1024*1024*1024 ? (usedBytes/(1024*1024)).toFixed(1) + ' MB' :
-                  (usedBytes/(1024*1024*1024)).toFixed(2) + ' GB';
+  const usedStr = formatFileSizeFromBytes(usedBytes);
 
   document.getElementById('storagePct').textContent = pct + '%';
   document.getElementById('storageUsed').textContent = usedStr + ' terpakai';
@@ -547,18 +644,15 @@ function renderFolders() {
     return (
       '<div class="folder-wrap' + (isPinned ? ' folder-pinned' : '') + '" ' +
       'style="animation-delay:' + (i * 0.06) + 's;position:relative;" ' +
-      'data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" ' +
-      'onclick="openFolderById(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\')" ' +
-      'ondblclick="event.stopPropagation();startFolderRename(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\',this)" ' +
-      'ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+      'data-folder-card="1" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
 
       '<button class="folder-pin-btn' + (isPinned ? ' pinned' : '') + '" ' +
       'title="' + (isPinned ? 'Lepas pin' : 'Pin ke atas') + '" ' +
-      'onclick="togglePinFolder(\'' + safeId + '\',event)">' +
+      'data-action="folder-pin" data-folder-id="' + safeId + '">' +
       '<i class="ti ' + (isPinned ? 'ti-pin-filled' : 'ti-pin') + '"></i></button>' +
 
       '<button class="folder-delete-btn" title="Hapus folder" ' +
-      'onclick="event.stopPropagation();deleteFolderById(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\')">' +
+      'data-action="folder-delete" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-trash"></i></button>' +
 
       '<div style="' + cardStyle + '">' +
@@ -635,11 +729,11 @@ function renderFolderBreadcrumb() {
   }
 
   bcEl.style.display = 'flex';
-  let html = '<span style="cursor:pointer;color:var(--accent);font-weight:500" onclick="goToRoot()"><i class="ti ti-home" style="font-size:13px;vertical-align:middle;margin-right:2px"></i>Root</span>';
+  let html = '<span style="cursor:pointer;color:var(--accent);font-weight:500" data-action="folder-breadcrumb-root"><i class="ti ti-home" style="font-size:13px;vertical-align:middle;margin-right:2px"></i>Root</span>';
   folderPath.forEach(function(crumb, idx) {
     html += '<i class="ti ti-chevron-right" style="font-size:11px;color:var(--ink-5)"></i>';
     if (idx < folderPath.length - 1) {
-      html += '<span style="cursor:pointer;color:var(--accent);font-weight:500" onclick="navigateBreadcrumb(' + idx + ')">' + escapeHtml(crumb.name) + '</span>';
+      html += '<span style="cursor:pointer;color:var(--accent);font-weight:500" data-action="folder-breadcrumb" data-index="' + idx + '">' + escapeHtml(crumb.name) + '</span>';
     } else {
       html += '<span style="color:var(--ink-2);font-weight:600">' + escapeHtml(crumb.name) + '</span>';
     }
@@ -697,7 +791,7 @@ function updateTopbarBreadcrumb() {
   }
 
   // Ada path: home (clickable) > folder1 > folder2 (aktif)
-  let html = `<i class="ti ti-home" style="font-size:15px;color:var(--accent);cursor:pointer" onclick="goToRoot()" title="Kembali ke root"></i>`;
+  let html = `<i class="ti ti-home" style="font-size:15px;color:var(--accent);cursor:pointer" data-action="folder-breadcrumb-root" title="Kembali ke root"></i>`;
 
   folderPath.forEach(function(crumb, idx) {
     html += `<i class="ti ti-chevron-right" style="font-size:12px;color:var(--ink-5)"></i>`;
@@ -707,7 +801,7 @@ function updateTopbarBreadcrumb() {
       html += `<span style="color:var(--ink-2);font-weight:600;font-size:12.5px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle">${escapeHtml(crumb.name)}</span>`;
     } else {
       // Folder parent — clickable untuk naik level
-      html += `<span style="color:var(--accent);font-weight:500;font-size:12.5px;cursor:pointer;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle" onclick="navigateBreadcrumb(${idx})" title="${escapeHtml(crumb.name)}">${escapeHtml(crumb.name)}</span>`;
+      html += `<span style="color:var(--accent);font-weight:500;font-size:12.5px;cursor:pointer;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle" data-action="folder-breadcrumb" data-index="${idx}" title="${escapeHtml(crumb.name)}">${escapeHtml(crumb.name)}</span>`;
     }
   });
 
@@ -815,7 +909,7 @@ function toggleSort() {
   var existing = document.getElementById('sortDropdown');
   if (existing) { existing.remove(); return; }
 
-  var btn = document.querySelector('[onclick="toggleSort()"]');
+  var btn = document.querySelector('[data-action="toggle-sort"]');
   var rect = btn.getBoundingClientRect();
 
   var options = [
@@ -834,7 +928,7 @@ function toggleSort() {
   dd.innerHTML = '<div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-5);padding:4px 10px 6px;font-family:\'JetBrains Mono\',monospace;">Urutkan berdasarkan</div>' +
     options.map(function(o) {
       var isActive = currentSort === o.mode;
-      return '<div onclick="setSortMode(\'' + o.mode + '\')" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:' + (isActive ? 'var(--accent)' : 'var(--ink-2)') + ';background:' + (isActive ? 'rgba(200,96,42,0.07)' : 'transparent') + ';font-weight:' + (isActive ? '600' : '400') + ';transition:background 0.15s;" onmouseover="this.style.background=\'' + (isActive ? 'rgba(200,96,42,0.10)' : 'var(--paper-2)') + '\'" onmouseout="this.style.background=\'' + (isActive ? 'rgba(200,96,42,0.07)' : 'transparent') + '\'">' +
+      return '<div data-action="sort-mode" data-mode="' + o.mode + '" style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;color:' + (isActive ? 'var(--accent)' : 'var(--ink-2)') + ';background:' + (isActive ? 'rgba(200,96,42,0.07)' : 'transparent') + ';font-weight:' + (isActive ? '600' : '400') + ';transition:background 0.15s;">' +
         '<i class="ti ' + o.icon + '" style="font-size:15px;flex-shrink:0;opacity:0.7"></i>' + o.label +
         (isActive ? '<i class="ti ti-check" style="margin-left:auto;font-size:13px;color:var(--accent)"></i>' : '') +
       '</div>';
@@ -888,8 +982,8 @@ function renderFiles() {
     if (currentSort === 'oldest')   return new Date(a.created_at) - new Date(b.created_at);
     if (currentSort === 'az')       return a.name.localeCompare(b.name);
     if (currentSort === 'za')       return b.name.localeCompare(a.name);
-    if (currentSort === 'largest')  return (b.size || 0) - (a.size || 0);
-    if (currentSort === 'smallest') return (a.size || 0) - (b.size || 0);
+    if (currentSort === 'largest')  return getFileSizeBytes(b) - getFileSizeBytes(a);
+    if (currentSort === 'smallest') return getFileSizeBytes(a) - getFileSizeBytes(b);
     return 0;
   });
 
@@ -904,10 +998,10 @@ function renderFiles() {
           <p class="empty-state__title">Belum ada file</p>
           <p class="empty-state__desc">Upload file pertamamu atau buat folder untuk mulai mengorganisir file kamu.</p>
           <div class="empty-state__actions">
-            <button class="empty-state__btn-primary" onclick="openModal()">
+            <button class="empty-state__btn-primary" data-action="open-upload">
               <i class="ti ti-cloud-upload"></i> Upload File
             </button>
-            <button class="empty-state__btn-secondary" onclick="addFolder()">
+            <button class="empty-state__btn-secondary" data-action="new-folder">
               <i class="ti ti-folder-plus"></i> Buat Folder
             </button>
           </div>
@@ -963,10 +1057,10 @@ function renderFiles() {
     if (currentViewMode === 'list') {
       // ── LIST VIEW CARD ──
       return (
-        '<div class="file-card" style="' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
+        '<div class="file-card" style="' + selectedStyle + '" data-file-card="1" data-file-id="' + safeId + '">' +
         // Checkbox
         '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';flex-shrink:0;align-items:center;justify-content:center;">' +
-        '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
+        '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);" data-action="toggle-file-select" data-file-id="' + safeId + '"></div>' +
         // Icon + type label
         '<div class="file-top" style="margin-bottom:0;flex-shrink:0;position:relative">' +
         '<div class="file-icon-box" style="background:' + iconBg + ';width:32px;height:32px;font-size:15px;">' +
@@ -982,7 +1076,7 @@ function renderFiles() {
         '<span style="margin-top:1px">' + date + '</span></div>' +
         // Fav + menu
         (isFav ? '<i class="ti ti-star fav-star" style="position:static;font-size:13px;flex-shrink:0;color:#fbbf24;"></i>' : '') +
-        (isSelectMode ? '' : '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
+        (isSelectMode ? '' : '<div class="file-menu" data-file-menu="1" data-file-id="' + safeId + '">' +
         '<i class="ti ti-dots-vertical"></i></div>') +
         '</div>'
       );
@@ -1003,16 +1097,16 @@ function renderFiles() {
     }
 
     return (
-      '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')" ondragstart="fileCardDragStart(event, \'' + safeId + '\')" ondragend="fileCardDragEnd(event, this)">' +
+      '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-card="1" data-file-id="' + safeId + '">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
-      '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
+      '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" data-action="toggle-file-select" data-file-id="' + safeId + '"></div>' +
       '<div class="file-top">' +
       '<div style="position:relative;display:inline-block">' +
       iconBox +
       '</div>' +
       '<div style="display:flex; gap:6px; align-items:center;">' +
       (isFav ? '<i class="ti ti-star" style="color:#fbbf24; font-size:16px;"></i>' : '') +
-      (isSelectMode ? '' : '<div class="file-menu" onclick="event.stopPropagation(); showCtx(event, \'' + safeId + '\')">' +
+      (isSelectMode ? '' : '<div class="file-menu" data-file-menu="1" data-file-id="' + safeId + '">' +
       '<i class="ti ti-dots-vertical"></i></div>') + '</div></div>' +
       '<span class="fcat-badge" style="background:' + badge.bg + ';color:' + badge.color + ';margin-top:8px">' + safeFolder + '</span>' +
       '<div class="file-name" title="' + escapeAttr(f.name) + '">' + safeName + '</div>' +
@@ -1125,9 +1219,9 @@ function renderShared() {
       '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'JetBrains Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span></div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0">' +
-      '<button onclick="copySharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseenter="this.style.background=\'#0f0e0d\';this.style.color=\'#fff\';this.style.borderColor=\'transparent\'" onmouseleave="this.style.background=\'#f7f5f2\';this.style.color=\'#5a5754\';this.style.borderColor=\'rgba(15,14,13,0.14)\'">' +
+      '<button data-action="copy-shared" data-index="' + i + '" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s">' +
       '<i class="ti ti-copy" style="font-size:13px"></i>Salin</button>' +
-      '<button onclick="removeSharedLink(\'' + i + '\')" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.15);border-radius:8px;color:#c0392b;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s" onmouseenter="this.style.background=\'rgba(192,57,43,0.12)\'" onmouseleave="this.style.background=\'rgba(192,57,43,0.06)\'">' +
+      '<button data-action="remove-shared" data-index="' + i + '" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.15);border-radius:8px;color:#c0392b;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s">' +
       '<i class="ti ti-trash" style="font-size:13px"></i>Hapus</button>' +
       '</div></div>'
     );
@@ -1240,8 +1334,8 @@ function renderFoldersFiltered(search) {
     const safeName = escapeHtml(f.name);
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
-      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
-      '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
+      '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-card="1" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
+      '<button class="folder-delete-btn" title="Hapus folder" data-action="folder-delete" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
       '<defs><filter id="fsf' + i + '" x="-5%" y="-5%" width="110%" height="110%">' +
@@ -1847,6 +1941,7 @@ async function deleteFile() {
         folder_id: file.folder_id,
         type: file.type,
         size: file.size,
+        size_bytes: getFileSizeBytes(file),
         icon: file.icon,
         icon_color: file.icon_color,
         icon_bg: file.icon_bg,
@@ -1950,16 +2045,8 @@ async function uploadFile() {
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB per file
   const MAX_TOTAL_SIZE = 1024 * 1024 * 1024; // 1 GB total storage
 
-  // Hitung sisa storage yang tersedia
-  let usedBytes = 0;
-  allFiles.forEach(function(f) {
-    if (f.size) {
-      const num = parseFloat(f.size);
-      if (f.size.includes('MB')) usedBytes += num * 1024 * 1024;
-      else if (f.size.includes('KB')) usedBytes += num * 1024;
-      else if (f.size.includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
-    }
-  });
+  // Hitung sisa storage yang tersedia berdasarkan size_bytes jika tersedia.
+  const usedBytes = calcTotalUsedBytes();
   const remainingBytes = MAX_TOTAL_SIZE - usedBytes;
 
   // Cek setiap file
@@ -1999,6 +2086,7 @@ async function uploadFile() {
 
   let successCount = 0;
   let failCount = 0;
+  let errorMessages = [];
   const total = files.length;
 
   const { data: authData } = await sb.auth.getSession();
@@ -2033,7 +2121,7 @@ async function uploadFile() {
 
     const filePath = buildStoragePathForUser(uid, folderId, file.name);
     const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
-    if (uploadError) { console.error('Upload error:', uploadError.message); failCount++; continue; }
+    if (uploadError) { console.error('Upload error:', uploadError.message); errorMessages.push(file.name + ': ' + uploadError.message); failCount++; continue; }
 
     const { error: insertError } = await sb.from('files').insert({
       name: file.name,
@@ -2041,6 +2129,7 @@ async function uploadFile() {
       folder_id: folderId || null,
       type: type,
       size: sizeStr,
+      size_bytes: file.size,
       icon: iconInfo.icon,
       icon_color: iconInfo.iconColor,
       icon_bg: iconInfo.iconBg,
@@ -2049,19 +2138,28 @@ async function uploadFile() {
     });
     if (insertError) {
       console.error('Insert error:', insertError.message);
+      errorMessages.push(file.name + ': ' + insertError.message);
       await sb.storage.from('user-files').remove([filePath]);
       failCount++;
     }
     else successCount++;
   }
 
-  // Progress 100%
-  progressBox.innerHTML =
-    '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Selesai!</div>' +
-    '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
-      '<div style="height:100%;width:100%;background:var(--green);border-radius:99px"></div>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--green);margin-top:5px;text-align:right">100%</div>';
+  // Progress selesai / error
+  if (failCount > 0) {
+    progressBox.innerHTML =
+      '<div style="font-size:12px;color:#c0392b;margin-bottom:6px;font-weight:600">Upload selesai dengan error</div>' +
+      '<div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.16);border-radius:10px;padding:9px;font-size:11.5px;color:#7f1d1d;line-height:1.45">' +
+        escapeHtml(errorMessages.slice(0, 3).join(' | ') || (failCount + ' file gagal diupload.')) +
+      '</div>';
+  } else {
+    progressBox.innerHTML =
+      '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Selesai!</div>' +
+      '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
+        '<div style="height:100%;width:100%;background:var(--green);border-radius:99px"></div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--green);margin-top:5px;text-align:right">100%</div>';
+  }
 
   btnConfirm.disabled = false;
   btnCancel.disabled  = false;
@@ -2303,6 +2401,7 @@ async function uploadFolderFiles() {
 
   var successCount = 0;
   var failCount = 0;
+  var errorMessages = [];
   var total = filesArr.length;
 
   for (var i = 0; i < filesArr.length; i++) {
@@ -2327,6 +2426,12 @@ async function uploadFolderFiles() {
     if (hasSkipFolder || fileName.startsWith('.')) { failCount++; continue; }
 
     if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
+    var folderProgress = document.getElementById('uploadProgressBox');
+    if (folderProgress) {
+      var pctFolder = Math.round((i / total) * 100);
+      folderProgress.innerHTML = '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Mengupload folder ' + (i + 1) + '/' + total + ': <span style="color:#0f0e0d">' + escapeHtml(file.name) + '</span></div>' +
+        '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden"><div style="height:100%;width:' + pctFolder + '%;background:var(--accent);border-radius:99px;transition:width 0.3s ease"></div></div>';
+    }
 
     try {
       // Resolve chain folder: destId (root tujuan) → folderParts[0] → folderParts[1] → dst
@@ -2343,7 +2448,7 @@ async function uploadFolderFiles() {
       var storagePath = buildStoragePathForUser(userId, targetFolderId || null, fileName);
 
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
-      if (upErr) { console.error('Storage upload error:', upErr.message); failCount++; continue; }
+      if (upErr) { console.error('Storage upload error:', upErr.message); errorMessages.push(fileName + ': ' + upErr.message); failCount++; continue; }
 
       // Determine file type
       var ext = fileName.split('.').pop().toLowerCase();
@@ -2365,15 +2470,16 @@ async function uploadFolderFiles() {
         folder_id: targetFolderId || null,
         type: type,
         size: sizeStr,
+        size_bytes: file.size,
         icon: iconInfo.icon,
         icon_color: iconInfo.iconColor,
         icon_bg: iconInfo.iconBg,
         storage_path: storagePath,
         user_id: userId
       });
-      if (insertErr) { console.error('DB insert error:', insertErr.message); failCount++; }
+      if (insertErr) { console.error('DB insert error:', insertErr.message); errorMessages.push(fileName + ': ' + insertErr.message); failCount++; }
       else successCount++;
-    } catch(e) { console.error('Upload error:', e); failCount++; }
+    } catch(e) { console.error('Upload error:', e); errorMessages.push(fileName + ': ' + (e.message || e)); failCount++; }
   }
 
   if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
@@ -2493,7 +2599,7 @@ async function folderCardDrop(e, el) {
 
     try {
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
-      if (upErr) { failCount++; continue; }
+      if (upErr) { console.error('Drop upload error:', upErr.message); failCount++; continue; }
 
       var ext = file.name.split('.').pop().toLowerCase();
       var type = 'doc';
@@ -2508,10 +2614,10 @@ async function folderCardDrop(e, el) {
 
       var { error: insertErr } = await sb.from('files').insert({
         name: file.name, folder_name: targetFolderName, folder_id: targetFolderId,
-        type: type, size: sizeStr, icon: iconInfo.icon, icon_color: iconInfo.iconColor,
+        type: type, size: sizeStr, size_bytes: file.size, icon: iconInfo.icon, icon_color: iconInfo.iconColor,
         icon_bg: iconInfo.iconBg, storage_path: storagePath, user_id: userId
       });
-      if (insertErr) failCount++; else successCount++;
+      if (insertErr) { console.error('Drop insert error:', insertErr.message); failCount++; } else successCount++;
     } catch(e2) { failCount++; }
   }
 
@@ -2687,7 +2793,7 @@ async function bulkDelete() {
         var f = deletedFromDB[j];
         var { error: rErr } = await sb.from('files').insert({
           id: f.id, name: f.name, folder_name: f.folder_name, folder_id: f.folder_id,
-          type: f.type, size: f.size, icon: f.icon, icon_color: f.icon_color,
+          type: f.type, size: f.size, size_bytes: getFileSizeBytes(f), icon: f.icon, icon_color: f.icon_color,
           icon_bg: f.icon_bg, storage_path: f.storage_path, user_id: f.user_id, created_at: f.created_at
         });
         if (rErr) reErr = true;
@@ -2911,8 +3017,143 @@ function setupSmoothScroll() {
   }
 }
 
+
+/* ── STATIC ACTION BINDINGS (mengurangi inline onclick di HTML utama) ── */
+function initStaticActionBindings() {
+  document.addEventListener('click', async function(e) {
+    var el = e.target.closest('[data-action]');
+    if (el) {
+      var action = el.getAttribute('data-action');
+
+      if (action === 'nav-dashboard') { setNav(el); setFilter(document.querySelector('.filter-chip[data-filter="semua"]'), 'semua'); return; }
+    if (action === 'nav-shared') { setNav(el); showSharedPanel(); return; }
+    if (action === 'nav-favorites') { setNav(el); filterFavorites(); return; }
+    if (action === 'nav-file-type') { setNav(el); setFilter(document.querySelector('.filter-chip[data-filter="' + el.dataset.filter + '"]'), el.dataset.filter); return; }
+    if (action === 'toggle-nav-group') { toggleNavGroup(el); return; }
+    if (action === 'go-settings') { window.location.href = 'pages/settings.html'; return; }
+    if (action === 'logout') { await doLogout(); return; }
+    if (action === 'close-sidebar') { closeSidebar(); return; }
+    if (action === 'toggle-sidebar') { toggleSidebar(); return; }
+    if (action === 'go-root') { goToRoot(); return; }
+    if (action === 'clear-search') { clearSearch(); return; }
+    if (action === 'toggle-night-mode') { NightMode.toggle(); updateNmBtn(); return; }
+    if (action === 'show-empty-notif') { showToast('Belum ada notifikasi'); return; }
+    if (action === 'refresh-data') { await loadAll(); showToast('Data diperbarui'); return; }
+    if (action === 'open-upload') { openModal(); return; }
+    if (action === 'new-folder') { addFolder(); return; }
+    if (action === 'bulk-download') { bulkDownload(); return; }
+    if (action === 'bulk-delete') { bulkDelete(); return; }
+    if (action === 'exit-select-mode') { exitSelectMode(); return; }
+    if (action === 'close-folder') { closeFolder(); return; }
+    if (action === 'enter-select-mode') { enterSelectMode(); return; }
+    if (action === 'toggle-sort') { toggleSort(); return; }
+    if (action === 'set-view-mode') { setViewMode(el.dataset.mode); return; }
+    if (action === 'set-filter') { setFilter(el, el.dataset.filter); return; }
+    if (action === 'switch-upload-tab') { switchUploadTab(el.dataset.tab); return; }
+    if (action === 'pick-file') { document.getElementById('fileInput').click(); return; }
+    if (action === 'pick-folder') { document.getElementById('folderInput').click(); return; }
+    if (action === 'close-modal') { closeModal(); return; }
+    if (action === 'do-upload') { doUpload(); return; }
+    if (action === 'close-move-modal') { closeMoveModal(); return; }
+    if (action === 'confirm-move-file') { confirmMoveFile(); return; }
+      if (action === 'ctx-download') { downloadFile(); return; }
+      if (action === 'ctx-share') { shareFile(); return; }
+      if (action === 'ctx-rename') { renameFile(); return; }
+      if (action === 'ctx-move') { moveFile(); return; }
+      if (action === 'ctx-favorite') { toggleFavorite(); return; }
+      if (action === 'ctx-delete') { deleteFile(); return; }
+      if (action === 'toggle-file-select') { e.stopPropagation(); return; }
+      if (action === 'file-select' || action === 'folder-select' || action === 'select-all') { return; }
+      if (action === 'folder-pin') { togglePinFolder(el.dataset.folderId, e); return; }
+      if (action === 'folder-delete') { e.stopPropagation(); deleteFolderById(el.dataset.folderId, el.dataset.folderName); return; }
+      if (action === 'sort-mode') { setSortMode(el.dataset.mode); return; }
+      if (action === 'copy-shared') { copySharedLink(el.dataset.index); return; }
+      if (action === 'remove-shared') { removeSharedLink(el.dataset.index); return; }
+      if (action === 'folder-breadcrumb-root') { goToRoot(); return; }
+      if (action === 'folder-breadcrumb') { navigateBreadcrumb(parseInt(el.dataset.index, 10)); return; }
+      if (action === 'open-folder') { openFolderById(el.dataset.folderId, el.dataset.folderName); return; }
+    }
+
+    var menu = e.target.closest('[data-file-menu]');
+    if (menu) {
+      e.stopPropagation();
+      showCtx(e, menu.dataset.fileId);
+      return;
+    }
+
+    var card = e.target.closest('[data-file-card]');
+    if (card) {
+      fileCardClick(e, card.dataset.fileId);
+      return;
+    }
+
+    var folderCard = e.target.closest('[data-folder-card]');
+    if (folderCard) {
+      openFolderById(folderCard.dataset.folderId, folderCard.dataset.folderName);
+      return;
+    }
+  });
+
+  document.addEventListener('input', function(e) {
+    var el = e.target;
+    if (el && el.dataset && el.dataset.action === 'search-files') { filterFiles(); toggleClearBtn(); }
+  });
+
+  document.addEventListener('change', function(e) {
+    var el = e.target;
+    if (!el || !el.dataset) return;
+    if (el.dataset.action === 'select-all') toggleSelectAll(el.checked);
+    if (el.dataset.action === 'file-select') handleFileSelect(el);
+    if (el.dataset.action === 'folder-select') handleFolderSelect(el);
+    if (el.dataset.action === 'toggle-file-select') toggleFileSelect(el.dataset.fileId, el.checked);
+  });
+
+  document.addEventListener('dblclick', function(e) {
+    var folderCard = e.target.closest('[data-folder-card]');
+    if (folderCard) {
+      e.stopPropagation();
+      startFolderRename(folderCard.dataset.folderId, folderCard.dataset.folderName, folderCard);
+    }
+  });
+
+  document.addEventListener('contextmenu', function(e) {
+    var card = e.target.closest('[data-file-card]');
+    if (card) showCtx(e, card.dataset.fileId);
+  });
+
+  document.addEventListener('dragstart', function(e) {
+    var card = e.target.closest('[data-file-card]');
+    if (card) fileCardDragStart(e, card.dataset.fileId);
+  });
+  document.addEventListener('dragend', function(e) {
+    var card = e.target.closest('[data-file-card]');
+    if (card) fileCardDragEnd(e, card);
+  });
+  document.addEventListener('dragover', function(e) {
+    var folderCard = e.target.closest('[data-folder-card]');
+    if (folderCard) folderCardDragOver(e, folderCard);
+  });
+  document.addEventListener('dragleave', function(e) {
+    var folderCard = e.target.closest('[data-folder-card]');
+    if (folderCard) folderCardDragLeave(e, folderCard);
+  });
+  document.addEventListener('drop', function(e) {
+    var folderCard = e.target.closest('[data-folder-card]');
+    if (folderCard) folderCardDrop(e, folderCard);
+  });
+
+  var folderDrop = document.getElementById('dropZoneFolder');
+  if (folderDrop && !folderDrop.dataset.dragBound) {
+    folderDrop.dataset.dragBound = '1';
+    folderDrop.addEventListener('dragover', handleFolderDragOver);
+    folderDrop.addEventListener('dragleave', handleFolderDragLeave);
+    folderDrop.addEventListener('drop', handleFolderDrop);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
   // Sembunyikan konten sampai session terverifikasi — cegah flash konten
+  initStaticActionBindings();
   document.body.style.visibility = 'hidden';
 
   const { data: sessionData } = await sb.auth.getSession();
@@ -2922,6 +3163,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   // Session valid — tampilkan konten
+  cleanupLegacyAvatarKeys();
   document.body.style.visibility = 'visible';
 
   // ── ENTER CURTAIN: hanya aktif kalau datang dari login (bukan refresh) ──
@@ -3051,7 +3293,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Restore saved view mode (grid/list)
   setViewMode(currentViewMode);
 
-  loadAll();
+  await loadAll();
 
   // ── Smooth scroll init ──
   initScrollReveal();

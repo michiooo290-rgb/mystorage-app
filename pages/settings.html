@@ -288,28 +288,28 @@
   </div>
 
   <span class="nav-label">Menu</span>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-layout-dashboard"></i>Dashboard
   </div>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-share"></i>Dibagikan
   </div>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-star"></i>Favorit
   </div>
 
   <div class="divider"></div>
   <span class="nav-label">Tipe File</span>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-file-type-pdf"></i>Dokumen
   </div>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-photo"></i>Foto
   </div>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-video"></i>Video
   </div>
-  <div class="nav-item" onclick="window.location.href='../Storage-dashboard.html'">
+  <div class="nav-item" data-action="go-dashboard">
     <i class="ti ti-music"></i>Audio
   </div>
 
@@ -318,7 +318,7 @@
   <div class="nav-item active">
     <i class="ti ti-settings"></i>Pengaturan
   </div>
-  <div class="nav-item nav-logout" onclick="doLogout()">
+  <div class="nav-item nav-logout" data-action="logout">
     <i class="ti ti-logout"></i>Keluar
   </div>
 
@@ -345,12 +345,12 @@
 </aside>
 
 <!-- SIDEBAR OVERLAY (mobile) -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar-overlay" id="sidebarOverlay" data-action="close-sidebar"></div>
 
 <div class="main">
 
   <header class="topbar">
-    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
+    <button class="hamburger-btn" id="hamburgerBtn" data-action="toggle-sidebar" aria-label="Buka menu">
       <i class="ti ti-menu-2"></i>
     </button>
     <div class="breadcrumb" style="margin-right:16px">
@@ -361,7 +361,7 @@
       <span>Pengaturan</span>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <div class="btn-icon" title="Kembali ke Dashboard" onclick="window.location.href='../Storage-dashboard.html'">
+      <div class="btn-icon" title="Kembali ke Dashboard" data-action="go-dashboard">
         <i class="ti ti-arrow-left"></i>
       </div>
       <div class="topbar-av" id="topbarAv">??</div>
@@ -375,16 +375,16 @@
       <!-- LEFT NAV -->
       <nav class="settings-nav">
         <div class="settings-nav-title">Pengaturan</div>
-        <div class="settings-nav-item active" onclick="scrollToSection('sec-profil', this)">
+        <div class="settings-nav-item active" data-action="scroll-section" data-section="sec-profil">
           <i class="ti ti-user-circle"></i>Edit Profil
         </div>
-        <div class="settings-nav-item" onclick="scrollToSection('sec-analitik', this)">
+        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-analitik">
           <i class="ti ti-chart-pie"></i>Analitik Storage
         </div>
-        <div class="settings-nav-item" onclick="scrollToSection('sec-notif', this)">
+        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-notif">
           <i class="ti ti-bell-ringing"></i>Notifikasi
         </div>
-        <div class="settings-nav-item" onclick="scrollToSection('sec-tampilan', this)">
+        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-tampilan">
           <i class="ti ti-palette"></i>Tampilan
         </div>
       </nav>
@@ -411,22 +411,22 @@
             <div class="avatar-section">
               <div class="avatar-wrapper" id="avatarWrapper">
                 <div class="avatar-preview" id="avatarPreview">??</div>
-                <div class="avatar-photo-overlay" onclick="triggerPhotoUpload()" title="Ganti foto profil">
+                <div class="avatar-photo-overlay" data-action="trigger-photo" title="Ganti foto profil">
                   <i class="ti ti-camera" style="font-size:16px"></i>
                 </div>
-                <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)"/>
+                <input type="file" id="photoInput" accept="image/*" style="display:none" data-action="photo-select"/>
               </div>
               <div class="avatar-info">
                 <div class="avatar-name-preview" id="avatarNamePreview">Memuat...</div>
                 <div class="avatar-email-preview" id="avatarEmailPreview">—</div>
                 <div class="avatar-actions">
-                  <button class="btn-avatar-change" onclick="triggerPhotoUpload()">
+                  <button class="btn-avatar-change" data-action="trigger-photo">
                     <i class="ti ti-upload" style="font-size:13px"></i>Upload Foto
                   </button>
-                  <button class="btn-avatar-change" onclick="triggerAvatarColor()" id="btnColorAvatar">
+                  <button class="btn-avatar-change" data-action="trigger-color" id="btnColorAvatar">
                     <i class="ti ti-palette" style="font-size:13px"></i>Warna Avatar
                   </button>
-                  <button class="btn-avatar-remove" id="btnRemovePhoto" onclick="removePhoto()" style="display:none">
+                  <button class="btn-avatar-remove" id="btnRemovePhoto" data-action="remove-photo" style="display:none">
                     <i class="ti ti-trash" style="font-size:13px"></i>Hapus Foto
                   </button>
                 </div>
@@ -446,13 +446,13 @@
                   </div>
                   <div class="crop-controls">
                     <i class="ti ti-zoom-out" style="font-size:15px;color:var(--text-muted)"></i>
-                    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" oninput="updateCrop()"/>
+                    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" data-action="update-crop"/>
                     <i class="ti ti-zoom-in" style="font-size:15px;color:var(--text-muted)"></i>
                   </div>
                 </div>
                 <div class="custom-dialog-footer">
-                  <button class="custom-dialog-btn cancel" onclick="closeCropDialog()">Batal</button>
-                  <button class="custom-dialog-btn confirm" onclick="applyCrop()">Simpan Foto</button>
+                  <button class="custom-dialog-btn cancel" data-action="close-crop">Batal</button>
+                  <button class="custom-dialog-btn confirm" data-action="apply-crop">Simpan Foto</button>
                 </div>
               </div>
             </div>
@@ -486,8 +486,8 @@
             </div>
 
             <div class="settings-footer">
-              <button class="btn-settings-cancel" onclick="resetProfileForm()">Reset</button>
-              <button class="btn-settings-save" id="btnSaveProfile" onclick="saveProfile()">
+              <button class="btn-settings-cancel" data-action="reset-profile">Reset</button>
+              <button class="btn-settings-save" id="btnSaveProfile" data-action="save-profile">
                 <i class="ti ti-check" style="font-size:14px"></i>Simpan Perubahan
               </button>
             </div>
@@ -614,7 +614,7 @@
                 <div class="notif-desc">Tampilkan peringatan (toast) otomatis di dalam dashboard saat storage mendekati batas yang ditentukan.</div>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="toggleInApp" checked onchange="saveNotifSettings()"/>
+                <input type="checkbox" id="toggleInApp" checked data-action="save-notif"/>
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -625,7 +625,7 @@
                 <div class="notif-desc">Tampilkan banner merah saat storage melampaui 90% kapasitas — bahkan jika notif dalam app dimatikan.</div>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="toggleCritical" checked onchange="saveNotifSettings()"/>
+                <input type="checkbox" id="toggleCritical" checked data-action="save-notif"/>
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -636,7 +636,7 @@
                 <div class="notif-desc">Tampilkan peringatan sebelum upload jika file baru akan membuat storage melebihi batas threshold.</div>
               </div>
               <label class="toggle-switch">
-                <input type="checkbox" id="toggleUploadWarn" checked onchange="saveNotifSettings()"/>
+                <input type="checkbox" id="toggleUploadWarn" checked data-action="save-notif"/>
                 <span class="toggle-slider"></span>
               </label>
             </div>
@@ -652,8 +652,7 @@
               </div>
               <input type="range" class="threshold-slider" id="thresholdSlider"
                 min="50" max="95" step="5" value="80"
-                oninput="updateThreshold(this.value)"
-                onchange="saveNotifSettings()"/>
+                data-action="update-threshold"/>
               <div class="threshold-marks">
                 <span>50%</span>
                 <span>60%</span>
@@ -665,8 +664,8 @@
             </div>
 
             <div class="settings-footer">
-              <button class="btn-settings-cancel" onclick="resetNotifSettings()">Reset Default</button>
-              <button class="btn-settings-save" onclick="saveNotifSettings(); showSettingsToast('Pengaturan notifikasi disimpan!')">
+              <button class="btn-settings-cancel" data-action="reset-notif">Reset Default</button>
+              <button class="btn-settings-save" data-action="save-notif">
                 <i class="ti ti-check" style="font-size:14px"></i>Simpan
               </button>
             </div>
@@ -695,7 +694,7 @@
                 <div class="notif-desc">Aktifkan tema gelap di seluruh halaman MyStorage. Preferensi ini tersimpan otomatis di perangkat ini.</div>
               </div>
               <!-- Static toggle wired to NightMode API -->
-              <label class="toggle-switch" style="cursor:pointer" onclick="NightMode.toggle(); syncNightModeToggle(); return false;">
+              <label class="toggle-switch" style="cursor:pointer" data-action="toggle-night-mode">
                 <input type="checkbox" id="nightModeCheck" style="pointer-events:none"/>
                 <span class="toggle-slider"></span>
               </label>
@@ -704,8 +703,8 @@
             <div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:12px 0 0;border-top:1px solid var(--border)">
               <span style="font-size:12px;color:var(--ink-4)">Preview tema:</span>
               <div style="display:flex;gap:8px">
-                <div style="width:28px;height:28px;border-radius:8px;background:#f7f5f2;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Terang" onclick="if(NightMode.isDark()){NightMode.toggle();syncNightModeToggle();}">☀️</div>
-                <div style="width:28px;height:28px;border-radius:8px;background:#141210;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Malam" onclick="if(!NightMode.isDark()){NightMode.toggle();syncNightModeToggle();}">🌙</div>
+                <div style="width:28px;height:28px;border-radius:8px;background:#f7f5f2;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Terang" data-action="set-light-mode">☀️</div>
+                <div style="width:28px;height:28px;border-radius:8px;background:#141210;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Malam" data-action="set-dark-mode">🌙</div>
               </div>
             </div>
 
@@ -739,7 +738,7 @@
     <div class="custom-dialog-msg">Pilih warna untuk avatar kamu</div>
     <div id="avatarColorOptions" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:24px"></div>
     <div class="custom-dialog-footer">
-      <button class="custom-dialog-btn cancel" onclick="closeColorPicker()">Batal</button>
+      <button class="custom-dialog-btn cancel" data-action="close-color-picker">Batal</button>
     </div>
   </div>
 </div>
@@ -823,6 +822,67 @@ function setAvatarColor(color) {
 }
 
 
+function cleanupLegacyAvatarKeys() {
+  localStorage.removeItem('myStorageAvatarPhoto');
+  localStorage.removeItem('myStorageAvatarColor');
+}
+
+function parseSizeString(size) {
+  if (!size) return 0;
+  var text = String(size).trim();
+  var num = parseFloat(text.replace(',', '.'));
+  if (!isFinite(num)) return 0;
+  var upper = text.toUpperCase();
+  if (upper.includes('GB')) return Math.round(num * 1024 * 1024 * 1024);
+  if (upper.includes('MB')) return Math.round(num * 1024 * 1024);
+  if (upper.includes('KB')) return Math.round(num * 1024);
+  return Math.round(num);
+}
+
+function getFileSizeBytes(file) {
+  if (!file) return 0;
+  if (typeof file.size_bytes === 'number' && isFinite(file.size_bytes)) return file.size_bytes;
+  if (typeof file.size_bytes === 'string' && file.size_bytes.trim() !== '') {
+    var parsed = parseInt(file.size_bytes, 10);
+    if (isFinite(parsed)) return parsed;
+  }
+  return parseSizeString(file.size);
+}
+
+function showSettingsLoading(message) {
+  let box = document.getElementById('settingsLoadingState');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'settingsLoadingState';
+    box.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:99999;display:none;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--ink,#0f0e0d);color:#fff;box-shadow:0 12px 32px rgba(0,0,0,.22);font-size:13px;font-family:Inter,system-ui,sans-serif;';
+    box.innerHTML = '<i class="ti ti-loader-2" style="font-size:17px;animation:spin .8s linear infinite"></i><span id="settingsLoadingMsg">Memuat...</span>';
+    document.body.appendChild(box);
+  }
+  document.getElementById('settingsLoadingMsg').textContent = message || 'Memuat...';
+  box.style.display = 'flex';
+}
+
+function hideSettingsLoading() {
+  const box = document.getElementById('settingsLoadingState');
+  if (box) box.style.display = 'none';
+}
+
+function showSettingsError(title, message) {
+  let box = document.getElementById('settingsErrorState');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'settingsErrorState';
+    box.style.cssText = 'position:fixed;left:50%;top:74px;transform:translateX(-50%);z-index:99999;display:none;max-width:min(560px,calc(100vw - 28px));padding:12px 14px;border-radius:14px;background:#fff7f7;color:#7f1d1d;border:1px solid rgba(192,57,43,.22);box-shadow:0 10px 30px rgba(127,29,29,.12);font-size:13px;font-family:Inter,system-ui,sans-serif;';
+    box.innerHTML = '<div style="display:flex;align-items:flex-start;gap:10px"><i class="ti ti-alert-circle" style="font-size:18px;flex-shrink:0;margin-top:1px"></i><div style="flex:1;min-width:0"><strong id="settingsErrorTitle" style="display:block;margin-bottom:2px">Terjadi error</strong><span id="settingsErrorMsg"></span></div><button id="settingsErrorClose" type="button" style="border:0;background:transparent;color:#7f1d1d;cursor:pointer;font-size:18px;line-height:1">&times;</button></div>';
+    document.body.appendChild(box);
+    box.querySelector('#settingsErrorClose').addEventListener('click', function() { box.style.display = 'none'; });
+  }
+  document.getElementById('settingsErrorTitle').textContent = title || 'Terjadi error';
+  document.getElementById('settingsErrorMsg').textContent = message || 'Coba ulangi beberapa saat lagi.';
+  box.style.display = 'block';
+}
+
+
 /* ────────────────────────
    TOAST
 ──────────────────────── */
@@ -851,16 +911,27 @@ function scrollToSection(id, el) {
    LOAD DATA
 ──────────────────────── */
 async function loadAll() {
-  const [filesRes, foldersRes] = await Promise.all([
-    sb.from('files').select('*').order('created_at', { ascending: false }),
-    sb.from('folders').select('*').order('created_at')
-  ]);
-  allFiles = filesRes.data || [];
-  allFolders = foldersRes.data || [];
+  showSettingsLoading('Memuat analitik storage...');
+  try {
+    const [filesRes, foldersRes] = await Promise.all([
+      sb.from('files').select('*').order('created_at', { ascending: false }),
+      sb.from('folders').select('*').order('created_at')
+    ]);
+    if (filesRes.error) throw filesRes.error;
+    if (foldersRes.error) throw foldersRes.error;
+    allFiles = filesRes.data || [];
+    allFolders = foldersRes.data || [];
 
-  updateSidebarStorage();
-  renderAnalitik();
-  checkStorageWarning();
+    updateSidebarStorage();
+    renderAnalitik();
+    checkStorageWarning();
+  } catch (err) {
+    console.error('Settings load error:', err);
+    showSettingsError('Gagal memuat data', err.message || 'Cek koneksi atau policy Supabase.');
+    showSettingsToast('Gagal memuat data storage', true);
+  } finally {
+    hideSettingsLoading();
+  }
 }
 
 /* ────────────────────────
@@ -882,16 +953,9 @@ function updateSidebarStorage() {
 }
 
 function calcUsedBytes() {
-  let usedBytes = 0;
-  allFiles.forEach(f => {
-    if (f.size) {
-      const num = parseFloat(f.size);
-      if (f.size.includes('MB')) usedBytes += num * 1024 * 1024;
-      else if (f.size.includes('KB')) usedBytes += num * 1024;
-      else if (f.size.includes('GB')) usedBytes += num * 1024 * 1024 * 1024;
-    }
-  });
-  return usedBytes;
+  return allFiles.reduce(function(total, file) {
+    return total + getFileSizeBytes(file);
+  }, 0);
 }
 
 function formatBytes(bytes) {
@@ -1157,12 +1221,12 @@ function resetProfileForm() {
 function triggerAvatarColor() {
   const container = document.getElementById('avatarColorOptions');
   container.innerHTML = AVATAR_COLORS.map(c =>
-    `<div onclick="pickAvatarColor('${c}')" style="
+    `<div data-action="pick-avatar-color" data-color="${c}" style="
       width:36px;height:36px;border-radius:10px;background:${c};cursor:pointer;
       border:3px solid ${c === avatarColor ? '#0f0e0d' : 'transparent'};
       transition:transform 0.15s,border-color 0.15s;display:flex;align-items:center;justify-content:center;
       font-size:10px;font-weight:700;color:#fff;font-family:'JetBrains Mono',monospace;
-    " onmouseenter="this.style.transform='scale(1.12)'" onmouseleave="this.style.transform='scale(1)'">
+    ">
       ${c === avatarColor ? '<i class="ti ti-check" style="font-size:14px"></i>' : ''}
     </div>`
   ).join('');
@@ -1285,12 +1349,7 @@ function renderFolderBars(showAll) {
     const files = allFiles.filter(f => f.folder_name === folder.name);
     let bytes = 0;
     files.forEach(f => {
-      if (f.size) {
-        const num = parseFloat(f.size);
-        if (f.size.includes('MB')) bytes += num * 1024 * 1024;
-        else if (f.size.includes('KB')) bytes += num * 1024;
-        else if (f.size.includes('GB')) bytes += num * 1024 * 1024 * 1024;
-      }
+      bytes += getFileSizeBytes(f);
     });
     return { name: folder.name, files: files.length, bytes };
   }).sort((a, b) => b.files - a.files);
@@ -1311,7 +1370,7 @@ function renderFolderBars(showAll) {
       </div>
     </div>`;
   }).join('') + (hasMore ? `
-    <button onclick="renderFolderBars(${!showAll})" class="btn-folder-toggle">
+    <button data-action="toggle-folder-bars" data-show-all="${!showAll}" class="btn-folder-toggle">
       <i class="ti ${showAll ? 'ti-chevron-up' : 'ti-chevron-down'}" style="font-size:13px"></i>
       ${showAll ? 'Tampilkan lebih sedikit' : 'Lihat semua ' + folderData.length + ' folder'}
     </button>` : '');
@@ -1437,7 +1496,52 @@ function checkStorageWarning() {
 /* ────────────────────────
    INIT
 ──────────────────────── */
+
+function initSettingsActionBindings() {
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-action]');
+    if (!el) return;
+    var action = el.dataset.action;
+
+    if (action === 'go-dashboard') { window.location.href = '../Storage-dashboard.html'; return; }
+    if (action === 'logout') { doLogout(); return; }
+    if (action === 'close-sidebar') { closeSidebar(); return; }
+    if (action === 'toggle-sidebar') { toggleSidebar(); return; }
+    if (action === 'scroll-section') { scrollToSection(el.dataset.section, el); return; }
+    if (action === 'trigger-photo') { triggerPhotoUpload(); return; }
+    if (action === 'trigger-color') { triggerAvatarColor(); return; }
+    if (action === 'remove-photo') { removePhoto(); return; }
+    if (action === 'close-crop') { closeCropDialog(); return; }
+    if (action === 'apply-crop') { applyCrop(); return; }
+    if (action === 'reset-profile') { resetProfileForm(); return; }
+    if (action === 'save-profile') { saveProfile(); return; }
+    if (action === 'reset-notif') { resetNotifSettings(); return; }
+    if (action === 'save-notif') { saveNotifSettings(); showSettingsToast('Pengaturan notifikasi disimpan!'); return; }
+    if (action === 'toggle-night-mode') { NightMode.toggle(); syncNightModeToggle(); return; }
+    if (action === 'set-light-mode') { if (NightMode.isDark()) { NightMode.toggle(); syncNightModeToggle(); } return; }
+    if (action === 'set-dark-mode') { if (!NightMode.isDark()) { NightMode.toggle(); syncNightModeToggle(); } return; }
+    if (action === 'close-color-picker') { closeColorPicker(); return; }
+    if (action === 'pick-avatar-color') { pickAvatarColor(el.dataset.color); return; }
+    if (action === 'toggle-folder-bars') { renderFolderBars(el.dataset.showAll === 'true'); return; }
+  });
+
+  document.addEventListener('change', function(e) {
+    var el = e.target;
+    if (!el || !el.dataset) return;
+    if (el.dataset.action === 'photo-select') handlePhotoSelect(el);
+    if (el.dataset.action === 'save-notif') saveNotifSettings();
+  });
+
+  document.addEventListener('input', function(e) {
+    var el = e.target;
+    if (!el || !el.dataset) return;
+    if (el.dataset.action === 'update-crop') updateCrop();
+    if (el.dataset.action === 'update-threshold') updateThreshold(el.value);
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
+  initSettingsActionBindings();
   const { data: sessionData } = await sb.auth.getSession();
   if (!sessionData || !sessionData.session) {
     window.location.href = '../pages/login.html';
@@ -1445,6 +1549,7 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 
   currentUser = sessionData.session.user;
+  cleanupLegacyAvatarKeys();
 
   // Terapkan avatar color milik user yang sedang login
   avatarColor = getAvatarColor();
