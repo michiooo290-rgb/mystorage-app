@@ -376,6 +376,16 @@ function togglePinFolder(folderId, e) {
   renderFolders();
 }
 
+/* ── FOLDER COLOR PALETTES (gradient pairs + text/pocket colors) ── */
+const FOLDER_GRADIENTS = [
+  { g1: '#818cf8', g2: '#6366f1', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(99,102,241,0.22)',  pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(99,102,241,0.50)' },
+  { g1: '#38bdf8', g2: '#0ea5e9', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(14,165,233,0.22)',  pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(14,165,233,0.50)' },
+  { g1: '#34d399', g2: '#10b981', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(16,185,129,0.22)',  pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(16,185,129,0.50)' },
+  { g1: '#fb923c', g2: '#f97316', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(249,115,22,0.22)',  pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(249,115,22,0.50)' },
+  { g1: '#fb7185', g2: '#f43f5e', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(244,63,94,0.22)',   pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(244,63,94,0.50)'  },
+  { g1: '#c084fc', g2: '#a855f7', docBg: 'rgba(255,255,255,0.93)', docLine: 'rgba(168,85,247,0.22)', pocket: 'rgba(255,255,255,0.26)', shadow: 'rgba(168,85,247,0.50)' },
+];
+
 /* ── RENDER FOLDERS ── */
 function renderFolders() {
   const grid = document.getElementById('folderGrid');
@@ -418,36 +428,103 @@ function renderFolders() {
   const toShow = isFolderExpanded ? visible : visible.slice(0, MAX_FOLDERS_SHOWN);
 
   grid.innerHTML = toShow.map(function(f, i) {
-    const c = FOLDER_COLORS[i % FOLDER_COLORS.length];
+    const p = FOLDER_GRADIENTS[i % FOLDER_GRADIENTS.length];
     const fileCount = allFiles.filter(function(x) {
       return x.folder_id === f.id || (!x.folder_id && x.folder_name === f.name);
     }).length;
     const subCount = allFolders.filter(function(x) { return x.parent_id === f.id; }).length;
     const safeName = escapeHtml(f.name);
     const safeId = escapeAttr(f.id);
-    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
+    const subLabel = subCount > 0 ? subCount + ' subfolder · ' + fileCount + ' file' : fileCount + ' file';
     const isPinned = pins.includes(f.id);
+
+    // Card utama — aspect ratio sedikit lebih tinggi agar dokumen & pocket proporsional
+    const cardStyle = [
+      'position:relative', 'width:100%', 'padding-bottom:80%',
+      'border-radius:20px',
+      'background:linear-gradient(155deg,' + p.g1 + ' 0%,' + p.g2 + ' 100%)',
+      'box-shadow:0 20px 40px -12px ' + p.shadow + ',0 4px 12px -4px ' + p.shadow,
+      'overflow:hidden', 'cursor:pointer'
+    ].join(';');
+
+    // Dokumen — semua berangkat dari left:50%, menyebar seperti referensi
+    const docBase = [
+      'position:absolute', 'width:42%', 'height:54%',
+      'background:' + p.docBg,
+      'border-radius:8px',
+      'box-shadow:0 8px 20px -6px rgba(0,0,0,0.22)',
+      'display:flex', 'flex-direction:column', 'gap:5px', 'padding:12% 11% 0'
+    ].join(';');
+
+    const lineStyle = 'display:block;height:3px;border-radius:3px;background:' + p.docLine + ';';
+    const lines = '<span style="' + lineStyle + 'width:80%"></span>' +
+                  '<span style="' + lineStyle + 'width:95%"></span>' +
+                  '<span style="' + lineStyle + 'width:65%"></span>';
+
+    // Kanan-belakang → tengah → kiri-depan, persis seperti referensi Scripts icon
+    const doc3 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-10%) rotate(10deg);z-index:1;">' + lines + '</div>';
+    const doc2 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-50%) rotate(2deg);z-index:2;">' + lines + '</div>';
+    const doc1 = '<div style="' + docBase + ';top:12%;left:50%;transform:translateX(-90%) rotate(-7deg);z-index:3;">' + lines + '</div>';
+
+    // Frosted pocket tinggi (60%) — blur kuat agar dokumen di belakang terlihat kabur
+    const pocketStyle = [
+      'position:absolute', 'left:0', 'right:0', 'bottom:0', 'height:60%', 'z-index:4',
+      'background:' + p.pocket,
+      'backdrop-filter:blur(16px)', '-webkit-backdrop-filter:blur(16px)',
+      'border-top:1px solid rgba(255,255,255,0.38)',
+      'border-top-right-radius:16px',
+      'box-shadow:inset 0 1px 0 rgba(255,255,255,0.4)',
+      'display:flex', 'align-items:flex-end',
+      'padding:0 16px 14px'
+    ].join(';');
+
+    const nameStyle = [
+      'font-family:Outfit,Inter,sans-serif',
+      'font-size:15px', 'font-weight:700', 'color:#fff',
+      'line-height:1.1', 'letter-spacing:-0.03em',
+      'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis'
+    ].join(';');
+
+    const subStyle = [
+      'font-size:10px', 'color:rgba(255,255,255,0.82)',
+      'margin-top:4px', 'font-family:JetBrains Mono,monospace',
+      'white-space:nowrap', 'overflow:hidden', 'text-overflow:ellipsis'
+    ].join(';');
+
+    const pinBadge = isPinned
+      ? '<span style="font-size:10px;line-height:1;flex-shrink:0;margin-bottom:2px;margin-left:6px">📌</span>'
+      : '';
+
     return (
-      '<div class="folder-wrap' + (isPinned ? ' folder-pinned' : '') + '" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" onclick="openFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')" ondblclick="event.stopPropagation(); startFolderRename(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\', this)" ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
-      '<button class="folder-pin-btn' + (isPinned ? ' pinned' : '') + '" title="' + (isPinned ? 'Lepas pin' : 'Pin ke atas') + '" onclick="togglePinFolder(\'' + safeId + '\', event)">' +
+      '<div class="folder-wrap' + (isPinned ? ' folder-pinned' : '') + '" ' +
+      'style="animation-delay:' + (i * 0.06) + 's;position:relative;" ' +
+      'data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '" ' +
+      'onclick="openFolderById(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\')" ' +
+      'ondblclick="event.stopPropagation();startFolderRename(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\',this)" ' +
+      'ondragover="folderCardDragOver(event,this)" ondragleave="folderCardDragLeave(event,this)" ondrop="folderCardDrop(event,this)">' +
+
+      '<button class="folder-pin-btn' + (isPinned ? ' pinned' : '') + '" ' +
+      'title="' + (isPinned ? 'Lepas pin' : 'Pin ke atas') + '" ' +
+      'onclick="togglePinFolder(\'' + safeId + '\',event)">' +
       '<i class="ti ' + (isPinned ? 'ti-pin-filled' : 'ti-pin') + '"></i></button>' +
-      '<button class="folder-delete-btn" title="Hapus folder" onclick="event.stopPropagation(); deleteFolderById(\'' + safeId + '\', \'' + escapeAttr(f.name) + '\')">' +
+
+      '<button class="folder-delete-btn" title="Hapus folder" ' +
+      'onclick="event.stopPropagation();deleteFolderById(\'' + safeId + '\',\'' + escapeAttr(f.name) + '\')">' +
       '<i class="ti ti-trash"></i></button>' +
-      '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
-      '<defs><filter id="fs' + i + '" x="-5%" y="-5%" width="110%" height="110%">' +
-      '<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="' + c.color1 + '" flood-opacity="0.4"/>' +
-      '</filter></defs>' +
-      '<path d="M6,20 Q6,14 12,14 L54,14 Q59,14 62,19 L67,26 L132,26 Q137,26 137,31 L137,82 Q137,88 131,88 L9,88 Q3,88 3,82 L3,27 Q3,20 9,20 Z" fill="' + c.color1 + '" filter="url(#fs' + i + ')"/>' +
-      '<path d="M3,28 L3,82 Q3,88 9,88 L131,88 Q137,88 137,82 L137,31 Q137,26 132,26 L6,26 Q3,26 3,28 Z" fill="' + c.color2 + '"/>' +
-      (isPinned ? '<text x="128" y="24" font-size="9" fill="' + c.sub + '" font-family="sans-serif" text-anchor="end">\uD83D\uDCCC</text>' : '') +
-      (subCount > 0
-        ? '<rect x="18" y="36" width="16" height="11" rx="2" fill="' + c.color1 + '"/>' +
-          '<rect x="37" y="36" width="16" height="11" rx="2" fill="' + c.color1 + '"/>' +
-          '<rect x="56" y="36" width="16" height="11" rx="2" fill="' + c.color1 + '"/>'
-        : '') +
-      '<text x="11" y="' + (subCount > 0 ? '60' : '48') + '" font-size="10.5" font-weight="700" fill="' + c.text + '" font-family="sans-serif">' + safeName + '</text>' +
-      '<text x="11" y="' + (subCount > 0 ? '70' : '61') + '" font-size="7.5" fill="' + c.sub + '" font-family="sans-serif">' + escapeHtml(subLabel) + '</text>' +
-      '</svg></div>'
+
+      '<div style="' + cardStyle + '">' +
+        '<div style="position:absolute;inset:0;">' +
+          doc3 + doc2 + doc1 +
+          '<div style="' + pocketStyle + '">' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="' + nameStyle + '">' + safeName + '</div>' +
+              '<div style="' + subStyle + '">' + escapeHtml(subLabel) + '</div>' +
+            '</div>' +
+            pinBadge +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '</div>'
     );
   }).join('');
 

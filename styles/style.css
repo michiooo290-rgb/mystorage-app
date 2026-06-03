@@ -527,24 +527,24 @@ body::before {
 /* ── Folder Grid ── */
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
 }
 
 .folder-wrap {
   position: relative;
   cursor: pointer;
-  border-radius: var(--radius);
-  transition: transform var(--t-med);
+  border-radius: 20px;
+  transition: transform var(--t-med), filter var(--t-med);
   animation: fadeUpIn 0.4s var(--ease-out-expo) both;
 }
-.folder-wrap:hover { transform: translateY(-3px); }
+.folder-wrap:hover { transform: translateY(-5px) scale(1.02); filter: brightness(1.05); }
 .folder-wrap.folder-drop-target {
-  transform: translateY(-4px) scale(1.03);
+  transform: translateY(-5px) scale(1.03);
   filter: brightness(1.08);
   outline: 2.5px solid var(--accent);
   outline-offset: 3px;
-  border-radius: 14px;
+  border-radius: 20px;
   transition: all 0.15s;
 }
 .folder-wrap.folder-drop-target::after {
@@ -563,40 +563,26 @@ body::before {
   pointer-events: none;
   font-family: inherit;
 }
-.folder-wrap.active svg path { stroke: var(--accent); stroke-width: 1px; }
-
-.folder-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  transition: all var(--t-fast);
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-xs);
-}
-.folder-wrap:hover .folder-card {
-  border-color: var(--border-2);
-  box-shadow: var(--shadow-sm);
-}
 
 .folder-delete-btn {
   position: absolute;
   top: 8px; right: 8px;
-  width: 22px; height: 22px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--ink-4);
+  width: 24px; height: 24px;
+  border-radius: 7px;
+  border: none;
+  background: rgba(255,255,255,0.88);
+  color: var(--red);
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   font-size: 12px;
   opacity: 0;
   transition: all var(--t-fast);
-  z-index: 2;
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 .folder-wrap:hover .folder-delete-btn { opacity: 1; }
-.folder-delete-btn:hover { background: rgba(192,57,43,0.06); color: var(--red); border-color: rgba(192,57,43,0.2); }
+.folder-delete-btn:hover { background: rgba(192,57,43,0.15); }
 
 /* ── Filter Row ── */
 .filter-row {
