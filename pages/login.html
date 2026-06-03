@@ -954,7 +954,12 @@
     }
     resetLoginAttempts();
     btn.innerHTML = '<i class="ti ti-check"></i>Berhasil!';
-    setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 700);
+    setTimeout(() => {
+      document.body.style.transition = 'opacity 0.45s cubic-bezier(0.4,0,1,1), transform 0.45s cubic-bezier(0.4,0,1,1)';
+      document.body.style.opacity = '0';
+      document.body.style.transform = 'scale(1.03)';
+      setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 460);
+    }, 600);
   }
 
   async function doRegister() {
@@ -996,7 +1001,12 @@
 
     if (data.session) {
       showToast('Akun berhasil dibuat!');
-      setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 900);
+      setTimeout(() => {
+        document.body.style.transition = 'opacity 0.45s cubic-bezier(0.4,0,1,1), transform 0.45s cubic-bezier(0.4,0,1,1)';
+        document.body.style.opacity = '0';
+        document.body.style.transform = 'scale(1.03)';
+        setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 460);
+      }, 900);
     } else {
       showToast('Cek email untuk konfirmasi!');
       switchTab('login');
