@@ -954,6 +954,8 @@
     }
     resetLoginAttempts();
     btn.innerHTML = '<i class="ti ti-check"></i>Berhasil!';
+    // Set tiket transisi — hanya aktif sekali saat redirect dari login
+    sessionStorage.setItem('fromLogin', '1');
     // Tampilkan curtain transisi sebelum pindah halaman
     const curtain = document.getElementById('pageCurtain');
     if (curtain) {
@@ -1003,6 +1005,7 @@
     if (data.session) {
       showToast('Akun berhasil dibuat!');
       setTimeout(() => {
+        sessionStorage.setItem('fromLogin', '1');
         const curtain = document.getElementById('pageCurtain');
         if (curtain) { curtain.style.opacity = '1'; curtain.style.pointerEvents = 'all'; }
         setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 750);
