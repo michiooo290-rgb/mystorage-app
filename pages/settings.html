@@ -901,11 +901,7 @@ function updateAvatarPreview(name, email) {
   if (savedPhoto) {
     // Show photo
     avatarEl.innerHTML = '';
-    avatarEl.style.background = 'transparent';
-    avatarEl.style.backgroundImage = `url(${savedPhoto})`;
-    avatarEl.style.backgroundSize = 'cover';
-    avatarEl.style.backgroundPosition = 'center';
-    avatarEl.textContent = '';
+    avatarEl.style.background = `url(${savedPhoto}) center/cover no-repeat`;
     document.getElementById('btnRemovePhoto').style.display = 'inline-flex';
     document.getElementById('btnColorAvatar').style.display = 'none';
 
@@ -914,10 +910,7 @@ function updateAvatarPreview(name, email) {
       const el = document.getElementById(id);
       if (!el) return;
       el.textContent = '';
-      el.style.backgroundImage = `url(${savedPhoto})`;
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-      el.style.background = `url(${savedPhoto}) center/cover`;
+      el.style.background = `url(${savedPhoto}) center/cover no-repeat`;
     };
     setAv('sidebarAv');
     setAv('topbarAv');
@@ -925,7 +918,6 @@ function updateAvatarPreview(name, email) {
     // Show initials
     avatarEl.textContent = initials;
     avatarEl.style.background = avatarColor;
-    avatarEl.style.backgroundImage = '';
     document.getElementById('btnRemovePhoto').style.display = 'none';
     document.getElementById('btnColorAvatar').style.display = 'inline-flex';
 
@@ -934,7 +926,6 @@ function updateAvatarPreview(name, email) {
       if (!el) return;
       el.textContent = initials;
       el.style.background = avatarColor;
-      el.style.backgroundImage = '';
     };
     setAvText('sidebarAv');
     setAvText('topbarAv');
@@ -943,6 +934,7 @@ function updateAvatarPreview(name, email) {
   document.getElementById('avatarNamePreview').textContent = name || 'Nama Kamu';
   document.getElementById('avatarEmailPreview').textContent = email || '—';
   document.getElementById('sidebarName').textContent = name || '—';
+  document.getElementById('sidebarEmail').textContent = email || '—';
 }
 
 /* ── Photo Upload & Crop ── */
@@ -1038,7 +1030,7 @@ function setupCropDrag() {
 function applyCrop() {
   const img = document.getElementById('cropImage');
   const zoom = parseFloat(document.getElementById('cropZoom').value);
-  const size = 220;
+  const size = 120; // cukup untuk avatar, hemat localStorage
   const nw = img.naturalWidth, nh = img.naturalHeight;
   const scale = Math.max(size / nw, size / nh) * zoom;
 
@@ -1056,8 +1048,15 @@ function applyCrop() {
   const dy = (size - dispH) / 2 + cropOffsetY;
   ctx.drawImage(img, dx, dy, dispW, dispH);
 
-  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  localStorage.setItem('myStorageAvatarPhoto', dataUrl);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
+
+  try {
+    localStorage.setItem('myStorageAvatarPhoto', dataUrl);
+  } catch (e) {
+    showSettingsToast('Foto terlalu besar, coba foto yang lebih kecil.', true);
+    closeCropDialog();
+    return;
+  }
 
   closeCropDialog();
   const name = document.getElementById('inputDisplayName').value.trim() ||

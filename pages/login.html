@@ -1084,6 +1084,20 @@
     document.getElementById('forgotSuccess').style.display = 'block';
   }
 </script>
+<style>
+@keyframes curtainLogoFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+  50%       { transform: translateY(-7px) scale(1.07); opacity: 1; }
+}
+@keyframes curtainBar {
+  0%   { transform: translateX(-130%); }
+  100% { transform: translateX(330%); }
+}
+@keyframes curtainDots {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.65; }
+}
+</style>
 <!-- ══════════════════════════════════════════
      PAGE TRANSITION CURTAIN — MyStorage
      Aktif saat login/register sukses → redirect dashboard
@@ -1096,13 +1110,19 @@
   opacity: 0; pointer-events: none;
   transition: opacity 0.45s cubic-bezier(0.19,1,0.22,1);
 ">
-  <!-- Logo icon (inline SVG fallback jika gambar tidak ada) -->
+  <!-- Logo dengan fallback kalau gambar tidak ada -->
   <img src="../assets/logo.png" alt="MyStorage" style="
     width: 68px; height: 68px;
     object-fit: contain;
     filter: drop-shadow(0 0 18px rgba(200,96,42,0.45));
     animation: curtainLogoFloat 1.3s ease-in-out infinite;
-  ">
+  " onerror="this.style.display='none'; document.getElementById('curtainLogoFallback').style.display='flex'">
+  <div id="curtainLogoFallback" style="
+    display:none; width:68px; height:68px; border-radius:16px;
+    background:#c8602a; align-items:center; justify-content:center;
+    font-size:28px; color:#fff; font-family:'Outfit',sans-serif; font-weight:700;
+    animation: curtainLogoFloat 1.3s ease-in-out infinite;
+  ">M</div>
 
   <!-- Brand name -->
   <div style="
@@ -1136,19 +1156,5 @@
   ">Membuka dashboard</div>
 </div>
 
-<style>
-@keyframes curtainLogoFloat {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
-  50%       { transform: translateY(-7px) scale(1.07); opacity: 1; }
-}
-@keyframes curtainBar {
-  0%   { transform: translateX(-130%); }
-  100% { transform: translateX(330%); }
-}
-@keyframes curtainDots {
-  0%, 100% { opacity: 0.35; }
-  50%       { opacity: 0.65; }
-}
-</style>
 </body>
 </html>
