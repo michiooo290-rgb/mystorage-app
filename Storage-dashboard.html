@@ -90,22 +90,27 @@
   </div>
 
   <div class="divider"></div>
-  <span class="nav-label">Tipe File</span>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=doc]'), 'doc')">
-    <i class="ti ti-file-type-pdf"></i>Dokumen
-    <span class="badge" id="badgeDocs">0</span>
+  <div class="nav-group-header" id="navGroupFileType" onclick="toggleNavGroup(this)">
+    <span class="nav-label" style="padding:0;pointer-events:none">Tipe File</span>
+    <i class="ti ti-chevron-down nav-group-chevron"></i>
   </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=foto]'), 'foto')">
-    <i class="ti ti-photo"></i>Foto
-    <span class="badge" id="badgePhotos">0</span>
-  </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=video]'), 'video')">
-    <i class="ti ti-video"></i>Video
-    <span class="badge" id="badgeVideos">0</span>
-  </div>
-  <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=audio]'), 'audio')">
-    <i class="ti ti-music"></i>Audio
-    <span class="badge" id="badgeAudio">0</span>
+  <div class="nav-group-body" id="navGroupFileTypeBody">
+    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=doc]'), 'doc')">
+      <i class="ti ti-file-type-pdf"></i>Dokumen
+      <span class="badge" id="badgeDocs">0</span>
+    </div>
+    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=foto]'), 'foto')">
+      <i class="ti ti-photo"></i>Foto
+      <span class="badge" id="badgePhotos">0</span>
+    </div>
+    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=video]'), 'video')">
+      <i class="ti ti-video"></i>Video
+      <span class="badge" id="badgeVideos">0</span>
+    </div>
+    <div class="nav-item" onclick="setNav(this); setFilter(document.querySelector('.filter-chip[onclick*=audio]'), 'audio')">
+      <i class="ti ti-music"></i>Audio
+      <span class="badge" id="badgeAudio">0</span>
+    </div>
   </div>
 
   <div class="divider"></div>
@@ -432,6 +437,26 @@
     btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
   }
   document.addEventListener('DOMContentLoaded', updateNmBtn);
+
+  function toggleNavGroup(headerEl) {
+    headerEl.classList.toggle('collapsed');
+    const bodyId = headerEl.id + 'Body';
+    const body = document.getElementById(bodyId);
+    if (body) body.classList.toggle('collapsed');
+    const key = 'navGroup_' + headerEl.id;
+    localStorage.setItem(key, headerEl.classList.contains('collapsed') ? '1' : '0');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.nav-group-header').forEach(function(header) {
+      const key = 'navGroup_' + header.id;
+      if (localStorage.getItem(key) === '1') {
+        header.classList.add('collapsed');
+        const body = document.getElementById(header.id + 'Body');
+        if (body) body.classList.add('collapsed');
+      }
+    });
+  });
 
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
