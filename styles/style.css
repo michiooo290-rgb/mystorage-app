@@ -1668,7 +1668,97 @@ body::before {
 @keyframes fadeInLoad {
   to { opacity: 1; transform: translateY(0); }
 }
-/* ── Collapsible Nav Group ── */
+/* ═══════════════════════════════════════════
+   EMPTY STATE — FIRST TIME USER
+   ═══════════════════════════════════════════ */
+.empty-state--first {
+  padding: 56px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+.empty-state__icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.empty-state__icon-wrap i {
+  font-size: 32px;
+  color: var(--accent);
+  opacity: 1;
+  margin: 0;
+  display: block;
+}
+.empty-state__title {
+  font-size: 16px !important;
+  font-weight: 600;
+  color: var(--ink-2) !important;
+  margin: 0 0 8px !important;
+}
+.empty-state__desc {
+  font-size: 13px !important;
+  color: var(--ink-4) !important;
+  max-width: 320px;
+  line-height: 1.6;
+  margin: 0 0 24px !important;
+}
+.empty-state__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.empty-state__btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.1s;
+}
+.empty-state__btn-primary:hover {
+  background: var(--accent-2);
+  transform: translateY(-1px);
+}
+.empty-state__btn-primary:active { transform: translateY(0); }
+.empty-state__btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: transparent;
+  color: var(--ink-3);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.empty-state__btn-secondary:hover {
+  border-color: var(--border-3);
+  color: var(--ink-2);
+  transform: translateY(-1px);
+}
+.empty-state__btn-secondary:active { transform: translateY(0); }
+
+/* ═══════════════════════════════════════════
+   COLLAPSIBLE NAV GROUP (Tipe File)
+   ═══════════════════════════════════════════ */
 .nav-group-header {
   display: flex;
   align-items: center;
