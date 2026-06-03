@@ -981,7 +981,7 @@ function renderFiles() {
 
   if (isInitialDataLoading && !hasLoadedInitialData) {
     grid.innerHTML = `
-      <div class="empty-state empty-state--loading">
+      <div class="empty-state empty-state--first empty-state--loading">
         <div class="empty-state__icon-wrap">
           <i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i>
         </div>
