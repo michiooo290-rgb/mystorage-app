@@ -918,7 +918,7 @@ function renderFiles() {
         '<div class="file-card" style="' + selectedStyle + '" data-file-id="' + safeId + '" onclick="fileCardClick(event, \'' + safeId + '\')" oncontextmenu="showCtx(event, \'' + safeId + '\')">' +
         // Checkbox
         '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';flex-shrink:0;align-items:center;justify-content:center;">' +
-        '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
+        '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent);" onclick="event.stopPropagation();toggleFileSelect(\'' + safeId + '\', this.checked)"></div>' +
         // Icon + type label
         '<div class="file-top" style="margin-bottom:0;flex-shrink:0;position:relative">' +
         '<div class="file-icon-box" style="background:' + iconBg + ';width:32px;height:32px;font-size:15px;">' +
@@ -1908,7 +1908,7 @@ async function uploadFile() {
     progressBox.innerHTML =
       '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Mengupload ' + (i + 1) + ' dari ' + total + ': <span style="color:#0f0e0d">' + file.name + '</span></div>' +
       '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
-        '<div style="height:100%;width:' + pct + '%;background:#c8602a;border-radius:99px;transition:width 0.3s ease"></div>' +
+        '<div style="height:100%;width:' + pct + '%;background:var(--accent);border-radius:99px;transition:width 0.3s ease"></div>' +
       '</div>' +
       '<div style="font-size:11px;color:#9a9693;margin-top:5px;text-align:right">' + pct + '%</div>';
 
@@ -1956,9 +1956,9 @@ async function uploadFile() {
   progressBox.innerHTML =
     '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Selesai!</div>' +
     '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
-      '<div style="height:100%;width:100%;background:#2d6a4f;border-radius:99px"></div>' +
+      '<div style="height:100%;width:100%;background:var(--green);border-radius:99px"></div>' +
     '</div>' +
-    '<div style="font-size:11px;color:#2d6a4f;margin-top:5px;text-align:right">100%</div>';
+    '<div style="font-size:11px;color:var(--green);margin-top:5px;text-align:right">100%</div>';
 
   btnConfirm.disabled = false;
   btnCancel.disabled  = false;
@@ -2453,7 +2453,7 @@ function toggleFileSelect(id, checked) {
   var card = document.querySelector('[data-file-id="' + id + '"]');
   if (card) {
     if (checked) {
-      card.style.outline = '2.5px solid #c8602a';
+      card.style.outline = '2.5px solid var(--accent)';
       card.style.outlineOffset = '2px';
       card.style.background = 'rgba(200,96,42,0.05)';
     } else {
@@ -2473,7 +2473,7 @@ function toggleSelectAll(checked) {
     var cb = card.querySelector('input[type=checkbox]');
     if (checked) {
       selectedFileIds.add(String(id));
-      card.style.outline = '2.5px solid #c8602a';
+      card.style.outline = '2.5px solid var(--accent)';
       card.style.outlineOffset = '2px';
       card.style.background = 'rgba(200,96,42,0.05)';
     } else {

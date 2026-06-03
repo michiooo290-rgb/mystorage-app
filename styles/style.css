@@ -1347,13 +1347,13 @@ body::before {
   pointer-events: all;
 }
 .file-card:has(.file-select-cb input:checked) {
-  outline: 2.5px solid #c8602a;
+  outline: 2.5px solid var(--accent);
   outline-offset: 2px;
   background: rgba(200,96,42,0.04);
 }
 #btnSelectMode.active {
   background: rgba(200,96,42,0.08);
-  color: #c8602a;
+  color: var(--accent);
 }
 #bulkBar {
   animation: slideDown 0.18s ease;
@@ -1569,12 +1569,12 @@ body::before {
 }
 .folder-pin-btn.pinned {
   opacity: 1;
-  color: #c8602a;
+  color: var(--accent);
   background: rgba(200, 96, 42, 0.1);
 }
 .folder-pin-btn:hover {
   background: rgba(200, 96, 42, 0.15) !important;
-  color: #c8602a !important;
+  color: var(--accent) !important;
 }
 .folder-pinned {
   outline: 2px solid rgba(200, 96, 42, 0.3);
@@ -1588,11 +1588,11 @@ body::before {
 .file-card-dragging {
   opacity: 0.4;
   transform: scale(0.97);
-  outline: 2px dashed #c8602a;
+  outline: 2px dashed var(--accent);
   outline-offset: 2px;
 }
 .folder-drop-target {
-  outline: 2.5px solid #c8602a !important;
+  outline: 2.5px solid var(--accent) !important;
   outline-offset: 3px;
   transform: scale(1.04);
   filter: brightness(1.05);
