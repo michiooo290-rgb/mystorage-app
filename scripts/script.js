@@ -846,7 +846,36 @@ function renderFiles() {
   });
 
   if (filtered.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><i class="ti ti-mood-empty"></i><p>Tidak ada file yang ditemukan.</p></div>';
+    const isReallyEmpty = allFiles.length === 0 && !search && currentFilter === 'semua' && !currentFolderId && !showOnlyFavorites;
+    if (isReallyEmpty) {
+      grid.innerHTML = `
+        <div class="empty-state empty-state--first">
+          <div class="empty-state__icon-wrap">
+            <i class="ti ti-cloud-upload"></i>
+          </div>
+          <p class="empty-state__title">Belum ada file</p>
+          <p class="empty-state__desc">Upload file pertamamu atau buat folder untuk mulai mengorganisir file kamu.</p>
+          <div class="empty-state__actions">
+            <button class="empty-state__btn-primary" onclick="openModal()">
+              <i class="ti ti-cloud-upload"></i> Upload File
+            </button>
+            <button class="empty-state__btn-secondary" onclick="addFolder()">
+              <i class="ti ti-folder-plus"></i> Buat Folder
+            </button>
+          </div>
+        </div>`;
+    } else {
+      const isSearch = !!search;
+      const isFilter = currentFilter !== 'semua';
+      const isFav    = showOnlyFavorites;
+      let icon = 'ti-mood-empty';
+      let msg  = 'Tidak ada file yang ditemukan.';
+      if (isSearch)      { icon = 'ti-search-off'; msg = 'Tidak ada file yang cocok dengan pencarian "' + search + '".'; }
+      else if (isFav)    { icon = 'ti-star-off';   msg = 'Belum ada file favorit. Klik kanan file lalu pilih "Tambah Favorit".'; }
+      else if (isFilter) { icon = 'ti-filter-off'; msg = 'Tidak ada file dengan tipe ini di sini.'; }
+      else if (currentFolderId) { icon = 'ti-folder-open'; msg = 'Folder ini masih kosong.'; }
+      grid.innerHTML = '<div class="empty-state"><i class="ti ' + icon + '"></i><p>' + msg + '</p></div>';
+    }
     document.getElementById('fileCount').textContent = '0';
     return;
   }
