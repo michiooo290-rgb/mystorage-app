@@ -954,7 +954,13 @@
     }
     resetLoginAttempts();
     btn.innerHTML = '<i class="ti ti-check"></i>Berhasil!';
-    setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 700);
+    // Tampilkan curtain transisi sebelum pindah halaman
+    const curtain = document.getElementById('pageCurtain');
+    if (curtain) {
+      curtain.style.opacity = '1';
+      curtain.style.pointerEvents = 'all';
+    }
+    setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 750);
   }
 
   async function doRegister() {
@@ -996,7 +1002,11 @@
 
     if (data.session) {
       showToast('Akun berhasil dibuat!');
-      setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 900);
+      setTimeout(() => {
+        const curtain = document.getElementById('pageCurtain');
+        if (curtain) { curtain.style.opacity = '1'; curtain.style.pointerEvents = 'all'; }
+        setTimeout(() => { window.location.href = '../Storage-dashboard.html'; }, 750);
+      }, 400);
     } else {
       showToast('Cek email untuk konfirmasi!');
       switchTab('login');
@@ -1010,6 +1020,15 @@
       if (loginVisible) doLogin(); else doRegister();
     }
     if (e.key === 'Escape') closeForgotModal();
+  });
+
+  /* ── PAGE TRANSITION: fade in on load (coming back from dashboard) ── */
+  window.addEventListener('pageshow', function(e) {
+    const curtain = document.getElementById('pageCurtain');
+    if (curtain) {
+      curtain.style.opacity = '0';
+      curtain.style.pointerEvents = 'none';
+    }
   });
 
   function openForgotModal() {
@@ -1054,5 +1073,71 @@
     document.getElementById('forgotSuccess').style.display = 'block';
   }
 </script>
+<!-- ══════════════════════════════════════════
+     PAGE TRANSITION CURTAIN — MyStorage
+     Aktif saat login/register sukses → redirect dashboard
+     ══════════════════════════════════════════ -->
+<div id="pageCurtain" aria-hidden="true" style="
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--ink, #0f0e0d);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.45s cubic-bezier(0.19,1,0.22,1);
+">
+  <!-- Logo icon (inline SVG fallback jika gambar tidak ada) -->
+  <img src="../assets/logo.png" alt="MyStorage" style="
+    width: 68px; height: 68px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 18px rgba(200,96,42,0.45));
+    animation: curtainLogoFloat 1.3s ease-in-out infinite;
+  ">
+
+  <!-- Brand name -->
+  <div style="
+    font-family: 'Outfit', sans-serif;
+    color: rgba(255,255,255,0.9);
+    font-size: 15px; font-weight: 600;
+    letter-spacing: -0.025em;
+  ">MyStorage</div>
+
+  <!-- Loading bar -->
+  <div style="
+    width: 120px; height: 2px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px; overflow: hidden;
+  ">
+    <div style="
+      height: 100%; width: 35%;
+      background: var(--accent, #c8602a);
+      border-radius: 99px;
+      animation: curtainBar 0.9s cubic-bezier(0.45,0,0.55,1) infinite;
+    "></div>
+  </div>
+
+  <!-- Status text -->
+  <div style="
+    font-family: 'Inter', sans-serif;
+    color: rgba(255,255,255,0.38);
+    font-size: 12px; font-weight: 400;
+    letter-spacing: 0.02em;
+    animation: curtainDots 1.5s ease-in-out infinite;
+  ">Membuka dashboard</div>
+</div>
+
+<style>
+@keyframes curtainLogoFloat {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+  50%       { transform: translateY(-7px) scale(1.07); opacity: 1; }
+}
+@keyframes curtainBar {
+  0%   { transform: translateX(-130%); }
+  100% { transform: translateX(330%); }
+}
+@keyframes curtainDots {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.65; }
+}
+</style>
 </body>
 </html>

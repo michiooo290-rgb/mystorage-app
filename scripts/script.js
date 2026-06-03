@@ -2774,6 +2774,33 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Session valid — tampilkan konten
   document.body.style.visibility = 'visible';
 
+  // ── ENTER CURTAIN: fade out tirai masuk dari login ──
+  const enterCurtain = document.getElementById('enterCurtain');
+  if (enterCurtain) {
+    setTimeout(function() {
+      enterCurtain.style.opacity = '0';
+      enterCurtain.style.pointerEvents = 'none';
+      setTimeout(function() { enterCurtain.remove(); }, 650);
+    }, 320);
+  }
+
+  // ── STAGGER REVEAL: kartu-kartu muncul berurutan ──
+  setTimeout(function() {
+    const revealEls = document.querySelectorAll('.stat, .folder-wrap, .file-card, .section-header');
+    revealEls.forEach(function(el, i) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      var delay = Math.min(i * 0.045, 0.55) + 's';
+      el.style.transition = 'opacity 0.5s cubic-bezier(0.19,1,0.22,1) ' + delay + ', transform 0.5s cubic-bezier(0.19,1,0.22,1) ' + delay;
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        });
+      });
+    });
+  }, 380);
+
   const user = sessionData.session.user;
   const fullName = (user.user_metadata && user.user_metadata.full_name) ? user.user_metadata.full_name : user.email.split('@')[0];
   userInitials = fullName.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);

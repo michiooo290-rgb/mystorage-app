@@ -16,178 +16,43 @@
   <link rel="stylesheet" href="styles/nightmode.css"/>
   <script src="scripts/nightmode.js"></script>
   <style>
-    /* ═══════════════════════════════════════
-       ICON ANIMATION SYSTEM
-       Semua animasi konsisten, warna ikut tema
-    ═══════════════════════════════════════ */
-
-    /* Base: semua nav icon */
-    .nav-item i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), color 0.2s;
-    }
-
-    /* Hover: bounce up */
-    .nav-item:hover i {
-      transform: translateY(-3px) scale(1.18);
-    }
-
-    /* Active nav: icon tetap di posisi tapi pulse */
-    .nav-item.active i {
-      animation: navIconPulse 2.5s ease-in-out infinite;
-    }
-    @keyframes navIconPulse {
-      0%, 100% { transform: scale(1); }
-      50%       { transform: scale(1.15); }
-    }
-
-    /* ── Stat card icons ── */
-    .stat-icon i {
-      display: inline-block;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .stat-card:hover .stat-icon i {
-      transform: scale(1.25) rotate(-8deg);
-    }
-
-    /* Stat icon loop animasi berbeda per card */
-    .stat-icon.anim-bounce i {
-      animation: iconBounce 3s ease-in-out infinite;
-    }
-    .stat-icon.anim-spin i {
-      animation: iconSpinSlow 4s linear infinite;
-    }
-    .stat-icon.anim-shake i {
-      animation: iconShake 3.5s ease-in-out infinite;
-    }
-    .stat-icon.anim-star i {
-      animation: iconStar 2.8s ease-in-out infinite;
-    }
-
-    @keyframes iconBounce {
-      0%, 100% { transform: translateY(0); }
-      40%       { transform: translateY(-5px); }
-      60%       { transform: translateY(-3px); }
-    }
-    @keyframes iconSpinSlow {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @keyframes iconShake {
-      0%, 90%, 100% { transform: rotate(0deg); }
-      92%           { transform: rotate(-12deg); }
-      96%           { transform: rotate(12deg); }
-    }
-    @keyframes iconStar {
-      0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
-      50%       { transform: scale(1.2) rotate(20deg); opacity: 0.85; }
-    }
-
-    /* ── Upload button icon ── */
-    .btn-upload i {
-      display: inline-block;
-      animation: uploadBounce 2s ease-in-out infinite;
-    }
-    @keyframes uploadBounce {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-3px); }
-    }
-    .btn-upload:hover i {
-      animation: none;
-      transform: translateY(-4px) scale(1.2);
-      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
-    }
-
-    /* ── Logo icon ── */
-    .logo-icon i {
-      display: inline-block;
-      animation: logoFloat 3s ease-in-out infinite;
-    }
-    @keyframes logoFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50%       { transform: translateY(-3px) rotate(-8deg); }
-    }
-
-    /* ── Drop zone icon ── */
-    .drop-zone i {
-      display: inline-block;
-      animation: dropFloat 2.2s ease-in-out infinite;
-      transition: transform 0.2s;
-    }
-    @keyframes dropFloat {
-      0%, 100% { transform: translateY(0); }
-      50%       { transform: translateY(-8px); }
-    }
-    .drop-zone:hover i {
-      animation: none;
-      transform: scale(1.15) translateY(-4px);
-    }
-
-    /* ── Context menu items ── */
-    .ctx-item i {
-      transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .ctx-item:hover i {
-      transform: scale(1.25) rotate(-5deg);
-    }
-    .ctx-item.danger:hover i {
-      transform: scale(1.2) rotate(0deg);
-      animation: trashShake 0.4s ease;
-    }
-    @keyframes trashShake {
-      0%, 100% { transform: scale(1.2) rotate(0deg); }
-      25%       { transform: scale(1.2) rotate(-8deg); }
-      75%       { transform: scale(1.2) rotate(8deg); }
-    }
-
-    /* ── Topbar icon buttons ── */
-    .btn-icon i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-icon:hover i {
-      transform: scale(1.2) rotate(-10deg);
-    }
-    /* Refresh icon: spin on hover */
-    .btn-icon.refresh-btn:hover i {
-      transform: rotate(180deg);
-      transition: transform 0.5s ease;
-    }
-    /* Bell icon: shake on hover */
-    .btn-icon.notif-btn:hover i {
-      animation: bellRing 0.5s ease;
-      transform: none;
-    }
-    @keyframes bellRing {
-      0%, 100% { transform: rotate(0deg); }
-      20%       { transform: rotate(-15deg); }
-      40%       { transform: rotate(15deg); }
-      60%       { transform: rotate(-10deg); }
-      80%       { transform: rotate(10deg); }
-    }
-
-    /* ── Settings icon: spin on hover ── */
-    .nav-item:hover .icon-settings {
-      animation: settingsSpin 0.6s ease;
-    }
-    @keyframes settingsSpin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(90deg); }
-    }
-
-    /* ── Folder baru button icon ── */
-    .btn-new i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-new:hover i {
-      transform: rotate(90deg) scale(1.2);
-    }
-
-    /* ── Night mode toggle ── */
-    #nmTopbarBtn i {
-      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    #nmTopbarBtn:hover i {
-      transform: rotate(30deg) scale(1.2);
-    }
+    .nav-item i{transition:transform .25s cubic-bezier(.34,1.56,.64,1),color .2s}
+    .nav-item:hover i{transform:translateY(-3px) scale(1.18)}
+    .nav-item.active i{animation:navIconPulse 2.5s ease-in-out infinite}
+    @keyframes navIconPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+    .stat-icon i{display:inline-block;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+    .stat-card:hover .stat-icon i{transform:scale(1.25) rotate(-8deg)}
+    .stat-icon.anim-bounce i{animation:iconBounce 3s ease-in-out infinite}
+    .stat-icon.anim-spin i{animation:iconSpinSlow 4s linear infinite}
+    .stat-icon.anim-shake i{animation:iconShake 3.5s ease-in-out infinite}
+    .stat-icon.anim-star i{animation:iconStar 2.8s ease-in-out infinite}
+    @keyframes iconBounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}60%{transform:translateY(-3px)}}
+    @keyframes iconSpinSlow{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+    @keyframes iconShake{0%,90%,100%{transform:rotate(0)}92%{transform:rotate(-12deg)}96%{transform:rotate(12deg)}}
+    @keyframes iconStar{0%,100%{transform:scale(1) rotate(0);opacity:1}50%{transform:scale(1.2) rotate(20deg);opacity:.85}}
+    .btn-upload i{display:inline-block;animation:uploadBounce 2s ease-in-out infinite}
+    @keyframes uploadBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+    .btn-upload:hover i{animation:none;transform:translateY(-4px) scale(1.2);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+    .logo-icon i{display:inline-block;animation:logoFloat 3s ease-in-out infinite}
+    @keyframes logoFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-3px) rotate(-8deg)}}
+    .drop-zone i{display:inline-block;animation:dropFloat 2.2s ease-in-out infinite;transition:transform .2s}
+    @keyframes dropFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    .drop-zone:hover i{animation:none;transform:scale(1.15) translateY(-4px)}
+    .ctx-item i{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+    .ctx-item:hover i{transform:scale(1.25) rotate(-5deg)}
+    .ctx-item.danger:hover i{transform:scale(1.2) rotate(0);animation:trashShake .4s ease}
+    @keyframes trashShake{0%,100%{transform:scale(1.2) rotate(0)}25%{transform:scale(1.2) rotate(-8deg)}75%{transform:scale(1.2) rotate(8deg)}}
+    .btn-icon i{transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+    .btn-icon:hover i{transform:scale(1.2) rotate(-10deg)}
+    .btn-icon.refresh-btn:hover i{transform:rotate(180deg);transition:transform .5s ease}
+    .btn-icon.notif-btn:hover i{animation:bellRing .5s ease;transform:none}
+    @keyframes bellRing{0%,100%{transform:rotate(0)}20%{transform:rotate(-15deg)}40%{transform:rotate(15deg)}60%{transform:rotate(-10deg)}80%{transform:rotate(10deg)}}
+    .nav-item:hover .icon-settings{animation:settingsSpin .6s ease}
+    @keyframes settingsSpin{from{transform:rotate(0)}to{transform:rotate(90deg)}}
+    .btn-new i{transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+    .btn-new:hover i{transform:rotate(90deg) scale(1.2)}
+    #nmTopbarBtn i{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+    #nmTopbarBtn:hover i{transform:rotate(30deg) scale(1.2)}
   </style>
 </head>
 <body>
@@ -273,11 +138,9 @@
   </div>
 </aside>
 
-<!-- SIDEBAR OVERLAY (mobile) -->
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
 <div class="main">
-
   <header class="topbar">
     <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Buka menu">
       <i class="ti ti-menu-2"></i>
@@ -313,8 +176,6 @@
   </header>
 
   <div class="content">
-
-    <!-- STAT CARDS -->
     <div class="stats-row">
       <div class="stat-card" style="animation-delay:0s">
         <div class="stat-icon anim-bounce" style="background:rgba(99,102,241,0.15)">
@@ -354,7 +215,6 @@
       </div>
     </div>
 
-    <!-- SHARED PANEL -->
     <div id="sharedPanel" style="display:none">
       <div class="section-head">
         <div class="section-head-left">
@@ -366,9 +226,7 @@
       <div id="sharedList" style="display:flex;flex-direction:column;gap:10px;margin-top:4px;min-height:80px"></div>
     </div>
 
-    <!-- MAIN PANEL -->
     <div id="mainPanel">
-
     <div>
       <div class="section-head">
         <div class="section-head-left">
@@ -424,27 +282,13 @@
       </div>
 
       <div class="filter-row">
-        <button class="filter-chip active" onclick="setFilter(this,'semua')">
-          <i class="ti ti-layout-grid"></i>Semua
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'pdf')">
-          <i class="ti ti-file-type-pdf"></i>PDF
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'doc')">
-          <i class="ti ti-file-text"></i>Dokumen
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'foto')">
-          <i class="ti ti-photo"></i>Foto
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'video')">
-          <i class="ti ti-video"></i>Video
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'spreadsheet')">
-          <i class="ti ti-table"></i>Spreadsheet
-        </button>
-        <button class="filter-chip" onclick="setFilter(this,'audio')">
-          <i class="ti ti-music"></i>Audio
-        </button>
+        <button class="filter-chip active" onclick="setFilter(this,'semua')"><i class="ti ti-layout-grid"></i>Semua</button>
+        <button class="filter-chip" onclick="setFilter(this,'pdf')"><i class="ti ti-file-type-pdf"></i>PDF</button>
+        <button class="filter-chip" onclick="setFilter(this,'doc')"><i class="ti ti-file-text"></i>Dokumen</button>
+        <button class="filter-chip" onclick="setFilter(this,'foto')"><i class="ti ti-photo"></i>Foto</button>
+        <button class="filter-chip" onclick="setFilter(this,'video')"><i class="ti ti-video"></i>Video</button>
+        <button class="filter-chip" onclick="setFilter(this,'spreadsheet')"><i class="ti ti-table"></i>Spreadsheet</button>
+        <button class="filter-chip" onclick="setFilter(this,'audio')"><i class="ti ti-music"></i>Audio</button>
       </div>
 
       <div class="file-list-header" id="fileListHeader">
@@ -457,8 +301,7 @@
       </div>
       <div class="file-grid" id="fileGrid"></div>
     </div>
-
-    </div><!-- end mainPanel -->
+    </div>
   </div>
 </div>
 
@@ -590,7 +433,6 @@
   }
   document.addEventListener('DOMContentLoaded', updateNmBtn);
 
-  /* ── Hamburger / Sidebar Toggle ── */
   function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('open');
     document.getElementById('sidebarOverlay').classList.toggle('open');
@@ -600,7 +442,6 @@
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
 
-  /* ── Logout (dipanggil dari sidebar nav) ── */
   async function doLogout() {
     const confirmed = await customConfirm({
       title: 'Logout',
@@ -616,5 +457,67 @@
     }
   }
 </script>
+
+<!-- ═══════════════════════════════════════════════════
+     ENTER CURTAIN — Tirai masuk dari halaman login
+     Warna identik dengan pageCurtain di login.html (#0f0e0d)
+     sehingga transisi terasa seamless tanpa kedip putih.
+     script.js akan fade-out & remove elemen ini setelah
+     session valid & konten siap ditampilkan.
+     ═══════════════════════════════════════════════════ -->
+<div id="enterCurtain" aria-hidden="true" style="
+  position: fixed; inset: 0; z-index: 9999;
+  background: #0f0e0d;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  transition: opacity 0.55s cubic-bezier(0.19,1,0.22,1);
+">
+  <img src="assets/logo.png" alt="MyStorage" style="
+    width: 68px; height: 68px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 20px rgba(200,96,42,0.55)) drop-shadow(0 0 6px rgba(200,96,42,0.3));
+    animation: ecLogoFloat 1.3s ease-in-out infinite;
+  ">
+  <div style="
+    font-family: 'Outfit', sans-serif;
+    color: rgba(255,255,255,0.88);
+    font-size: 15px; font-weight: 600;
+    letter-spacing: -0.025em;
+  ">MyStorage</div>
+  <div style="
+    width: 120px; height: 2px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 99px; overflow: hidden;
+  ">
+    <div style="
+      height: 100%; width: 36%;
+      background: #c8602a;
+      border-radius: 99px;
+      animation: ecBar 0.9s cubic-bezier(0.45,0,0.55,1) infinite;
+    "></div>
+  </div>
+  <div style="
+    font-family: 'Inter', sans-serif;
+    color: rgba(255,255,255,0.32);
+    font-size: 12px; letter-spacing: 0.02em;
+    animation: ecDots 1.5s ease-in-out infinite;
+  ">Memuat dashboard</div>
+</div>
+
+<style>
+@keyframes ecLogoFloat {
+  0%, 100% { transform: translateY(0) scale(1);    opacity: 0.88; }
+  50%       { transform: translateY(-8px) scale(1.08); opacity: 1; }
+}
+@keyframes ecBar {
+  0%   { transform: translateX(-140%); }
+  100% { transform: translateX(340%); }
+}
+@keyframes ecDots {
+  0%, 100% { opacity: 0.28; }
+  50%       { opacity: 0.65; }
+}
+</style>
+
 </body>
 </html>
