@@ -327,7 +327,7 @@ function renderStats() {
     if (!el) return;
     if (count > 0) {
       el.textContent = count;
-      el.style.display = '';
+      el.style.display = 'inline-block';
     } else {
       el.style.display = 'none';
     }
@@ -1055,7 +1055,7 @@ function renderShared() {
   if (document.getElementById('sharedCount')) document.getElementById('sharedCount').textContent = sharedLinks.length;
   if (document.getElementById('statShared')) document.getElementById('statShared').textContent = sharedLinks.length;
   var bShared = document.getElementById('badgeShared');
-  if (bShared) { if (sharedLinks.length > 0) { bShared.textContent = sharedLinks.length; bShared.style.display = ''; } else { bShared.style.display = 'none'; } }
+  if (bShared) { if (sharedLinks.length > 0) { bShared.textContent = sharedLinks.length; bShared.style.display = 'inline-block'; } else { bShared.style.display = 'none'; } }
 
   if (sharedLinks.length === 0) {
     list.innerHTML = '<div class="empty-state"><i class="ti ti-share-off"></i><p>Belum ada file yang dibagikan. Klik kanan file lalu pilih "Bagikan Link".</p></div>';
@@ -1570,7 +1570,7 @@ async function shareFile() {
 
   // Update badge
   var bSh = document.getElementById('badgeShared');
-  if (bSh) { if (saved.length > 0) { bSh.textContent = saved.length; bSh.style.display = ''; } else { bSh.style.display = 'none'; } }
+  if (bSh) { if (saved.length > 0) { bSh.textContent = saved.length; bSh.style.display = 'inline-block'; } else { bSh.style.display = 'none'; } }
   if (document.getElementById('statShared')) document.getElementById('statShared').textContent = saved.length;
 
   try {
