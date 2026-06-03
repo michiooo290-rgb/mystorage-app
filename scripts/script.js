@@ -2969,8 +2969,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   document.querySelectorAll('.user-name').forEach(function(el) { el.textContent = fullName; });
 
   // Apply avatar photo or initials
-  const savedPhoto = localStorage.getItem('myStorageAvatarPhoto');
-  const savedColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+  const savedPhoto = localStorage.getItem('myStorageAvatar_' + user.id + '_photo');
+  const savedColor = localStorage.getItem('myStorageAvatar_' + user.id + '_color') || '#c8602a';
   document.querySelectorAll('.user-av, .topbar-av').forEach(function(el) {
     if (savedPhoto) {
       el.textContent = '';

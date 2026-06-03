@@ -765,7 +765,7 @@ let currentUser = null;
 let allFiles = [];
 let allFolders = [];
 let userInitials = '??';
-let avatarColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+let avatarColor = '#c8602a';
 
 const AVATAR_COLORS = [
   '#c8602a','#1d4ed8','#2d6a4f','#7e22ce','#0369a1',
@@ -783,6 +783,45 @@ const DONUT_COLORS = {
 const DONUT_LABELS = {
   pdf:'PDF', doc:'Dokumen', foto:'Foto', video:'Video', spreadsheet:'Spreadsheet', audio:'Audio'
 };
+
+/* ────────────────────────
+   AVATAR STORAGE PER USER
+   Jangan pakai key global seperti myStorageAvatarPhoto / myStorageAvatarColor,
+   karena localStorage berlaku untuk 1 browser/domain, bukan per akun.
+──────────────────────── */
+function getCurrentUserId() {
+  return currentUser && currentUser.id ? currentUser.id : 'guest';
+}
+
+function getAvatarKey(type) {
+  return 'myStorageAvatar_' + getCurrentUserId() + '_' + type;
+}
+
+function getAvatarPhoto() {
+  if (!currentUser) return null;
+  return localStorage.getItem(getAvatarKey('photo'));
+}
+
+function setAvatarPhoto(dataUrl) {
+  if (!currentUser) return;
+  localStorage.setItem(getAvatarKey('photo'), dataUrl);
+}
+
+function removeAvatarPhoto() {
+  if (!currentUser) return;
+  localStorage.removeItem(getAvatarKey('photo'));
+}
+
+function getAvatarColor() {
+  if (!currentUser) return '#c8602a';
+  return localStorage.getItem(getAvatarKey('color')) || '#c8602a';
+}
+
+function setAvatarColor(color) {
+  if (!currentUser) return;
+  localStorage.setItem(getAvatarKey('color'), color);
+}
+
 
 /* ────────────────────────
    TOAST
@@ -895,7 +934,7 @@ function updateAvatarPreview(name, email) {
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '??';
   userInitials = initials;
 
-  const savedPhoto = localStorage.getItem('myStorageAvatarPhoto');
+  const savedPhoto = getAvatarPhoto();
   const avatarEl = document.getElementById('avatarPreview');
 
   if (savedPhoto) {
@@ -1051,7 +1090,7 @@ function applyCrop() {
   const dataUrl = canvas.toDataURL('image/jpeg', 0.72);
 
   try {
-    localStorage.setItem('myStorageAvatarPhoto', dataUrl);
+    setAvatarPhoto(dataUrl);
   } catch (e) {
     showSettingsToast('Foto terlalu besar, coba foto yang lebih kecil.', true);
     closeCropDialog();
@@ -1071,7 +1110,7 @@ function closeCropDialog() {
 }
 
 function removePhoto() {
-  localStorage.removeItem('myStorageAvatarPhoto');
+  removeAvatarPhoto();
   const name = document.getElementById('inputDisplayName').value.trim() || 'User';
   updateAvatarPreview(name, currentUser ? currentUser.email : '');
   showSettingsToast('Foto profil dihapus');
@@ -1102,7 +1141,7 @@ async function saveProfile() {
   }
 
   // Simpan warna avatar ke localStorage
-  localStorage.setItem('myStorageAvatarColor', avatarColor);
+  setAvatarColor(avatarColor);
 
   updateAvatarPreview(fullName, currentUser.email);
   showSettingsToast('Profil berhasil diperbarui!');
@@ -1132,7 +1171,7 @@ function triggerAvatarColor() {
 
 function pickAvatarColor(color) {
   avatarColor = color;
-  localStorage.setItem('myStorageAvatarColor', color);
+  setAvatarColor(color);
   closeColorPicker();
   const fullName = document.getElementById('inputDisplayName').value.trim() ||
     (document.getElementById('inputFirstName').value.trim() + ' ' + document.getElementById('inputLastName').value.trim()).trim();
@@ -1407,8 +1446,8 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   currentUser = sessionData.session.user;
 
-  // Terapkan avatar color dari localStorage
-  avatarColor = localStorage.getItem('myStorageAvatarColor') || '#c8602a';
+  // Terapkan avatar color milik user yang sedang login
+  avatarColor = getAvatarColor();
 
   initProfile(currentUser);
   loadNotifSettings();
