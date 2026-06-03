@@ -160,6 +160,9 @@ let isSelectMode = false;
 let showOnlyFavorites = false;
 let userInitials = 'US';
 let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
+let hasLoadedInitialData = false;
+let isInitialDataLoading = true;
+
 
 /* ── CUSTOM DIALOG UTILITIES ── */
 function customConfirm({ title, message, confirmText, cancelText, icon, iconClass, confirmBtnClass } = {}) {
@@ -400,19 +403,33 @@ function clearAppError() {
 }
 
 /* ── LOAD DATA ── */
-async function loadAll() {
-  showAppLoading('Memuat data storage...');
+async function loadAll(options) {
+  options = options || {};
+  var showFloatingLoading = options.showFloating === true;
+
+  // Saat refresh pertama, jangan tampilkan empty state dulu.
+  // Tampilkan loading di area file sampai query Supabase selesai.
+  isInitialDataLoading = !hasLoadedInitialData;
   clearAppError();
+  if (isInitialDataLoading) renderFiles();
+  if (showFloatingLoading) showAppLoading('Memuat data storage...');
+
   try {
     await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
     await loadFiles();
+    hasLoadedInitialData = true;
+    isInitialDataLoading = false;
     renderStats();
+    renderFiles();
   } catch (err) {
     console.error('Load data error:', err);
+    hasLoadedInitialData = true;
+    isInitialDataLoading = false;
+    renderFiles();
     showAppError('Gagal memuat data', err.message || 'Cek koneksi internet atau policy Supabase.');
     showToast('Gagal memuat data storage.');
   } finally {
-    hideAppLoading();
+    if (showFloatingLoading) hideAppLoading();
   }
 }
 
@@ -430,6 +447,7 @@ async function loadFolders() {
 async function loadFiles() {
   const { data, error } = await sb.from('files').select('*').order('created_at', { ascending: false });
   if (error) {
+    isInitialDataLoading = false;
     showAppError('Gagal load file', error.message);
     showToast('Gagal load file: ' + error.message);
     throw error;
@@ -450,6 +468,8 @@ async function loadFiles() {
     }
   }
 
+  hasLoadedInitialData = true;
+  isInitialDataLoading = false;
   renderFiles();
 }
 
@@ -957,7 +977,24 @@ function setSortMode(mode) {
 /* ── RENDER FILES ── */
 function renderFiles() {
   const grid = document.getElementById('fileGrid');
-  const search = document.getElementById('searchInput').value.toLowerCase();
+  if (!grid) return;
+
+  if (isInitialDataLoading && !hasLoadedInitialData) {
+    grid.innerHTML = `
+      <div class="empty-state empty-state--loading">
+        <div class="empty-state__icon-wrap">
+          <i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i>
+        </div>
+        <p class="empty-state__title">Memuat file...</p>
+        <p class="empty-state__desc">Sedang mengambil data dari storage kamu.</p>
+      </div>`;
+    const fileCountEl = document.getElementById('fileCount');
+    if (fileCountEl) fileCountEl.textContent = '...';
+    return;
+  }
+
+  const searchEl = document.getElementById('searchInput');
+  const search = searchEl ? searchEl.value.toLowerCase() : '';
   const favs = getFavs();
 
   let filtered = allFiles.filter(function(f) {
@@ -3038,7 +3075,7 @@ function initStaticActionBindings() {
     if (action === 'clear-search') { clearSearch(); return; }
     if (action === 'toggle-night-mode') { NightMode.toggle(); updateNmBtn(); return; }
     if (action === 'show-empty-notif') { showToast('Belum ada notifikasi'); return; }
-    if (action === 'refresh-data') { await loadAll(); showToast('Data diperbarui'); return; }
+    if (action === 'refresh-data') { await loadAll({ showFloating: true }); showToast('Data diperbarui'); return; }
     if (action === 'open-upload') { openModal(); return; }
     if (action === 'new-folder') { addFolder(); return; }
     if (action === 'bulk-download') { bulkDownload(); return; }
