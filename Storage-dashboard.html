@@ -243,6 +243,13 @@
           <i class="ti ti-plus" style="font-size:14px"></i>Folder baru
         </button>
       </div>
+      <div class="folder-search-row" style="display:flex;align-items:center;gap:8px;margin:-4px 0 14px;max-width:420px">
+        <div style="flex:1;position:relative">
+          <i class="ti ti-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-5)"></i>
+          <input id="folderSearchInput" type="text" placeholder="Cari folder..." data-action="search-folders" autocomplete="off" style="width:100%;height:36px;border:1px solid var(--border);border-radius:12px;background:var(--white);color:var(--ink);padding:0 12px 0 34px;font:13px Inter,sans-serif;outline:none">
+        </div>
+        <button id="folderSearchClear" type="button" data-action="clear-folder-search" style="display:none;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--ink-4);font-size:12px;cursor:pointer;font-family:inherit">Reset</button>
+      </div>
       <div class="folder-grid" id="folderGrid"></div>
     </div>
 

@@ -125,7 +125,10 @@ let folderPath = [];              // breadcrumb: [{id, name}]
 let currentSort = 'newest';
 let currentViewMode = localStorage.getItem('myStorageViewMode') || 'grid';
 const MAX_FOLDERS_SHOWN = 4;      // Jumlah folder yang ditampilkan sebelum "Lihat Semua"
+const MAX_UPLOAD_FILE_BYTES = 100 * 1024 * 1024;      // 100 MB per file
+const MAX_STORAGE_BYTES = 1024 * 1024 * 1024;         // 1 GB per akun
 let isFolderExpanded = false;
+let folderSearchQuery = '';
 
 /* ── VIEW MODE (grid / list) ── */
 function setViewMode(mode) {
@@ -342,6 +345,53 @@ function calcTotalUsedBytes() {
   }, 0);
 }
 
+async function fetchFreshUsedBytes() {
+  // Ambil ulang usage dari Supabase sebelum upload supaya validasi quota tidak bergantung
+  // pada state lama di browser. RLS memastikan query ini hanya membaca file user sendiri.
+  const { data, error } = await sb.from('files').select('size_bytes,size');
+  if (error) throw error;
+  return (data || []).reduce(function(total, file) {
+    return total + getFileSizeBytes(file);
+  }, 0);
+}
+
+async function validateUploadQuota(files) {
+  const fileList = Array.from(files || []);
+  if (fileList.length === 0) return { ok: false, message: 'Pilih file dulu!' };
+
+  const tooBig = fileList.find(function(file) { return file.size > MAX_UPLOAD_FILE_BYTES; });
+  if (tooBig) {
+    return {
+      ok: false,
+      message: 'File terlalu besar (maks 100 MB): ' + tooBig.name +
+        ' (' + formatFileSizeFromBytes(tooBig.size) + ')'
+    };
+  }
+
+  const totalNewBytes = fileList.reduce(function(sum, file) { return sum + file.size; }, 0);
+  let freshUsedBytes;
+  try {
+    freshUsedBytes = await fetchFreshUsedBytes();
+  } catch (err) {
+    // Kalau query fresh gagal, pakai state lokal sebagai fallback, tapi tetap beri error visual.
+    console.warn('Gagal mengambil quota terbaru, pakai cache lokal:', err);
+    freshUsedBytes = calcTotalUsedBytes();
+  }
+
+  const remainingBytes = MAX_STORAGE_BYTES - freshUsedBytes;
+  if (totalNewBytes > remainingBytes) {
+    return {
+      ok: false,
+      usedBytes: freshUsedBytes,
+      remainingBytes: remainingBytes,
+      message: 'Storage tidak cukup! Perlu ' + formatFileSizeFromBytes(totalNewBytes) +
+        ', sisa ' + formatFileSizeFromBytes(Math.max(remainingBytes, 0)) + '.'
+    };
+  }
+
+  return { ok: true, usedBytes: freshUsedBytes, remainingBytes: remainingBytes, totalNewBytes: totalNewBytes };
+}
+
 function formatFileSizeFromBytes(bytes) {
   bytes = Number(bytes) || 0;
   if (bytes < 1024) return bytes.toFixed(0) + ' B';
@@ -507,7 +557,7 @@ function renderStats() {
 
   const usedBytes = calcTotalUsedBytes();
   const usedMB = usedBytes / (1024 * 1024);
-  const totalMB = 1024;
+  const totalMB = MAX_STORAGE_BYTES / (1024 * 1024);
   const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
   const usedStr = formatFileSizeFromBytes(usedBytes);
 
@@ -556,10 +606,16 @@ function renderFolders() {
   const grid = document.getElementById('folderGrid');
   const pins = getPinnedFolders();
 
-  // Tampilkan hanya folder yang parent_id-nya sama dengan currentFolderId
+  const folderSearchEl = document.getElementById('folderSearchInput');
+  const activeFolderSearch = folderSearchEl ? folderSearchEl.value.trim().toLowerCase() : folderSearchQuery;
+  folderSearchQuery = activeFolderSearch;
+
+  // Tampilkan folder sesuai level saat ini. Jika search folder aktif, cari di semua folder.
   let visible = allFolders.filter(function(f) {
     const pid = f.parent_id || null;
-    return pid === currentFolderId;
+    const matchLevel = activeFolderSearch ? true : pid === currentFolderId;
+    const matchSearch = activeFolderSearch ? f.name.toLowerCase().includes(activeFolderSearch) : true;
+    return matchLevel && matchSearch;
   });
 
   // Sort: pinned duluan, lalu urutan asli
@@ -580,7 +636,7 @@ function renderFolders() {
 
   if (visible.length === 0) {
     grid.innerHTML = '<div class="empty-state"><i class="ti ti-folder-off"></i><p>' +
-      (currentFolderId ? 'Belum ada subfolder di sini.' : 'Belum ada folder. Buat folder baru!') +
+      (activeFolderSearch ? 'Folder tidak ditemukan.' : (currentFolderId ? 'Belum ada subfolder di sini.' : 'Belum ada folder. Buat folder baru!')) +
       '</p></div>';
     document.getElementById('folderCount').textContent = '0';
     populateFolderSelect();
@@ -875,13 +931,31 @@ function populateFolderDestSelect() {
   if (currentFolderId) sel.value = currentFolderId;
 }
 
-function openFolderById(folderId, folderName) {
-  currentFolderId = folderId;
-  currentFolderFilter = folderName; // untuk filter file
-  showOnlyFavorites = false;
+function buildFolderPathById(folderId) {
+  var path = [];
+  var safety = 0;
+  var current = allFolders.find(function(f) { return f.id === folderId; });
+  while (current && safety < 50) {
+    path.unshift({ id: current.id, name: current.name });
+    current = current.parent_id ? allFolders.find(function(f) { return f.id === current.parent_id; }) : null;
+    safety++;
+  }
+  return path;
+}
 
-  // Tambah ke breadcrumb path
-  folderPath.push({ id: folderId, name: folderName });
+function openFolderById(folderId, folderName) {
+  const folder = allFolders.find(function(f) { return f.id === folderId; });
+  currentFolderId = folderId;
+  currentFolderFilter = folder ? folder.name : folderName; // untuk filter file
+  showOnlyFavorites = false;
+  folderPath = buildFolderPathById(folderId);
+
+  // Bersihkan search folder saat user masuk ke folder tertentu.
+  folderSearchQuery = '';
+  var folderSearchEl = document.getElementById('folderSearchInput');
+  var folderClearBtn = document.getElementById('folderSearchClear');
+  if (folderSearchEl) folderSearchEl.value = '';
+  if (folderClearBtn) folderClearBtn.style.display = 'none';
 
   renderFolders();
   renderFiles();
@@ -1335,6 +1409,25 @@ function clearSearch() {
   resetFolderUI();
   renderFolders();
   renderFiles();
+}
+
+function filterFoldersOnly() {
+  const input = document.getElementById('folderSearchInput');
+  const btn = document.getElementById('folderSearchClear');
+  folderSearchQuery = input ? input.value.trim().toLowerCase() : '';
+  if (btn) btn.style.display = folderSearchQuery ? 'flex' : 'none';
+  isFolderExpanded = true;
+  renderFolders();
+}
+
+function clearFolderSearch() {
+  folderSearchQuery = '';
+  const input = document.getElementById('folderSearchInput');
+  const btn = document.getElementById('folderSearchClear');
+  if (input) input.value = '';
+  if (btn) btn.style.display = 'none';
+  isFolderExpanded = false;
+  renderFolders();
 }
 
 function filterFiles() {
@@ -2004,15 +2097,17 @@ async function deleteFile() {
 /* ── STORAGE NOTIFICATION CHECK ── */
 function checkStorageNotif(usedBytes) {
   const s = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');
-  if (s.inApp === false) return;
+  if (s.inApp === false) { updateNotificationBadge(); return; }
 
   const threshold = s.threshold || 80;
-  const totalBytes = 1024 * 1024 * 1024;
+  const totalBytes = MAX_STORAGE_BYTES;
   const pct = (usedBytes / totalBytes) * 100;
 
   const lastShown = parseInt(localStorage.getItem('myStorageNotifLastShown') || '0');
   const now = Date.now();
   const ONE_HOUR = 60 * 60 * 1000;
+
+  updateNotificationBadge();
 
   // Jangan spam — tampilkan maks sekali per jam
   if (now - lastShown < ONE_HOUR) return;
@@ -2024,6 +2119,126 @@ function checkStorageNotif(usedBytes) {
     showToast('⚠️ Storage mencapai ' + pct.toFixed(0) + '% (batas: ' + threshold + '%)');
     localStorage.setItem('myStorageNotifLastShown', now.toString());
   }
+}
+
+function buildNotificationItems() {
+  const items = [];
+  const settings = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');
+  const threshold = settings.threshold || 80;
+  const usedBytes = calcTotalUsedBytes();
+  const pct = (usedBytes / MAX_STORAGE_BYTES) * 100;
+  const remaining = Math.max(0, MAX_STORAGE_BYTES - usedBytes);
+
+  if (pct >= 90 && settings.critical !== false) {
+    items.push({
+      type: 'danger',
+      icon: 'ti-alert-triangle',
+      title: 'Storage hampir penuh',
+      desc: pct.toFixed(0) + '% terpakai. Sisa ' + formatFileSizeFromBytes(remaining) + '.',
+      action: 'Hapus file yang tidak perlu atau pindahkan ke tempat lain.'
+    });
+  } else if (pct >= threshold && settings.inApp !== false) {
+    items.push({
+      type: 'warn',
+      icon: 'ti-alert-circle',
+      title: 'Storage melewati batas peringatan',
+      desc: pct.toFixed(0) + '% terpakai dari 1 GB.',
+      action: 'Batas peringatan kamu: ' + threshold + '%.'
+    });
+  }
+
+  const todayKey = new Date().toISOString().split('T')[0];
+  const uploadedToday = allFiles.filter(function(file) {
+    return file.created_at && file.created_at.split('T')[0] === todayKey;
+  }).length;
+  if (uploadedToday > 0) {
+    items.push({
+      type: 'info',
+      icon: 'ti-cloud-upload',
+      title: uploadedToday + ' file diupload hari ini',
+      desc: 'Aktivitas upload terbaru sudah masuk ke storage.',
+      action: 'Total storage sekarang ' + formatFileSizeFromBytes(usedBytes) + '.'
+    });
+  }
+
+  const now = Date.now();
+  const expiringShared = JSON.parse(localStorage.getItem('myStorageShared') || '[]').filter(function(link) {
+    const left = (link.createdAt + 7 * 24 * 60 * 60 * 1000) - now;
+    return left > 0 && left <= 24 * 60 * 60 * 1000;
+  }).length;
+  if (expiringShared > 0) {
+    items.push({
+      type: 'warn',
+      icon: 'ti-link',
+      title: expiringShared + ' link hampir expired',
+      desc: 'Link share akan habis dalam 24 jam.',
+      action: 'Buka menu Dibagikan untuk mengecek link.'
+    });
+  }
+
+  if (hasLoadedInitialData && allFiles.length === 0) {
+    items.push({
+      type: 'info',
+      icon: 'ti-cloud-upload',
+      title: 'Belum ada file',
+      desc: 'Upload file pertama untuk mulai memakai storage.',
+      action: 'Klik tombol Upload di kanan atas.'
+    });
+  }
+
+  return items;
+}
+
+function ensureNotificationPanel() {
+  if (document.getElementById('notificationPanel')) return;
+  const panel = document.createElement('div');
+  panel.id = 'notificationPanel';
+  panel.style.cssText = 'position:fixed;right:72px;top:62px;z-index:9999;width:min(360px,calc(100vw - 28px));background:var(--white);border:1px solid var(--border-2);border-radius:18px;box-shadow:var(--shadow-lg);padding:12px;display:none;color:var(--ink-2);';
+  panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:14px">Notifikasi</strong><button type="button" data-action="close-notifications" style="border:0;background:transparent;color:var(--ink-4);cursor:pointer;font-size:18px;line-height:1">&times;</button></div><div id="notificationList"></div>';
+  document.body.appendChild(panel);
+}
+
+function renderNotificationPanel() {
+  ensureNotificationPanel();
+  const list = document.getElementById('notificationList');
+  const items = buildNotificationItems();
+  if (!list) return;
+
+  if (items.length === 0) {
+    const usedBytes = calcTotalUsedBytes();
+    list.innerHTML = '<div style="padding:18px 10px;text-align:center;color:var(--ink-4)"><i class="ti ti-bell-check" style="font-size:28px;color:var(--green);display:block;margin-bottom:8px"></i><div style="font-weight:600;color:var(--ink-2);margin-bottom:3px">Tidak ada peringatan</div><div style="font-size:12px;line-height:1.45">Storage aman. Terpakai ' + formatFileSizeFromBytes(usedBytes) + ' dari 1 GB.</div></div>';
+    return;
+  }
+
+  list.innerHTML = items.map(function(item) {
+    const color = item.type === 'danger' ? '#c0392b' : item.type === 'warn' ? '#92400e' : '#1d4ed8';
+    const bg = item.type === 'danger' ? 'rgba(192,57,43,0.08)' : item.type === 'warn' ? 'rgba(146,64,14,0.08)' : 'rgba(29,78,216,0.08)';
+    return '<div style="display:flex;gap:10px;padding:10px;border-radius:14px;background:' + bg + ';margin-bottom:8px;border:1px solid rgba(15,14,13,0.06)">' +
+      '<div style="width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ' + item.icon + '" style="color:' + color + ';font-size:17px"></i></div>' +
+      '<div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px">' + escapeHtml(item.title) + '</div>' +
+      '<div style="font-size:12px;color:var(--ink-4);line-height:1.4">' + escapeHtml(item.desc) + '</div>' +
+      '<div style="font-size:11px;color:' + color + ';margin-top:5px;font-weight:600">' + escapeHtml(item.action) + '</div></div></div>';
+  }).join('');
+}
+
+function updateNotificationBadge() {
+  const dot = document.querySelector('.notif-dot');
+  const items = buildNotificationItems();
+  if (dot) dot.style.display = items.length > 0 ? 'block' : 'none';
+  const btn = document.querySelector('[data-action="show-empty-notif"]');
+  if (btn) btn.title = items.length > 0 ? (items.length + ' notifikasi') : 'Tidak ada peringatan';
+}
+
+function toggleNotifications() {
+  renderNotificationPanel();
+  const panel = document.getElementById('notificationPanel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+}
+
+function closeNotifications() {
+  const panel = document.getElementById('notificationPanel');
+  if (panel) panel.style.display = 'none';
 }
 
 /* ── TOAST ── */
@@ -2078,32 +2293,10 @@ async function uploadFile() {
   const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
 
-  // ── Validasi ukuran file ──
-  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB per file
-  const MAX_TOTAL_SIZE = 1024 * 1024 * 1024; // 1 GB total storage
-
-  // Hitung sisa storage yang tersedia berdasarkan size_bytes jika tersedia.
-  const usedBytes = calcTotalUsedBytes();
-  const remainingBytes = MAX_TOTAL_SIZE - usedBytes;
-
-  // Cek setiap file
-  let tooBigFiles = [];
-  let totalNewBytes = 0;
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i];
-    totalNewBytes += f.size;
-    if (f.size > MAX_FILE_SIZE) {
-      tooBigFiles.push(f.name + ' (' + (f.size / (1024*1024)).toFixed(1) + ' MB)');
-    }
-  }
-  if (tooBigFiles.length > 0) {
-    showToast('File terlalu besar (maks 100 MB): ' + tooBigFiles[0]);
-    return;
-  }
-  if (totalNewBytes > remainingBytes) {
-    const remMB = (remainingBytes / (1024*1024)).toFixed(0);
-    const newMB = (totalNewBytes / (1024*1024)).toFixed(1);
-    showToast('Storage tidak cukup! Perlu ' + newMB + ' MB, sisa ' + remMB + ' MB.');
+  // ── Validasi quota terbaru dari Supabase ──
+  const quota = await validateUploadQuota(files);
+  if (!quota.ok) {
+    showToast(quota.message);
     return;
   }
 
@@ -2215,7 +2408,7 @@ async function uploadFile() {
 function handleFileSelect(input) {
   droppedFiles = null;
   const filesArr = Array.from(input.files);
-  const MAX_FILE_SIZE = 100 * 1024 * 1024;
+  const MAX_FILE_SIZE = MAX_UPLOAD_FILE_BYTES;
   const el = document.getElementById('selectedFiles');
 
   const warnings = filesArr.filter(function(f) { return f.size > MAX_FILE_SIZE; });
@@ -2413,6 +2606,12 @@ async function uploadFolderFiles() {
     return;
   }
 
+  const quota = await validateUploadQuota(filesArr);
+  if (!quota.ok) {
+    showToast(quota.message);
+    return;
+  }
+
   var destId = document.getElementById('folderDestSelect').value || null;
   var destObj = allFolders.find(function(f) { return f.id === destId; });
   var destName = destObj ? destObj.name : null;
@@ -2514,7 +2713,12 @@ async function uploadFolderFiles() {
         storage_path: storagePath,
         user_id: userId
       });
-      if (insertErr) { console.error('DB insert error:', insertErr.message); errorMessages.push(fileName + ': ' + insertErr.message); failCount++; }
+      if (insertErr) {
+        console.error('DB insert error:', insertErr.message);
+        errorMessages.push(fileName + ': ' + insertErr.message);
+        await sb.storage.from('user-files').remove([storagePath]);
+        failCount++;
+      }
       else successCount++;
     } catch(e) { console.error('Upload error:', e); errorMessages.push(fileName + ': ' + (e.message || e)); failCount++; }
   }
@@ -3073,8 +3277,10 @@ function initStaticActionBindings() {
     if (action === 'toggle-sidebar') { toggleSidebar(); return; }
     if (action === 'go-root') { goToRoot(); return; }
     if (action === 'clear-search') { clearSearch(); return; }
+    if (action === 'clear-folder-search') { clearFolderSearch(); return; }
+    if (action === 'close-notifications') { closeNotifications(); return; }
     if (action === 'toggle-night-mode') { NightMode.toggle(); updateNmBtn(); return; }
-    if (action === 'show-empty-notif') { showToast('Belum ada notifikasi'); return; }
+    if (action === 'show-empty-notif') { toggleNotifications(); return; }
     if (action === 'refresh-data') { await loadAll({ showFloating: true }); showToast('Data diperbarui'); return; }
     if (action === 'open-upload') { openModal(); return; }
     if (action === 'new-folder') { addFolder(); return; }
@@ -3134,6 +3340,7 @@ function initStaticActionBindings() {
   document.addEventListener('input', function(e) {
     var el = e.target;
     if (el && el.dataset && el.dataset.action === 'search-files') { filterFiles(); toggleClearBtn(); }
+    if (el && el.dataset && el.dataset.action === 'search-folders') { filterFoldersOnly(); }
   });
 
   document.addEventListener('change', function(e) {
