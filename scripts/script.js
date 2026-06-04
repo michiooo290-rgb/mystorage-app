@@ -162,7 +162,8 @@ let selectedFileIds = new Set();
 let isSelectMode = false;
 let showOnlyFavorites = false;
 let userInitials = 'US';
-let sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]'); // [{id, name, url, createdAt, folder}]
+let sharedLinks = []; // Diisi dari Supabase shared_links, fallback dari localStorage lama jika tabel belum ada
+let activityLogs = [];
 let hasLoadedInitialData = false;
 let isInitialDataLoading = true;
 
@@ -452,6 +453,133 @@ function clearAppError() {
   if (box) box.style.display = 'none';
 }
 
+
+/* ── PUBLIC SHARE + ACTIVITY LOG HELPERS ── */
+function generateShareToken() {
+  try {
+    var bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+  } catch (e) {
+    return String(Date.now()) + '_' + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  }
+}
+
+function buildPublicShareUrl(token) {
+  return window.location.origin + '/pages/share.html?token=' + encodeURIComponent(token);
+}
+
+function normalizeSharedRow(row) {
+  var file = row.files || row.file || {};
+  var createdAt = row.created_at ? new Date(row.created_at).getTime() : Date.now();
+  var expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : createdAt + 7 * 24 * 60 * 60 * 1000;
+  var token = row.token || '';
+  return {
+    fileId: String(row.file_id || (file && file.id) || ''),
+    sharedId: row.id || null,
+    token: token,
+    name: file.name || row.file_name || 'File',
+    url: token ? buildPublicShareUrl(token) : (row.public_url || row.signed_url || ''),
+    type: file.type || row.file_type || 'doc',
+    folder: file.folder_name || row.folder_name || '',
+    createdAt: createdAt,
+    expiresAt: expiresAt,
+    revokedAt: row.revoked_at || null,
+    accessCount: row.access_count || 0,
+    lastAccessedAt: row.last_accessed_at || null
+  };
+}
+
+async function loadSharedLinks() {
+  var nowIso = new Date().toISOString();
+  try {
+    const { data, error } = await sb
+      .from('shared_links')
+      .select('id, token, file_id, expires_at, revoked_at, created_at, access_count, last_accessed_at, files(id,name,type,folder_name,size)')
+      .is('revoked_at', null)
+      .gt('expires_at', nowIso)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    sharedLinks = (data || []).map(normalizeSharedRow);
+    localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+    return sharedLinks;
+  } catch (err) {
+    console.warn('Gagal load shared_links dari Supabase, pakai cache lokal:', err && err.message ? err.message : err);
+    var cached = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
+    var now = Date.now();
+    sharedLinks = cached.filter(function(s) {
+      var exp = s.expiresAt || (s.createdAt + 7 * 24 * 60 * 60 * 1000);
+      return exp > now && !s.revokedAt;
+    });
+    return sharedLinks;
+  }
+}
+
+function getActivityMeta(action) {
+  var map = {
+    upload_file:       { icon: 'ti-cloud-upload', color: '#2d6a4f', label: 'Upload file' },
+    upload_folder:     { icon: 'ti-folder-up', color: '#2d6a4f', label: 'Upload folder' },
+    rename_file:       { icon: 'ti-edit', color: '#1d4ed8', label: 'Rename file' },
+    move_file:         { icon: 'ti-folder-symlink', color: '#0369a1', label: 'Pindah file' },
+    delete_file:       { icon: 'ti-trash', color: '#c0392b', label: 'Hapus file' },
+    share_file:        { icon: 'ti-share', color: '#c8602a', label: 'Bagikan file' },
+    revoke_share:      { icon: 'ti-link-off', color: '#c0392b', label: 'Cabut link' },
+    create_folder:     { icon: 'ti-folder-plus', color: '#2d6a4f', label: 'Buat folder' },
+    delete_folder:     { icon: 'ti-folder-x', color: '#c0392b', label: 'Hapus folder' },
+    favorite_file:     { icon: 'ti-star', color: '#f59e0b', label: 'Favorit' },
+    unfavorite_file:   { icon: 'ti-star-off', color: '#92400e', label: 'Hapus favorit' }
+  };
+  return map[action] || { icon: 'ti-activity', color: '#1d4ed8', label: action || 'Aktivitas' };
+}
+
+function formatActivityTime(iso) {
+  if (!iso) return 'baru saja';
+  var diff = Date.now() - new Date(iso).getTime();
+  if (!isFinite(diff) || diff < 0) return 'baru saja';
+  var min = Math.floor(diff / 60000);
+  if (min < 1) return 'baru saja';
+  if (min < 60) return min + ' menit lalu';
+  var h = Math.floor(min / 60);
+  if (h < 24) return h + ' jam lalu';
+  return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+}
+
+async function loadActivityLogs() {
+  try {
+    const { data, error } = await sb
+      .from('activity_logs')
+      .select('id, action, file_id, file_name, details, created_at')
+      .order('created_at', { ascending: false })
+      .limit(12);
+    if (error) throw error;
+    activityLogs = data || [];
+  } catch (err) {
+    console.warn('Gagal load activity_logs:', err && err.message ? err.message : err);
+    activityLogs = JSON.parse(localStorage.getItem('myStorageActivityCache') || '[]');
+  }
+  return activityLogs;
+}
+
+async function logActivity(action, file, details) {
+  var item = {
+    action: action,
+    file_id: file && file.id ? file.id : null,
+    file_name: file && file.name ? file.name : (details && details.file_name ? details.file_name : null),
+    details: details || {}
+  };
+  try {
+    const { error } = await sb.from('activity_logs').insert(item);
+    if (error) throw error;
+  } catch (err) {
+    // Fallback lokal supaya UI tetap punya riwayat walaupun SQL belum dijalankan.
+    var cache = JSON.parse(localStorage.getItem('myStorageActivityCache') || '[]');
+    cache.unshift(Object.assign({ id: 'local_' + Date.now(), created_at: new Date().toISOString() }, item));
+    cache = cache.slice(0, 20);
+    localStorage.setItem('myStorageActivityCache', JSON.stringify(cache));
+  }
+  try { await loadActivityLogs(); updateNotificationBadge(); } catch(e) {}
+}
+
 /* ── LOAD DATA ── */
 async function loadAll(options) {
   options = options || {};
@@ -467,10 +595,13 @@ async function loadAll(options) {
   try {
     await loadFolders();  // harus duluan agar folder tersedia saat migrasi file
     await loadFiles();
+    await loadSharedLinks();
+    await loadActivityLogs();
     hasLoadedInitialData = true;
     isInitialDataLoading = false;
     renderStats();
     renderFiles();
+    updateNotificationBadge();
   } catch (err) {
     console.error('Load data error:', err);
     hasLoadedInitialData = true;
@@ -529,8 +660,8 @@ function renderStats() {
   const totalFolders = allFolders.filter(function(f) { return !f.parent_id; }).length; // hanya root folder
   const favCount = allFiles.filter(f => getFavs().includes(String(f.id))).length;
 
-  const sharedCount = JSON.parse(localStorage.getItem('myStorageShared') || '[]').filter(function(s) {
-    return Date.now() - s.createdAt < 7 * 24 * 60 * 60 * 1000;
+  const sharedCount = (sharedLinks || []).filter(function(s) {
+    return !s.revokedAt && (s.expiresAt || (s.createdAt + 7 * 24 * 60 * 60 * 1000)) > Date.now();
   }).length;
 
   document.getElementById('statFiles').textContent = totalFiles;
@@ -1267,6 +1398,7 @@ function openFile(id) {
   if (!file) return;
   const path = getFileStoragePath(file);
   const params = new URLSearchParams({
+    id: String(file.id),
     path: path,
     name: file.name,
     type: file.type || 'doc',
@@ -1287,12 +1419,16 @@ function hideSharedPanel() {
   document.getElementById('mainPanel').style.display = '';
 }
 
-function renderShared() {
+async function renderShared() {
   const list = document.getElementById('sharedList');
-  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-  // Hapus yang sudah expired (lebih dari 7 hari)
+  if (!list) return;
+
+  list.innerHTML = '<div class="empty-state"><i class="ti ti-loader-2" style="animation:spin .8s linear infinite"></i><p>Memuat link dibagikan...</p></div>';
+  await loadSharedLinks();
   const now = Date.now();
-  sharedLinks = sharedLinks.filter(function(s) { return now - s.createdAt < 7 * 24 * 60 * 60 * 1000; });
+  sharedLinks = (sharedLinks || []).filter(function(s) {
+    return !s.revokedAt && (s.expiresAt || (s.createdAt + 7 * 24 * 60 * 60 * 1000)) > now;
+  });
   localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
 
   if (document.getElementById('sharedCount')) document.getElementById('sharedCount').textContent = sharedLinks.length;
@@ -1316,10 +1452,11 @@ function renderShared() {
 
   list.innerHTML = sharedLinks.map(function(s, i) {
     const iconInfo = FILE_ICONS_LOCAL[s.type] || FILE_ICONS_LOCAL['doc'];
-    const created = new Date(s.createdAt);
-    const expiry  = new Date(s.createdAt + 7 * 24 * 60 * 60 * 1000);
+    const created = new Date(s.createdAt || Date.now());
+    const expiry  = new Date(s.expiresAt || (s.createdAt + 7 * 24 * 60 * 60 * 1000));
     const daysLeft = Math.max(0, Math.ceil((expiry - now) / (24 * 60 * 60 * 1000)));
     const dateStr = created.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const accessInfo = s.accessCount ? ' · ' + s.accessCount + 'x dibuka' : '';
 
     return (
       '<div style="background:#fff;border:1px solid rgba(15,14,13,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 4px rgba(15,14,13,0.06)" class="shared-item">' +
@@ -1327,28 +1464,30 @@ function renderShared() {
       '<i class="ti ' + iconInfo.icon + '" style="color:' + iconInfo.color + ';font-size:18px"></i></div>' +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:13px;font-weight:500;color:#0f0e0d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.name) + '</div>' +
-      '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'JetBrains Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span></div>' +
+      '<div style="font-size:10.5px;color:#9a9693;margin-top:3px;font-family:\'JetBrains Mono\',monospace">Dibagikan ' + dateStr + ' · <span style="color:' + (daysLeft <= 1 ? '#c0392b' : '#92400e') + '">' + daysLeft + ' hari tersisa</span>' + accessInfo + '</div>' +
+      '<div style="font-size:11px;color:#9a9693;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(s.url || '') + '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;flex-shrink:0">' +
       '<button data-action="copy-shared" data-index="' + i + '" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s">' +
       '<i class="ti ti-copy" style="font-size:13px"></i>Salin</button>' +
+      '<a href="' + escapeAttr(s.url || '#') + '" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:#f7f5f2;border:1px solid rgba(15,14,13,0.14);border-radius:8px;color:#5a5754;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none">' +
+      '<i class="ti ti-external-link" style="font-size:13px"></i>Buka</a>' +
       '<button data-action="remove-shared" data-index="' + i + '" style="display:flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.15);border-radius:8px;color:#c0392b;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s">' +
-      '<i class="ti ti-trash" style="font-size:13px"></i>Hapus</button>' +
+      '<i class="ti ti-link-off" style="font-size:13px"></i>Cabut</button>' +
       '</div></div>'
     );
   }).join('');
 }
 
 function copySharedLink(idx) {
-  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-  const s = sharedLinks[parseInt(idx)];
+  const s = sharedLinks[parseInt(idx, 10)];
   if (!s) return;
   try {
     navigator.clipboard.writeText(s.url);
-    showToast('Link berhasil disalin!');
+    showToast('Link publik berhasil disalin!');
   } catch {
     customPrompt({
-      title: 'Salin Link',
+      title: 'Salin Link Publik',
       message: 'Salin link berikut secara manual:',
       defaultValue: s.url,
       icon: 'ti-link',
@@ -1359,20 +1498,28 @@ function copySharedLink(idx) {
 }
 
 async function removeSharedLink(idx) {
-  sharedLinks = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-  var removed = sharedLinks.splice(parseInt(idx), 1)[0];
-  localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+  const removed = sharedLinks[parseInt(idx, 10)];
+  if (!removed) return;
+  const ok = await customConfirm({
+    title: 'Cabut Link',
+    message: 'Link publik untuk "' + removed.name + '" akan dinonaktifkan. Lanjutkan?',
+    icon: 'ti-link-off',
+    confirmText: 'Ya, Cabut',
+    confirmBtnClass: 'danger'
+  });
+  if (!ok) return;
 
-  if (removed && removed.sharedId) {
-    try {
-      await sb.from('shared_links').update({ revoked_at: new Date().toISOString() }).eq('id', removed.sharedId);
-    } catch (e) {
-      console.warn('Gagal menandai shared link sebagai revoked:', e && e.message ? e.message : e);
-    }
+  if (removed.sharedId) {
+    const { error } = await sb.from('shared_links').update({ revoked_at: new Date().toISOString() }).eq('id', removed.sharedId);
+    if (error) { showToast('Gagal mencabut link: ' + error.message); return; }
   }
 
-  showToast('Link dihapus dari daftar. Signed URL lama tetap aktif sampai expired.');
-  renderShared();
+  sharedLinks = sharedLinks.filter(function(_, i) { return i !== parseInt(idx, 10); });
+  localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+  await logActivity('revoke_share', { id: removed.fileId, name: removed.name }, { shared_id: removed.sharedId, token: removed.token });
+  showToast('Link publik berhasil dicabut.');
+  await renderShared();
+  renderStats();
 }
 
 /* ── FILTER & SEARCH ── */
@@ -1835,55 +1982,69 @@ async function shareFile() {
   const file = allFiles.find(function(f) { return String(f.id) === ctxTarget; });
   if (!file) return;
   document.getElementById('ctxMenu').classList.remove('show');
-  const path = getFileStoragePath(file);
-  const { data, error } = await sb.storage.from('user-files').createSignedUrl(path, 604800);
-  if (error) { showToast('Gagal membuat link: ' + error.message); return; }
 
-  // Simpan ke localStorage untuk panel Dibagikan
-  let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-  // Hindari duplikat berdasarkan file id
-  saved = saved.filter(function(s) { return s.fileId !== String(file.id); });
-  let sharedRowId = null;
+  const path = getFileStoragePath(file);
+  const token = generateShareToken();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  let sharedRow = null;
+
   try {
     const userId = await getCurrentUserId();
-    const { data: sharedRow, error: sharedInsertError } = await sb
+
+    // Cabut link aktif lama untuk file yang sama agar satu file hanya punya satu link aktif terbaru.
+    await sb
+      .from('shared_links')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('file_id', file.id)
+      .eq('user_id', userId)
+      .is('revoked_at', null);
+
+    const { data, error } = await sb
       .from('shared_links')
       .insert({
+        token: token,
         file_id: file.id,
         user_id: userId,
-        signed_url: data.signedUrl,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        expires_at: expiresAt,
+        file_name: file.name,
+        file_type: file.type || 'doc',
+        folder_name: file.folder_name || null,
+        storage_path_snapshot: path
       })
-      .select('id')
+      .select('id, token, file_id, expires_at, revoked_at, created_at, access_count, last_accessed_at, files(id,name,type,folder_name,size)')
       .single();
-    if (!sharedInsertError && sharedRow) sharedRowId = sharedRow.id;
+
+    if (error) throw error;
+    sharedRow = data;
   } catch (e) {
-    // shared_links bersifat opsional. Jika tabel belum dibuat, fitur share tetap memakai signed URL.
-    console.warn('shared_links metadata tidak tersimpan:', e && e.message ? e.message : e);
+    showToast('Gagal membuat public share link: ' + (e.message || e));
+    return;
   }
 
-  saved.unshift({ fileId: String(file.id), sharedId: sharedRowId, name: file.name, url: data.signedUrl, type: file.type || 'doc', folder: file.folder_name || '', createdAt: Date.now() });
-  if (saved.length > 50) saved = saved.slice(0, 50);
-  localStorage.setItem('myStorageShared', JSON.stringify(saved));
-
-  // Update badge
-  var bSh = document.getElementById('badgeShared');
-  if (bSh) { if (saved.length > 0) { bSh.textContent = saved.length; bSh.style.display = 'inline-block'; } else { bSh.style.display = 'none'; } }
-  if (document.getElementById('statShared')) document.getElementById('statShared').textContent = saved.length;
+  const item = normalizeSharedRow(sharedRow);
+  sharedLinks = sharedLinks.filter(function(s) { return s.fileId !== String(file.id); });
+  sharedLinks.unshift(item);
+  localStorage.setItem('myStorageShared', JSON.stringify(sharedLinks));
+  await logActivity('share_file', file, { shared_id: item.sharedId, token: item.token, expires_at: expiresAt });
 
   try {
-    await navigator.clipboard.writeText(data.signedUrl);
-    showToast('Link berhasil disalin ke clipboard!');
-  } catch (clipErr) {
+    await navigator.clipboard.writeText(item.url);
+    showToast('Link publik berhasil dibuat dan disalin!');
+  } catch {
     customPrompt({
-      title: 'Salin Link Berbagi',
-      message: 'Salin link berikut secara manual (Ctrl+C):',
-      defaultValue: data.signedUrl,
+      title: 'Link Publik',
+      message: 'Salin link berikut secara manual:',
+      defaultValue: item.url,
       icon: 'ti-link',
       iconClass: 'prompt',
       confirmText: 'Tutup'
     });
-    showToast('Salin link dari dialog ya!');
+    showToast('Link publik berhasil dibuat!');
+  }
+
+  renderStats();
+  if (document.getElementById('sharedPanel') && document.getElementById('sharedPanel').style.display !== 'none') {
+    await renderShared();
   }
 }
 
@@ -1917,6 +2078,7 @@ async function renameFile() {
   const { error: dbErr } = await sb.from('files').update({ name: newName.trim(), storage_path: newPath }).eq('id', file.id);
   if (dbErr) { showToast('Gagal mengubah di Database: ' + dbErr.message); return; }
   showToast('Nama file berhasil diubah!');
+  await logActivity('rename_file', { id: file.id, name: newName.trim() }, { old_name: file.name, new_name: newName.trim() });
   await loadFiles();
   renderStats();
 }
@@ -1993,6 +2155,7 @@ async function confirmMoveFile() {
 
   closeMoveModal();
   showToast('File berhasil dipindahkan ke "' + targetFolder + '"!');
+  await logActivity('move_file', file, { folder_id: targetFolderId, folder_name: targetFolder });
   ctxTarget = null;
   if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
   await loadAll();
@@ -2036,6 +2199,8 @@ async function deleteFile() {
   // Hapus dari DB segera (bisa di-restore dengan re-insert, tapi lebih mudah: hapus storage tertunda)
   const { error } = await sb.from('files').delete().eq('id', fileId);
   if (error) { showToast('Gagal hapus: ' + error.message); ctxTarget = null; return; }
+
+  await logActivity('delete_file', file, { storage_path: pathToDelete });
 
   // Hapus dari favs lokal
   let favs = getFavs();
@@ -2162,9 +2327,9 @@ function buildNotificationItems() {
   }
 
   const now = Date.now();
-  const expiringShared = JSON.parse(localStorage.getItem('myStorageShared') || '[]').filter(function(link) {
-    const left = (link.createdAt + 7 * 24 * 60 * 60 * 1000) - now;
-    return left > 0 && left <= 24 * 60 * 60 * 1000;
+  const expiringShared = (sharedLinks || []).filter(function(link) {
+    const left = (link.expiresAt || (link.createdAt + 7 * 24 * 60 * 60 * 1000)) - now;
+    return !link.revokedAt && left > 0 && left <= 24 * 60 * 60 * 1000;
   }).length;
   if (expiringShared > 0) {
     items.push({
@@ -2193,8 +2358,8 @@ function ensureNotificationPanel() {
   if (document.getElementById('notificationPanel')) return;
   const panel = document.createElement('div');
   panel.id = 'notificationPanel';
-  panel.style.cssText = 'position:fixed;right:72px;top:62px;z-index:9999;width:min(360px,calc(100vw - 28px));background:var(--white);border:1px solid var(--border-2);border-radius:18px;box-shadow:var(--shadow-lg);padding:12px;display:none;color:var(--ink-2);';
-  panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:14px">Notifikasi</strong><button type="button" data-action="close-notifications" style="border:0;background:transparent;color:var(--ink-4);cursor:pointer;font-size:18px;line-height:1">&times;</button></div><div id="notificationList"></div>';
+  panel.style.cssText = 'position:fixed;right:72px;top:62px;z-index:9999;width:min(420px,calc(100vw - 28px));max-height:calc(100vh - 84px);overflow:auto;background:var(--white);border:1px solid var(--border-2);border-radius:18px;box-shadow:var(--shadow-lg);padding:12px;display:none;color:var(--ink-2);';
+  panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:14px">Notifikasi & Aktivitas</strong><button type="button" data-action="close-notifications" style="border:0;background:transparent;color:var(--ink-4);cursor:pointer;font-size:18px;line-height:1">&times;</button></div><div id="notificationList"></div><div style="height:1px;background:var(--border);margin:10px 0"></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:13px">Aktivitas terbaru</strong><button type="button" data-action="refresh-activity" style="border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:12px;font-weight:600">Refresh</button></div><div id="activityList"></div>';
   document.body.appendChild(panel);
 }
 
@@ -2207,6 +2372,7 @@ function renderNotificationPanel() {
   if (items.length === 0) {
     const usedBytes = calcTotalUsedBytes();
     list.innerHTML = '<div style="padding:18px 10px;text-align:center;color:var(--ink-4)"><i class="ti ti-bell-check" style="font-size:28px;color:var(--green);display:block;margin-bottom:8px"></i><div style="font-weight:600;color:var(--ink-2);margin-bottom:3px">Tidak ada peringatan</div><div style="font-size:12px;line-height:1.45">Storage aman. Terpakai ' + formatFileSizeFromBytes(usedBytes) + ' dari 1 GB.</div></div>';
+    renderActivityList();
     return;
   }
 
@@ -2219,6 +2385,27 @@ function renderNotificationPanel() {
       '<div style="font-size:12px;color:var(--ink-4);line-height:1.4">' + escapeHtml(item.desc) + '</div>' +
       '<div style="font-size:11px;color:' + color + ';margin-top:5px;font-weight:600">' + escapeHtml(item.action) + '</div></div></div>';
   }).join('');
+  renderActivityList();
+}
+
+
+function renderActivityList() {
+  const list = document.getElementById('activityList');
+  if (!list) return;
+  const logs = activityLogs || [];
+  if (logs.length === 0) {
+    list.innerHTML = '<div style="padding:14px 10px;text-align:center;color:var(--ink-4);font-size:12px"><i class="ti ti-activity" style="font-size:24px;display:block;margin-bottom:6px;color:var(--ink-5)"></i>Belum ada aktivitas.</div>';
+    return;
+  }
+  list.innerHTML = logs.slice(0, 8).map(function(log) {
+    var meta = getActivityMeta(log.action);
+    var name = log.file_name || (log.details && log.details.folder_name) || 'Item';
+    return '<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--border)">' +
+      '<div style="width:30px;height:30px;border-radius:10px;background:rgba(15,14,13,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ' + meta.icon + '" style="font-size:16px;color:' + meta.color + '"></i></div>' +
+      '<div style="min-width:0;flex:1"><div style="font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(meta.label) + '</div>' +
+      '<div style="font-size:12px;color:var(--ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(name) + '</div>' +
+      '<div style="font-size:10.5px;color:var(--ink-5);margin-top:2px;font-family:\'JetBrains Mono\',monospace">' + escapeHtml(formatActivityTime(log.created_at)) + '</div></div></div>';
+  }).join('');
 }
 
 function updateNotificationBadge() {
@@ -2229,7 +2416,8 @@ function updateNotificationBadge() {
   if (btn) btn.title = items.length > 0 ? (items.length + ' notifikasi') : 'Tidak ada peringatan';
 }
 
-function toggleNotifications() {
+async function toggleNotifications() {
+  await loadActivityLogs();
   renderNotificationPanel();
   const panel = document.getElementById('notificationPanel');
   if (!panel) return;
@@ -2372,7 +2560,10 @@ async function uploadFile() {
       await sb.storage.from('user-files').remove([filePath]);
       failCount++;
     }
-    else successCount++;
+    else {
+      successCount++;
+      await logActivity('upload_file', { name: file.name }, { folder_id: folderId || null, folder_name: folder, size_bytes: file.size, storage_path: filePath });
+    }
   }
 
   // Progress selesai / error
@@ -2719,7 +2910,10 @@ async function uploadFolderFiles() {
         await sb.storage.from('user-files').remove([storagePath]);
         failCount++;
       }
-      else successCount++;
+      else {
+        successCount++;
+        await logActivity('upload_folder', { name: fileName }, { folder_id: targetFolderId || null, folder_name: targetFolderName, size_bytes: file.size, storage_path: storagePath });
+      }
     } catch(e) { console.error('Upload error:', e); errorMessages.push(fileName + ': ' + (e.message || e)); failCount++; }
   }
 
@@ -2858,7 +3052,10 @@ async function folderCardDrop(e, el) {
         type: type, size: sizeStr, size_bytes: file.size, icon: iconInfo.icon, icon_color: iconInfo.iconColor,
         icon_bg: iconInfo.iconBg, storage_path: storagePath, user_id: userId
       });
-      if (insertErr) { console.error('Drop insert error:', insertErr.message); failCount++; } else successCount++;
+      if (insertErr) { console.error('Drop insert error:', insertErr.message); failCount++; } else {
+        successCount++;
+        await logActivity('upload_file', { name: file.name }, { folder_id: targetFolderId, folder_name: targetFolderName, size_bytes: file.size, storage_path: storagePath });
+      }
     } catch(e2) { failCount++; }
   }
 
@@ -3279,6 +3476,7 @@ function initStaticActionBindings() {
     if (action === 'clear-search') { clearSearch(); return; }
     if (action === 'clear-folder-search') { clearFolderSearch(); return; }
     if (action === 'close-notifications') { closeNotifications(); return; }
+    if (action === 'refresh-activity') { await loadActivityLogs(); renderActivityList(); return; }
     if (action === 'toggle-night-mode') { NightMode.toggle(); updateNmBtn(); return; }
     if (action === 'show-empty-notif') { toggleNotifications(); return; }
     if (action === 'refresh-data') { await loadAll({ showFloating: true }); showToast('Data diperbarui'); return; }

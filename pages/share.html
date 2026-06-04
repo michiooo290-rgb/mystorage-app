@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MyStorage — Shared File</title>
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <link rel="stylesheet" href="../styles/nightmode.css"/>
+  <script src="../scripts/theme-boot.js"></script>
+  <script src="../scripts/nightmode.js"></script>
+  <style>
+    :root{--ink:#0f0e0d;--ink-2:#2a2825;--ink-3:#5a5754;--ink-4:#9a9693;--ink-5:#c8c4c0;--paper:#f7f5f2;--paper-2:#efece8;--paper-3:#e8e4df;--white:#fdfcfb;--border:rgba(15,14,13,.08);--border-2:rgba(15,14,13,.14);--accent:#c8602a;--accent-2:#a84e20;--green:#2d6a4f;--red:#c0392b;--shadow-lg:0 12px 40px rgba(15,14,13,.12);--radius:14px;--radius-lg:20px}
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:Inter,Outfit,sans-serif;background:var(--paper);color:var(--ink-2);min-height:100vh;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased} body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");opacity:.022;pointer-events:none;z-index:0}.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;display:flex;align-items:center;gap:14px;padding:0 22px;background:var(--ink);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 2px 12px rgba(0,0,0,.08)}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}.brand img{width:34px;height:34px;object-fit:contain}.brand span{font-family:Outfit,sans-serif;font-weight:700;font-size:16px}.file-info{min-width:0;flex:1;border-left:1px solid rgba(255,255,255,.14);padding-left:14px}.file-title{font-family:Outfit,sans-serif;color:rgba(255,255,255,.92);font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-meta{font-size:11px;color:rgba(255,255,255,.46);margin-top:2px;font-family:JetBrains Mono,monospace}.top-actions{display:flex;gap:8px;align-items:center}.btn{display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:rgba(255,255,255,.86);font:600 13px Outfit,sans-serif;cursor:pointer;text-decoration:none}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn:hover{transform:translateY(-1px)}.viewer-wrap{position:relative;z-index:1;margin-top:64px;height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:24px}.loading-state,.error-state,.generic-viewer{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;color:var(--ink-4);max-width:560px}.spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--paper-3);border-top-color:var(--accent);animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.error-state i{font-size:52px;color:#d98378}.error-state h3,.generic-viewer h3{font-family:Outfit,sans-serif;color:var(--ink);font-size:22px}.error-state p,.generic-viewer p{font-size:14px;line-height:1.6}.pdf-viewer{width:100%;height:100%;border:0;border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-lg)}.img-viewer-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.img-viewer-wrap img{max-width:100%;max-height:100%;border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);object-fit:contain}.video-viewer-wrap video{max-width:min(1100px,100%);max-height:calc(100vh - 140px);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);background:#000}.audio-viewer-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:34px;min-width:min(520px,90vw);text-align:center}.audio-icon-big,.generic-icon-box{width:82px;height:82px;border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}.audio-icon-big{background:rgba(200,96,42,.08);color:var(--accent);font-size:38px}.audio-name{font:700 18px Outfit,sans-serif;margin-bottom:18px}.generic-viewer{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);padding:34px}.generic-icon-box i{font-size:38px}.ext-badge{font:600 11px JetBrains Mono,monospace;color:var(--accent);background:rgba(200,96,42,.08);border-radius:99px;padding:5px 10px}.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px);z-index:9999;display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:12px;background:var(--ink);color:#fff;box-shadow:0 10px 30px rgba(0,0,0,.22);font-size:13px;opacity:0;pointer-events:none;transition:.25s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:720px){.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:12px}.file-info{order:3;flex-basis:100%;border-left:0;padding-left:0}.viewer-wrap{margin-top:94px;height:calc(100vh - 94px);padding:14px}.btn span{display:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../Storage-dashboard.html">
+      <img src="../assets/logo.png" alt="MyStorage">
+      <span>MyStorage</span>
+    </a>
+    <div class="file-info">
+      <div class="file-title" id="fileTitle">Memuat shared file...</div>
+      <div class="file-meta" id="fileMeta">Public share link</div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="btnCopy" type="button"><i class="ti ti-copy"></i><span>Salin Link</span></button>
+      <button class="btn primary" id="btnDownload" type="button"><i class="ti ti-download"></i><span>Download</span></button>
+    </div>
+  </header>
+
+  <main class="viewer-wrap" id="viewerWrap">
+    <div class="loading-state" id="loadingState">
+      <div class="spinner"></div>
+      <h3>Memuat file...</h3>
+      <p>Sedang memeriksa link publik.</p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">
+    <i class="ti ti-check" id="toastIcon" style="font-size:16px;color:#4ade80"></i>
+    <span id="toastMsg">Berhasil!</span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../scripts/supabase-config.js"></script>
+  <script src="../scripts/share-viewer.js"></script>
+</body>
+</html>
