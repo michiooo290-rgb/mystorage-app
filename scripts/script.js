@@ -419,6 +419,123 @@ function formatFileSizeFromBytes(bytes) {
   return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
 }
 
+
+/* ── FOLDER SAFETY HELPERS ── */
+function normalizeFolderName(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ');
+}
+
+function isValidFolderName(name) {
+  var clean = normalizeFolderName(name);
+  if (!clean) return { ok: false, message: 'Nama folder tidak boleh kosong.' };
+  if (clean.length > 80) return { ok: false, message: 'Nama folder maksimal 80 karakter.' };
+  if (/[\\/\x00-\x1F\x7F?%*:|"<>]/.test(clean)) {
+    return { ok: false, message: 'Nama folder tidak boleh memakai karakter: / \\ ? % * : | " < >' };
+  }
+  if (clean === '.' || clean === '..') return { ok: false, message: 'Nama folder tidak valid.' };
+  return { ok: true, name: clean };
+}
+
+function folderNameExistsInParent(name, parentId, excludeFolderId) {
+  var clean = normalizeFolderName(name).toLowerCase();
+  return allFolders.some(function(folder) {
+    return String(folder.id) !== String(excludeFolderId || '') &&
+      (folder.parent_id || null) === (parentId || null) &&
+      normalizeFolderName(folder.name).toLowerCase() === clean;
+  });
+}
+
+function getDescendantFolderIds(folderId) {
+  var ids = [];
+  function walk(parentId) {
+    allFolders
+      .filter(function(folder) { return String(folder.parent_id || '') === String(parentId || ''); })
+      .forEach(function(child) {
+        ids.push(child.id);
+        walk(child.id);
+      });
+  }
+  walk(folderId);
+  return ids;
+}
+
+function getFolderDisplayPath(folderId) {
+  var path = buildFolderPathById(folderId);
+  return path.length ? path.map(function(item) { return item.name; }).join(' / ') : 'Root';
+}
+
+function buildFolderDestinationOptions(excludeFolderId, selectedParentId) {
+  var blocked = [String(excludeFolderId || '')].concat(getDescendantFolderIds(excludeFolderId).map(String));
+  function build(parentId, indent) {
+    return allFolders
+      .filter(function(folder) { return (folder.parent_id || null) === (parentId || null); })
+      .filter(function(folder) { return !blocked.includes(String(folder.id)); })
+      .map(function(folder) {
+        var selected = String(folder.id) === String(selectedParentId || '') ? ' selected' : '';
+        return '<option value="' + escapeAttr(folder.id) + '"' + selected + '>' + indent + escapeHtml(folder.name) + '</option>' +
+          build(folder.id, indent + '　');
+      }).join('');
+  }
+  var rootSelected = !selectedParentId ? ' selected' : '';
+  return '<option value=""' + rootSelected + '>📂 Root / Dashboard</option>' + build(null, '');
+}
+
+function updateFolderLocal(folderId, patch) {
+  var idx = allFolders.findIndex(function(folder) { return String(folder.id) === String(folderId); });
+  if (idx !== -1) allFolders[idx] = Object.assign({}, allFolders[idx], patch);
+}
+
+/* ── DETAILED UPLOAD PROGRESS HELPERS ── */
+function ensureUploadProgressBox(targetId) {
+  var progressBox = document.getElementById('uploadProgressBox');
+  if (!progressBox) {
+    progressBox = document.createElement('div');
+    progressBox.id = 'uploadProgressBox';
+    progressBox.style.cssText = 'margin:12px 0 14px';
+    var target = document.getElementById(targetId || 'selectedFiles') || document.getElementById('selectedFiles') || document.getElementById('selectedFolder');
+    if (target) target.after(progressBox);
+  }
+  return progressBox;
+}
+
+function renderDetailedUploadProgress(box, state) {
+  if (!box) return;
+  var total = Math.max(Number(state.total) || 0, 1);
+  var done = Number(state.done) || 0;
+  var failed = Number(state.failed) || 0;
+  var currentIndex = Math.min(Number(state.currentIndex) || 0, total);
+  var pct = Math.min(100, Math.round(((done + failed) / total) * 100));
+  var rows = (state.items || []).slice(-6).map(function(item) {
+    var color = item.status === 'success' ? 'var(--green)' : item.status === 'error' ? '#c0392b' : item.status === 'skip' ? '#92400e' : 'var(--accent)';
+    var icon = item.status === 'success' ? 'ti-check' : item.status === 'error' ? 'ti-alert-circle' : item.status === 'skip' ? 'ti-circle-minus' : 'ti-loader-2';
+    var spin = item.status === 'uploading' ? 'animation:spin .8s linear infinite' : '';
+    return '<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid rgba(15,14,13,0.06)">' +
+      '<i class="ti ' + icon + '" style="font-size:14px;color:' + color + ';margin-top:1px;' + spin + '"></i>' +
+      '<div style="min-width:0;flex:1"><div style="font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(item.name || 'File') + '</div>' +
+      (item.message ? '<div style="font-size:10.5px;color:var(--ink-4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + escapeHtml(item.message) + '</div>' : '') + '</div></div>';
+  }).join('');
+
+  box.innerHTML =
+    '<div style="border:1px solid var(--border);background:var(--white);border-radius:14px;padding:12px;box-shadow:var(--shadow-xs)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">' +
+        '<div style="min-width:0"><div style="font-size:12.5px;font-weight:700;color:var(--ink)">' + escapeHtml(state.title || 'Upload file') + '</div>' +
+        '<div style="font-size:11px;color:var(--ink-4);margin-top:1px">' + done + ' berhasil · ' + failed + ' gagal · ' + currentIndex + '/' + total + ' diproses</div></div>' +
+        (state.finished ? '' : '<button type="button" data-action="cancel-upload" style="border:1px solid rgba(192,57,43,0.18);background:rgba(192,57,43,0.06);color:#c0392b;border-radius:9px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0">Batal</button>') +
+      '</div>' +
+      '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:7px;overflow:hidden;margin-bottom:7px">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + (failed > 0 ? '#c8602a' : 'var(--accent)') + ';border-radius:99px;transition:width .25s ease"></div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--ink-4);font-family:JetBrains Mono,monospace;margin-bottom:6px"><span>' + pct + '%</span><span>' + escapeHtml(state.currentName || '') + '</span></div>' +
+      '<div style="max-height:178px;overflow:auto">' + rows + '</div>' +
+    '</div>';
+}
+
+function pushUploadProgressItem(state, item) {
+  state.items = state.items || [];
+  state.items.push(item);
+  state.currentName = item.name || '';
+}
+
 function cleanupLegacyAvatarKeys() {
   // Hapus cache avatar lama yang global supaya foto akun A tidak muncul di akun B.
   localStorage.removeItem('myStorageAvatarPhoto');
@@ -546,6 +663,8 @@ function getActivityMeta(action) {
     revoke_share:      { icon: 'ti-link-off', color: '#c0392b', label: 'Cabut link' },
     create_folder:     { icon: 'ti-folder-plus', color: '#2d6a4f', label: 'Buat folder' },
     delete_folder:     { icon: 'ti-folder-x', color: '#c0392b', label: 'Hapus folder' },
+    rename_folder:     { icon: 'ti-folder-cog', color: '#1d4ed8', label: 'Rename folder' },
+    move_folder:       { icon: 'ti-folder-symlink', color: '#0369a1', label: 'Pindah folder' },
     favorite_file:     { icon: 'ti-star', color: '#f59e0b', label: 'Favorit' },
     unfavorite_file:   { icon: 'ti-star-off', color: '#92400e', label: 'Hapus favorit' }
   };
@@ -880,6 +999,16 @@ function renderFolders() {
       'title="' + (isPinned ? 'Lepas pin' : 'Pin ke atas') + '" ' +
       'data-action="folder-pin" data-folder-id="' + safeId + '">' +
       '<i class="ti ' + (isPinned ? 'ti-pin-filled' : 'ti-pin') + '"></i></button>' +
+
+      '<button class="folder-action-btn folder-rename-btn" title="Rename folder" ' +
+      'style="position:absolute;right:70px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" ' +
+      'data-action="folder-rename" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
+      '<i class="ti ti-edit" style="font-size:14px"></i></button>' +
+
+      '<button class="folder-action-btn folder-move-btn" title="Pindah folder" ' +
+      'style="position:absolute;right:39px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" ' +
+      'data-action="folder-move" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
+      '<i class="ti ti-folder-symlink" style="font-size:14px"></i></button>' +
 
       '<button class="folder-delete-btn" title="Hapus folder" ' +
       'data-action="folder-delete" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
@@ -1657,6 +1786,8 @@ function renderFoldersFiltered(search) {
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
       '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-card="1" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
+      '<button class="folder-action-btn folder-rename-btn" title="Rename folder" style="position:absolute;right:70px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" data-action="folder-rename" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-edit" style="font-size:14px"></i></button>' +
+      '<button class="folder-action-btn folder-move-btn" title="Pindah folder" style="position:absolute;right:39px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" data-action="folder-move" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-folder-symlink" style="font-size:14px"></i></button>' +
       '<button class="folder-delete-btn" title="Hapus folder" data-action="folder-delete" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +
@@ -1873,82 +2004,144 @@ function deleteFolderByName(btn) {
   if (fid) deleteFolderById(fid, fname);
 }
 
-/* ── RENAME FOLDER (double click) ── */
-function startFolderRename(folderId, folderName, el) {
-  // Cari elemen SVG text nama folder
-  const svg = el.querySelector('svg');
-  if (!svg) return;
+/* ── RENAME & MOVE FOLDER (safe) ── */
+async function renameFolderById(folderId, folderName) {
+  var folder = allFolders.find(function(f) { return String(f.id) === String(folderId); });
+  if (!folder) { showToast('Folder tidak ditemukan.'); return; }
 
-  // Buat input overlay di atas folder card
-  const rect = el.getBoundingClientRect();
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.value = folderName;
-  input.style.cssText = `
-    position: fixed;
-    left: ${rect.left + 10}px;
-    top: ${rect.top + rect.height * 0.45}px;
-    width: ${Math.min(rect.width - 20, 160)}px;
-    padding: 4px 8px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: 'Outfit', sans-serif;
-    border: 2px solid var(--accent, #c8602a);
-    border-radius: 6px;
-    background: #fff;
-    color: #0f0e0d;
-    z-index: 9999;
-    outline: none;
-    box-shadow: 0 4px 16px rgba(200,96,42,0.25);
-  `;
+  var result = await customPrompt({
+    title: 'Rename Folder',
+    message: 'Masukkan nama baru untuk folder "' + folder.name + '":',
+    defaultValue: folder.name,
+    placeholder: 'Nama folder baru...',
+    icon: 'ti-folder-cog',
+    iconClass: 'prompt',
+    confirmText: 'Ubah Nama'
+  });
+  if (result === null) return;
 
-  document.body.appendChild(input);
-  input.focus();
-  input.select();
+  var valid = isValidFolderName(result);
+  if (!valid.ok) { showToast(valid.message); return; }
+  var newName = valid.name;
+  if (newName.toLowerCase() === normalizeFolderName(folder.name).toLowerCase()) return;
 
-  async function doRename() {
-    const newName = input.value.trim();
-    input.remove();
-
-    if (!newName || newName === folderName) return;
-
-    // Cek duplikat dalam parent yang sama
-    const folder = allFolders.find(function(f) { return f.id === folderId; });
-    const parentId = folder ? (folder.parent_id || null) : null;
-    const siblings = allFolders.filter(function(f) { return (f.parent_id || null) === parentId && f.id !== folderId; });
-    if (siblings.some(function(f) { return f.name.toLowerCase() === newName.toLowerCase(); })) {
-      showToast('Nama folder "' + newName + '" sudah ada!');
-      return;
-    }
-
-    showToast('Mengubah nama folder...');
-    const { error } = await sb.from('folders').update({ name: newName }).eq('id', folderId);
-    if (error) { showToast('Gagal rename: ' + error.message); return; }
-
-    // Update nama di allFolders lokal
-    const idx = allFolders.findIndex(function(f) { return f.id === folderId; });
-    if (idx !== -1) allFolders[idx].name = newName;
-
-    // Update breadcrumb jika folder ini sedang dibuka
-    const bcIdx = folderPath.findIndex(function(c) { return c.id === folderId; });
-    if (bcIdx !== -1) folderPath[bcIdx].name = newName;
-
-    showToast('📁 Folder berhasil diubah ke "' + newName + '"!');
-    await loadFolders();
+  var parentId = folder.parent_id || null;
+  if (folderNameExistsInParent(newName, parentId, folderId)) {
+    showToast('Nama folder "' + newName + '" sudah ada di lokasi ini.');
+    return;
   }
 
-  input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doRename();
-    if (e.key === 'Escape') input.remove();
-  });
+  showToast('Mengubah nama folder...');
+  const { error } = await sb.from('folders').update({ name: newName }).eq('id', folderId);
+  if (error) { showToast('Gagal rename folder: ' + error.message); return; }
 
-  input.addEventListener('blur', function() {
-    // Delay agar enter bisa diproses dulu
-    setTimeout(function() {
-      if (document.body.contains(input)) doRename();
-    }, 150);
-  });
+  // folder_name masih disimpan di rows file untuk label lama; sinkronkan file langsung di folder ini.
+  await sb.from('files').update({ folder_name: newName }).eq('folder_id', folderId);
+  try { await sb.from('shared_links').update({ folder_name: newName }).eq('folder_name', folder.name); } catch(e) {}
+
+  updateFolderLocal(folderId, { name: newName });
+  allFiles.forEach(function(file) { if (String(file.folder_id || '') === String(folderId)) file.folder_name = newName; });
+  var bcIdx = folderPath.findIndex(function(c) { return String(c.id) === String(folderId); });
+  if (bcIdx !== -1) folderPath[bcIdx].name = newName;
+
+  await logActivity('rename_folder', { id: folderId, name: newName }, { old_name: folder.name, new_name: newName, folder_id: folderId });
+  showToast('📁 Folder berhasil diubah menjadi "' + newName + '".');
+  await loadFolders();
+  renderFiles();
+  renderStats();
 }
+
+function startFolderRename(folderId, folderName, el) {
+  // Double click tetap didukung, tapi sekarang memakai prompt yang lebih aman.
+  renameFolderById(folderId, folderName);
+}
+
+function ensureFolderMoveModal() {
+  var existing = document.getElementById('folderMoveModal');
+  if (existing) return existing;
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'folderMoveModal';
+  overlay.innerHTML =
+    '<div class="modal">' +
+      '<div class="modal-title">Pindah Folder</div>' +
+      '<div class="modal-sub" id="folderMoveModalSub">Pilih lokasi tujuan.</div>' +
+      '<div class="modal-row"><select class="modal-select" id="folderMoveSelect"></select></div>' +
+      '<div style="font-size:11.5px;color:var(--ink-4);line-height:1.45;margin-top:-4px;margin-bottom:10px">Folder tidak bisa dipindah ke dirinya sendiri atau ke subfoldernya sendiri. Nama folder juga tidak boleh duplikat di lokasi tujuan.</div>' +
+      '<div class="modal-footer">' +
+        '<button class="btn-cancel" type="button" data-action="close-folder-move-modal">Batal</button>' +
+        '<button class="btn-confirm" type="button" data-action="confirm-move-folder">Pindahkan</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) closeFolderMoveModal(); });
+  return overlay;
+}
+
+let folderMoveTargetId = null;
+
+function moveFolderById(folderId, folderName) {
+  var folder = allFolders.find(function(f) { return String(f.id) === String(folderId); });
+  if (!folder) { showToast('Folder tidak ditemukan.'); return; }
+  folderMoveTargetId = folderId;
+  var modal = ensureFolderMoveModal();
+  var select = document.getElementById('folderMoveSelect');
+  var sub = document.getElementById('folderMoveModalSub');
+  if (sub) sub.textContent = 'Pindahkan "' + folder.name + '" dari ' + getFolderDisplayPath(folder.parent_id) + ' ke:';
+  if (select) select.innerHTML = buildFolderDestinationOptions(folderId, folder.parent_id || null);
+  modal.classList.add('show');
+}
+
+function closeFolderMoveModal() {
+  var modal = document.getElementById('folderMoveModal');
+  if (modal) modal.classList.remove('show');
+  folderMoveTargetId = null;
+}
+
+async function confirmMoveFolder() {
+  if (!folderMoveTargetId) return;
+  var folder = allFolders.find(function(f) { return String(f.id) === String(folderMoveTargetId); });
+  if (!folder) { closeFolderMoveModal(); showToast('Folder tidak ditemukan.'); return; }
+  var select = document.getElementById('folderMoveSelect');
+  var targetParentId = select && select.value ? select.value : null;
+  var oldParentId = folder.parent_id || null;
+
+  if ((targetParentId || null) === oldParentId) {
+    showToast('Folder sudah berada di lokasi itu.');
+    return;
+  }
+  if (targetParentId && String(targetParentId) === String(folder.id)) {
+    showToast('Folder tidak bisa dipindah ke dirinya sendiri.');
+    return;
+  }
+  var descendants = getDescendantFolderIds(folder.id).map(String);
+  if (targetParentId && descendants.includes(String(targetParentId))) {
+    showToast('Folder tidak bisa dipindah ke subfoldernya sendiri.');
+    return;
+  }
+  if (folderNameExistsInParent(folder.name, targetParentId, folder.id)) {
+    showToast('Di lokasi tujuan sudah ada folder bernama "' + folder.name + '".');
+    return;
+  }
+
+  var btn = document.querySelector('#folderMoveModal .btn-confirm');
+  if (btn) { btn.disabled = true; btn.textContent = 'Memindahkan...'; }
+
+  const { error } = await sb.from('folders').update({ parent_id: targetParentId }).eq('id', folder.id);
+  if (btn) { btn.disabled = false; btn.textContent = 'Pindahkan'; }
+  if (error) { showToast('Gagal memindahkan folder: ' + error.message); return; }
+
+  updateFolderLocal(folder.id, { parent_id: targetParentId });
+  if (currentFolderId) folderPath = buildFolderPathById(currentFolderId);
+  await logActivity('move_folder', { id: folder.id, name: folder.name }, { folder_id: folder.id, old_parent_id: oldParentId, new_parent_id: targetParentId });
+
+  closeFolderMoveModal();
+  showToast('📁 Folder berhasil dipindahkan ke ' + getFolderDisplayPath(targetParentId) + '.');
+  await loadFolders();
+  renderFiles();
+  renderStats();
+}
+
 async function deleteFolderById(folderId, folderName) {
   // Kumpulkan semua subfolder secara rekursif
   function collectSubIds(pid) {
@@ -1968,26 +2161,26 @@ async function deleteFolderById(folderId, folderName) {
   });
 
   const msg = filesInside.length > 0
-    ? 'Folder "' + folderName + '" berisi ' + filesInside.length + ' file' + (allSubIds.length > 1 ? ' dan ' + (allSubIds.length - 1) + ' subfolder' : '') + '. Semua akan dihapus permanen.'
+    ? 'Folder "' + folderName + '" berisi ' + filesInside.length + ' file' + (allSubIds.length > 1 ? ' dan ' + (allSubIds.length - 1) + ' subfolder' : '') + '. Semua file di dalamnya akan dipindahkan ke Sampah.'
     : 'Yakin ingin menghapus folder "' + folderName + '"' + (allSubIds.length > 1 ? ' beserta ' + (allSubIds.length - 1) + ' subfoldernya' : '') + '?';
 
   const confirmed = await customConfirm({
     title: 'Hapus Folder',
     message: msg,
     icon: 'ti-trash',
-    confirmText: 'Ya, Hapus Semua',
+    confirmText: 'Pindahkan ke Sampah',
     confirmBtnClass: 'danger'
   });
   if (!confirmed) return;
 
-  showToast('Menghapus folder...');
-  // Hapus semua file di dalamnya
-  for (const file of filesInside) {
-    const path = getFileStoragePath(file);
-    await sb.storage.from('user-files').remove([path]);
-    await sb.from('files').delete().eq('id', file.id);
+  showToast('Memindahkan isi folder ke Sampah...');
+  var deletedAt = new Date().toISOString();
+  var fileIdsInside = filesInside.map(function(file) { return file.id; });
+  if (fileIdsInside.length > 0) {
+    await sb.from('files').update({ deleted_at: deletedAt, folder_id: null, folder_name: null }).in('id', fileIdsInside);
+    try { await sb.from('shared_links').update({ revoked_at: deletedAt }).in('file_id', fileIdsInside); } catch(e) {}
   }
-  // Hapus folder (cascade akan hapus subfolder jika ada foreign key, atau manual)
+  // Setelah isinya masuk Sampah, metadata folder boleh dihapus supaya daftar folder tetap rapi.
   await sb.from('folders').delete().in('id', allSubIds);
 
   if (currentFolderId && allSubIds.includes(currentFolderId)) {
@@ -1996,7 +2189,8 @@ async function deleteFolderById(folderId, folderName) {
     folderPath = [];
     updateFileSectionTitle();
   }
-  showToast('Folder "' + folderName + '" berhasil dihapus!');
+  await logActivity('delete_folder', { id: folderId, name: folderName }, { folder_id: folderId, moved_files_to_trash: filesInside.length, folder_ids: allSubIds });
+  showToast('Folder "' + folderName + '" dihapus. ' + filesInside.length + ' file dipindahkan ke Sampah.');
   await loadAll();
 }
 
@@ -2569,55 +2763,53 @@ function showToast(msg, opts) {
 /* ── UPLOAD FILE ── */
 async function uploadFile() {
   const folderId = document.getElementById('folderSelect').value || currentFolderId || null;
-  // Cari nama folder berdasarkan ID. Jika kosong, upload ke root/Dashboard.
   const folderObj = folderId ? allFolders.find(function(f) { return f.id === folderId; }) : null;
   const folder = folderObj ? folderObj.name : null;
 
   const fileInput = document.getElementById('fileInput');
-  const files = (droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files;
+  const files = Array.from((droppedFiles && droppedFiles.length > 0) ? droppedFiles : fileInput.files || []);
   if (!files || files.length === 0) { showToast('Pilih file dulu!'); return; }
 
-  // ── Validasi quota terbaru dari Supabase ──
   const quota = await validateUploadQuota(files);
-  if (!quota.ok) {
-    showToast(quota.message);
-    return;
-  }
+  if (!quota.ok) { showToast(quota.message); return; }
 
   const btnConfirm = document.querySelector('.btn-confirm');
   const btnCancel  = document.querySelector('.btn-cancel');
-  btnConfirm.disabled = true;
-  btnCancel.disabled  = true;
+  if (btnConfirm) btnConfirm.disabled = true;
+  if (btnCancel) btnCancel.disabled  = true;
 
-  // Buat progress UI di dalam modal
-  let progressBox = document.getElementById('uploadProgressBox');
-  if (!progressBox) {
-    progressBox = document.createElement('div');
-    progressBox.id = 'uploadProgressBox';
-    progressBox.style.cssText = 'margin-bottom:14px';
-    document.getElementById('selectedFiles').after(progressBox);
-  }
+  var progressBox = ensureUploadProgressBox('selectedFiles');
+  activeUploadCancelled = false;
+  var progressState = { title: 'Upload file ke ' + (folder || 'Dashboard'), total: files.length, done: 0, failed: 0, currentIndex: 0, items: [] };
+  renderDetailedUploadProgress(progressBox, progressState);
 
   let successCount = 0;
   let failCount = 0;
+  let cancelledCount = 0;
   let errorMessages = [];
   const total = files.length;
 
-  const { data: authData } = await sb.auth.getSession();
-  const uid = authData && authData.session ? authData.session.user.id : null;
+  let uid;
+  try {
+    uid = await getCurrentUserId();
+  } catch (authErr) {
+    showToast(authErr.message || 'User belum login.');
+    if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
+    if (btnCancel) btnCancel.disabled = false;
+    return;
+  }
 
   for (let i = 0; i < total; i++) {
+    if (activeUploadCancelled) {
+      cancelledCount = total - i;
+      break;
+    }
+
     const file = files[i];
-    const pct = Math.round((i / total) * 100);
-
-    progressBox.innerHTML =
-      '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Mengupload ' + (i + 1) + ' dari ' + total + ': <span style="color:#0f0e0d">' + file.name + '</span></div>' +
-      '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
-        '<div style="height:100%;width:' + pct + '%;background:var(--accent);border-radius:99px;transition:width 0.3s ease"></div>' +
-      '</div>' +
-      '<div style="font-size:11px;color:#9a9693;margin-top:5px;text-align:right">' + pct + '%</div>';
-
-    btnConfirm.textContent = 'Mengupload ' + (i+1) + '/' + total;
+    progressState.currentIndex = i + 1;
+    pushUploadProgressItem(progressState, { name: file.name, status: 'uploading', message: formatFileSizeFromBytes(file.size) });
+    renderDetailedUploadProgress(progressBox, progressState);
+    if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i + 1) + '/' + total;
 
     const ext = file.name.split('.').pop().toLowerCase();
     let type = 'doc';
@@ -2629,63 +2821,64 @@ async function uploadFile() {
     else if (['doc','docx','txt','odt','rtf','pptx','ppt'].includes(ext)) type = 'doc';
 
     const iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-    const sizeStr = file.size > 1024*1024
-      ? (file.size / (1024*1024)).toFixed(1) + ' MB'
-      : (file.size / 1024).toFixed(0) + ' KB';
-
+    const sizeStr = formatFileSizeFromBytes(file.size);
     const filePath = buildStoragePathForUser(uid, folderId, file.name);
-    const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
-    if (uploadError) { console.error('Upload error:', uploadError.message); errorMessages.push(file.name + ': ' + uploadError.message); failCount++; continue; }
 
-    const { error: insertError } = await sb.from('files').insert({
-      name: file.name,
-      folder_name: folder,
-      folder_id: folderId || null,
-      type: type,
-      size: sizeStr,
-      size_bytes: file.size,
-      icon: iconInfo.icon,
-      icon_color: iconInfo.iconColor,
-      icon_bg: iconInfo.iconBg,
-      storage_path: filePath,
-      user_id: uid
-    });
-    if (insertError) {
-      console.error('Insert error:', insertError.message);
-      errorMessages.push(file.name + ': ' + insertError.message);
-      await sb.storage.from('user-files').remove([filePath]);
-      failCount++;
-    }
-    else {
+    try {
+      const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
+      if (uploadError) throw new Error(uploadError.message);
+
+      const { error: insertError } = await sb.from('files').insert({
+        name: file.name,
+        folder_name: folder,
+        folder_id: folderId || null,
+        type: type,
+        size: sizeStr,
+        size_bytes: file.size,
+        icon: iconInfo.icon,
+        icon_color: iconInfo.iconColor,
+        icon_bg: iconInfo.iconBg,
+        storage_path: filePath,
+        user_id: uid
+      });
+      if (insertError) {
+        await sb.storage.from('user-files').remove([filePath]);
+        throw new Error(insertError.message);
+      }
+
       successCount++;
+      progressState.done = successCount;
+      progressState.items[progressState.items.length - 1] = { name: file.name, status: 'success', message: 'Berhasil · ' + sizeStr };
       await logActivity('upload_file', { name: file.name }, { folder_id: folderId || null, folder_name: folder, size_bytes: file.size, storage_path: filePath });
+    } catch (err) {
+      console.error('Upload error:', err.message || err);
+      failCount++;
+      progressState.failed = failCount;
+      var message = err.message || String(err);
+      errorMessages.push(file.name + ': ' + message);
+      progressState.items[progressState.items.length - 1] = { name: file.name, status: 'error', message: message };
     }
+    renderDetailedUploadProgress(progressBox, progressState);
   }
 
-  // Progress selesai / error
-  if (failCount > 0) {
-    progressBox.innerHTML =
-      '<div style="font-size:12px;color:#c0392b;margin-bottom:6px;font-weight:600">Upload selesai dengan error</div>' +
-      '<div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.16);border-radius:10px;padding:9px;font-size:11.5px;color:#7f1d1d;line-height:1.45">' +
-        escapeHtml(errorMessages.slice(0, 3).join(' | ') || (failCount + ' file gagal diupload.')) +
-      '</div>';
+  progressState.finished = true;
+  if (cancelledCount > 0) {
+    progressState.currentName = 'Upload dibatalkan';
+    progressState.items.push({ name: cancelledCount + ' file belum diproses', status: 'skip', message: 'Dibatalkan oleh pengguna' });
   } else {
-    progressBox.innerHTML =
-      '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Selesai!</div>' +
-      '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden">' +
-        '<div style="height:100%;width:100%;background:var(--green);border-radius:99px"></div>' +
-      '</div>' +
-      '<div style="font-size:11px;color:var(--green);margin-top:5px;text-align:right">100%</div>';
+    progressState.currentName = 'Selesai';
   }
+  renderDetailedUploadProgress(progressBox, progressState);
 
-  btnConfirm.disabled = false;
-  btnCancel.disabled  = false;
-  btnConfirm.textContent = 'Upload';
+  if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
+  if (btnCancel) btnCancel.disabled = false;
+  activeUploadCancelled = false;
 
-  setTimeout(() => { closeModal(); }, 600);
+  if (failCount === 0 && cancelledCount === 0) setTimeout(function() { closeModal(); }, 900);
 
-  if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal diupload.');
-  else if (failCount > 0 && successCount === 0) showToast('Gagal mengupload ' + failCount + ' file. Cek koneksi atau storage.');
+  if (cancelledCount > 0) showToast('Upload dibatalkan. ' + successCount + ' file berhasil, ' + cancelledCount + ' belum diproses.');
+  else if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal diupload.');
+  else if (failCount > 0 && successCount === 0) showToast('Gagal mengupload ' + failCount + ' file. Lihat detail di modal.');
   else showToast('File berhasil diupload ke ' + (folder || 'Dashboard') + '!');
 
   await loadFiles();
@@ -2884,20 +3077,13 @@ async function uploadFolderFiles() {
   var filesArr = droppedFolderFiles;
   if (!filesArr || filesArr.length === 0) {
     var folderInput = document.getElementById('folderInput');
-    if (folderInput && folderInput.files.length > 0) {
-      filesArr = Array.from(folderInput.files);
-    }
+    if (folderInput && folderInput.files.length > 0) filesArr = Array.from(folderInput.files);
   }
-  if (!filesArr || filesArr.length === 0) {
-    showToast('Pilih folder dulu!');
-    return;
-  }
+  filesArr = Array.from(filesArr || []);
+  if (!filesArr || filesArr.length === 0) { showToast('Pilih folder dulu!'); return; }
 
   const quota = await validateUploadQuota(filesArr);
-  if (!quota.ok) {
-    showToast(quota.message);
-    return;
-  }
+  if (!quota.ok) { showToast(quota.message); return; }
 
   var destId = document.getElementById('folderDestSelect').value || null;
   var destObj = allFolders.find(function(f) { return f.id === destId; });
@@ -2906,12 +3092,11 @@ async function uploadFolderFiles() {
   var btnConfirm = document.getElementById('uploadBtn');
   var btnCancel  = document.querySelector('#modal .btn-cancel');
   if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.textContent = 'Mengupload...'; }
-  if (btnCancel)    btnCancel.disabled = true;
+  if (btnCancel) btnCancel.disabled = true;
 
-  // Reset folder cache tiap upload baru
   folderIdCache = {};
+  activeUploadCancelled = false;
 
-  // Auth session (ambil sekali di luar loop)
   var userId;
   try {
     userId = await getCurrentUserId();
@@ -2922,58 +3107,58 @@ async function uploadFolderFiles() {
     return;
   }
 
+  var progressBox = ensureUploadProgressBox('selectedFolder');
+  var progressState = { title: 'Upload folder ke ' + (destName || 'Dashboard'), total: filesArr.length, done: 0, failed: 0, currentIndex: 0, items: [] };
+  renderDetailedUploadProgress(progressBox, progressState);
+
   var successCount = 0;
   var failCount = 0;
-  var errorMessages = [];
+  var skippedCount = 0;
+  var cancelledCount = 0;
   var total = filesArr.length;
 
   for (var i = 0; i < filesArr.length; i++) {
+    if (activeUploadCancelled) {
+      cancelledCount = total - i;
+      break;
+    }
+
     var file = filesArr[i];
     var relPath = file.webkitRelativePath || file.name;
-
-    // relPath contoh: "NamaFolder/SubFolder/file.pdf"
-    // Pisahkan menjadi bagian folder dan nama file
     var pathParts = relPath.replace(/\\/g, '/').split('/');
     var fileName  = pathParts[pathParts.length - 1];
     var folderParts = pathParts.slice(0, pathParts.length - 1);
 
-    // Skip folder sistem & file tersembunyi
-    const SKIP_FOLDERS = [
-      'build','node_modules','.git','.gradle','intermediates',
-      'out','debug','release','tmp','.idea','.dart_tool',
-      'generated','obj','bin','.vs','__pycache__','.cache'
-    ];
-    const hasSkipFolder = folderParts.some(function(p) {
-      return SKIP_FOLDERS.includes(p.toLowerCase()) || p.startsWith('.');
-    });
-    if (hasSkipFolder || fileName.startsWith('.')) { failCount++; continue; }
+    progressState.currentIndex = i + 1;
+    pushUploadProgressItem(progressState, { name: relPath, status: 'uploading', message: formatFileSizeFromBytes(file.size) });
+    if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i + 1) + '/' + total;
+    renderDetailedUploadProgress(progressBox, progressState);
 
-    if (btnConfirm) btnConfirm.textContent = 'Upload ' + (i+1) + '/' + total;
-    var folderProgress = document.getElementById('uploadProgressBox');
-    if (folderProgress) {
-      var pctFolder = Math.round((i / total) * 100);
-      folderProgress.innerHTML = '<div style="font-size:12px;color:#9a9693;margin-bottom:6px">Mengupload folder ' + (i + 1) + '/' + total + ': <span style="color:#0f0e0d">' + escapeHtml(file.name) + '</span></div>' +
-        '<div style="background:rgba(15,14,13,0.06);border-radius:99px;height:5px;overflow:hidden"><div style="height:100%;width:' + pctFolder + '%;background:var(--accent);border-radius:99px;transition:width 0.3s ease"></div></div>';
+    const SKIP_FOLDERS = ['build','node_modules','.git','.gradle','intermediates','out','debug','release','tmp','.idea','.dart_tool','generated','obj','bin','.vs','__pycache__','.cache'];
+    const hasSkipFolder = folderParts.some(function(part) {
+      return SKIP_FOLDERS.includes(part.toLowerCase()) || part.startsWith('.');
+    });
+    if (hasSkipFolder || fileName.startsWith('.')) {
+      skippedCount++;
+      progressState.failed = failCount;
+      progressState.items[progressState.items.length - 1] = { name: relPath, status: 'skip', message: 'Dilewati karena folder/file sistem' };
+      renderDetailedUploadProgress(progressBox, progressState);
+      continue;
     }
 
     try {
-      // Resolve chain folder: destId (root tujuan) → folderParts[0] → folderParts[1] → dst
       var targetFolderId = destId;
       var targetFolderName = destName;
-
       if (folderParts.length > 0) {
         targetFolderId = await resolveOrCreateFolderChain(folderParts, destId, userId);
-        if (!targetFolderId) { failCount++; continue; }
+        if (!targetFolderId) throw new Error('Gagal membuat folder tujuan');
         targetFolderName = folderParts[folderParts.length - 1];
       }
 
-      // Storage path unik
       var storagePath = buildStoragePathForUser(userId, targetFolderId || null, fileName);
-
       var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
-      if (upErr) { console.error('Storage upload error:', upErr.message); errorMessages.push(fileName + ': ' + upErr.message); failCount++; continue; }
+      if (upErr) throw new Error(upErr.message);
 
-      // Determine file type
       var ext = fileName.split('.').pop().toLowerCase();
       var type = 'doc';
       if (['jpg','jpeg','png','gif','webp','svg','bmp'].includes(ext)) type = 'foto';
@@ -2983,10 +3168,7 @@ async function uploadFolderFiles() {
       else if (['mp3','wav','ogg','flac','aac','m4a'].includes(ext)) type = 'audio';
 
       var iconInfo = FILE_ICONS[type] || FILE_ICONS['doc'];
-      var sizeStr = file.size > 1024*1024
-        ? (file.size/(1024*1024)).toFixed(1)+' MB'
-        : (file.size/1024).toFixed(0)+' KB';
-
+      var sizeStr = formatFileSizeFromBytes(file.size);
       var { error: insertErr } = await sb.from('files').insert({
         name: fileName,
         folder_name: targetFolderName,
@@ -3001,29 +3183,46 @@ async function uploadFolderFiles() {
         user_id: userId
       });
       if (insertErr) {
-        console.error('DB insert error:', insertErr.message);
-        errorMessages.push(fileName + ': ' + insertErr.message);
         await sb.storage.from('user-files').remove([storagePath]);
-        failCount++;
+        throw new Error(insertErr.message);
       }
-      else {
-        successCount++;
-        await logActivity('upload_folder', { name: fileName }, { folder_id: targetFolderId || null, folder_name: targetFolderName, size_bytes: file.size, storage_path: storagePath });
-      }
-    } catch(e) { console.error('Upload error:', e); errorMessages.push(fileName + ': ' + (e.message || e)); failCount++; }
+
+      successCount++;
+      progressState.done = successCount;
+      progressState.items[progressState.items.length - 1] = { name: relPath, status: 'success', message: 'Berhasil · ' + sizeStr };
+      await logActivity('upload_folder', { name: fileName }, { folder_id: targetFolderId || null, folder_name: targetFolderName, size_bytes: file.size, storage_path: storagePath });
+    } catch (err) {
+      console.error('Upload folder error:', err.message || err);
+      failCount++;
+      progressState.failed = failCount;
+      progressState.items[progressState.items.length - 1] = { name: relPath, status: 'error', message: err.message || String(err) };
+    }
+    renderDetailedUploadProgress(progressBox, progressState);
   }
 
+  progressState.finished = true;
+  progressState.failed = failCount;
+  if (cancelledCount > 0) {
+    progressState.currentName = 'Upload dibatalkan';
+    progressState.items.push({ name: cancelledCount + ' file belum diproses', status: 'skip', message: 'Dibatalkan oleh pengguna' });
+  } else {
+    progressState.currentName = 'Selesai';
+  }
+  renderDetailedUploadProgress(progressBox, progressState);
+
   if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.textContent = 'Upload'; }
-  if (btnCancel)    btnCancel.disabled = false;
+  if (btnCancel) btnCancel.disabled = false;
+  activeUploadCancelled = false;
   droppedFolderFiles = null;
 
-  setTimeout(function() { closeModal(); }, 400);
-  await loadFolders(); // reload folder dulu agar subfolder baru tampil
+  if (failCount === 0 && cancelledCount === 0) setTimeout(function() { closeModal(); }, 900);
+  await loadFolders();
   await loadFiles();
   renderStats();
 
-  if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal.');
-  else if (failCount > 0) showToast('Gagal upload ' + failCount + ' file. Cek konsol untuk detail.');
+  if (cancelledCount > 0) showToast('Upload folder dibatalkan. ' + successCount + ' file berhasil, ' + cancelledCount + ' belum diproses.');
+  else if (failCount > 0 && successCount > 0) showToast(successCount + ' file berhasil, ' + failCount + ' gagal' + (skippedCount ? ', ' + skippedCount + ' dilewati' : '') + '.');
+  else if (failCount > 0) showToast('Gagal upload ' + failCount + ' file. Lihat detail di modal.');
   else showToast('Folder berhasil diupload ke ' + (destName || 'Dashboard') + '!');
 }
 
@@ -3104,6 +3303,7 @@ async function folderCardDrop(e, el) {
 
     if (dbErr) { showToast('Gagal update DB: ' + dbErr.message); return; }
     showToast('\uD83D\uDCC1 "' + file.name + '" dipindahkan ke ' + targetFolderName + '!');
+    await logActivity('move_file', file, { folder_id: targetFolderId, folder_name: targetFolderName, via_drag_drop: true });
     await loadAll();
     return;
   }
@@ -3111,6 +3311,9 @@ async function folderCardDrop(e, el) {
   // ── CASE 2: Drop file dari OS (upload langsung) ──
   var files = e.dataTransfer.files;
   if (!files || files.length === 0) return;
+
+  const quota = await validateUploadQuota(files);
+  if (!quota.ok) { showToast(quota.message); return; }
 
   var userId;
   try {
@@ -3558,6 +3761,7 @@ function initStaticActionBindings() {
     if (action === 'refresh-data') { await loadAll({ showFloating: true }); showToast('Data diperbarui'); return; }
     if (action === 'open-upload') { openModal(); return; }
     if (action === 'new-folder') { addFolder(); return; }
+    if (action === 'cancel-upload') { activeUploadCancelled = true; showToast('Membatalkan upload setelah file aktif selesai...'); return; }
     if (action === 'bulk-download') { bulkDownload(); return; }
     if (action === 'bulk-delete') { bulkDelete(); return; }
     if (action === 'exit-select-mode') { exitSelectMode(); return; }
@@ -3573,6 +3777,8 @@ function initStaticActionBindings() {
     if (action === 'do-upload') { doUpload(); return; }
     if (action === 'close-move-modal') { closeMoveModal(); return; }
     if (action === 'confirm-move-file') { confirmMoveFile(); return; }
+    if (action === 'close-folder-move-modal') { closeFolderMoveModal(); return; }
+    if (action === 'confirm-move-folder') { confirmMoveFolder(); return; }
       if (action === 'ctx-download') { downloadFile(); return; }
       if (action === 'ctx-share') { shareFile(); return; }
       if (action === 'ctx-rename') { renameFile(); return; }
@@ -3584,6 +3790,8 @@ function initStaticActionBindings() {
       if (action === 'toggle-file-select') { e.stopPropagation(); return; }
       if (action === 'file-select' || action === 'folder-select' || action === 'select-all') { return; }
       if (action === 'folder-pin') { togglePinFolder(el.dataset.folderId, e); return; }
+      if (action === 'folder-rename') { e.stopPropagation(); renameFolderById(el.dataset.folderId, el.dataset.folderName); return; }
+      if (action === 'folder-move') { e.stopPropagation(); moveFolderById(el.dataset.folderId, el.dataset.folderName); return; }
       if (action === 'folder-delete') { e.stopPropagation(); deleteFolderById(el.dataset.folderId, el.dataset.folderName); return; }
       if (action === 'sort-mode') { setSortMode(el.dataset.mode); return; }
       if (action === 'copy-shared') { copySharedLink(el.dataset.index); return; }
