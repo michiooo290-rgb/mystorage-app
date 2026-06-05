@@ -173,7 +173,15 @@
     }
     .folder-rename-btn { right: 70px !important; color: #0f0e0d !important; }
     .folder-move-btn { right: 39px !important; color: #0f0e0d !important; }
-    .folder-delete-btn { right: 8px !important; color: var(--red) !important; }
+    /* Trash dibuat sama persis dengan tombol edit & move.
+       Tidak pakai warna merah di state normal/hover agar visualnya seragam. */
+    .folder-delete-btn { right: 8px !important; color: #0f0e0d !important; }
+
+    .folder-action-btn i,
+    .folder-delete-btn i {
+      color: currentColor !important;
+      stroke: currentColor !important;
+    }
 
     .folder-wrap:hover .folder-action-btn,
     .folder-wrap:focus-within .folder-action-btn,
@@ -183,15 +191,11 @@
       transform: translateY(0) scale(1);
       pointer-events: auto;
     }
-    .folder-action-btn:hover {
+    .folder-action-btn:hover,
+    .folder-delete-btn:hover {
       background: rgba(200,96,42,0.16) !important;
       color: var(--accent) !important;
       box-shadow: 0 6px 16px rgba(200,96,42,0.18) !important;
-    }
-    .folder-delete-btn:hover {
-      background: rgba(192,57,43,0.16) !important;
-      color: var(--red) !important;
-      box-shadow: 0 6px 16px rgba(192,57,43,0.18) !important;
     }
     @media (hover: none), (max-width: 768px) {
       .folder-action-btn,
