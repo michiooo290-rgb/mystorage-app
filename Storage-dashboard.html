@@ -54,6 +54,90 @@
     .btn-new:hover i{transform:rotate(90deg) scale(1.2)}
     #nmTopbarBtn i{transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
     #nmTopbarBtn:hover i{transform:rotate(30deg) scale(1.2)}
+
+
+    /* ── MOBILE UX PATCH ── */
+    @media (max-width: 768px) {
+      body { overflow-x: hidden; }
+      .sidebar {
+        width: min(84vw, 310px) !important;
+        transform: translateX(-105%);
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+        z-index: 80;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open {
+        display: block !important;
+        opacity: 1;
+        visibility: visible;
+      }
+      .main { margin-left: 0 !important; width: 100% !important; }
+      .topbar {
+        padding: 10px 12px !important;
+        gap: 8px !important;
+        height: auto !important;
+        min-height: 64px;
+        flex-wrap: wrap;
+      }
+      .breadcrumb { order: 2; width: calc(100% - 8px); margin-right: 0 !important; font-size: 12px; }
+      .search { order: 3; width: 100%; min-width: 0; }
+      .topbar-right { margin-left: auto; gap: 6px !important; }
+      .topbar-right .btn-icon { width: 36px; height: 36px; }
+      .topbar-right .refresh-btn { display: none; }
+      .btn-upload { padding: 0 14px !important; height: 40px !important; border-radius: 12px !important; }
+      .content { padding: 18px 12px 28px !important; }
+      .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+      .stat-card { padding: 14px !important; min-height: 86px; }
+      .stat-value { font-size: 24px !important; }
+      .folder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+      .folder-wrap { min-width: 0; }
+      .section-head { align-items: flex-start !important; flex-direction: column; gap: 10px; }
+      .section-head > div:last-child { width: 100%; justify-content: space-between; overflow-x: auto; padding-bottom: 2px; }
+      .filter-row { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 6px; -webkit-overflow-scrolling: touch; }
+      .filter-chip { flex: 0 0 auto; }
+      .file-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+      .file-card { min-height: 150px; padding: 12px !important; }
+      .file-name { font-size: 12.5px !important; }
+      .file-info { font-size: 10.5px !important; }
+      .file-list-header { display: none !important; }
+      .list-view { display: grid !important; grid-template-columns: 1fr !important; }
+      .modal { width: calc(100vw - 24px) !important; max-height: 88vh; overflow-y: auto; border-radius: 20px !important; }
+      .drop-zone { min-height: 160px; padding: 18px 12px !important; }
+      .shared-item { flex-direction: column !important; align-items: stretch !important; }
+      .ctx-menu.ctx-menu--mobile {
+        position: fixed !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: 10px !important;
+        top: auto !important;
+        width: auto !important;
+        max-width: none !important;
+        border-radius: 20px !important;
+        padding: 10px !important;
+        z-index: 1000 !important;
+        box-shadow: 0 24px 70px rgba(0,0,0,.38) !important;
+      }
+      .ctx-menu.ctx-menu--mobile .ctx-item { min-height: 44px; font-size: 14px; }
+      body.ctx-open-mobile::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 999;
+        background: rgba(0,0,0,.36);
+        backdrop-filter: blur(2px);
+        pointer-events: none;
+      }
+      body.ctx-open-mobile .ctx-menu { pointer-events: auto; }
+    }
+
+    @media (max-width: 430px) {
+      .stats-row { grid-template-columns: 1fr 1fr !important; }
+      .folder-grid, .file-grid { grid-template-columns: 1fr !important; }
+      .btn-upload { font-size: 0; width: 46px; padding: 0 !important; justify-content: center; }
+      .btn-upload i { margin: 0 !important; }
+      .view-toggle { display: none !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -88,6 +172,10 @@
   </div>
   <div class="nav-item" data-action="nav-favorites">
     <i class="ti ti-star"></i>Favorit
+  </div>
+  <div class="nav-item" data-action="nav-trash">
+    <i class="ti ti-trash"></i>Sampah
+    <span class="badge" id="badgeTrash">0</span>
   </div>
 
   <div class="divider"></div>
@@ -393,7 +481,9 @@
   <div class="ctx-item" data-action="ctx-move"><i class="ti ti-folder-symlink"></i>Pindah ke Folder</div>
   <div class="ctx-item" data-action="ctx-favorite"><i class="ti ti-star"></i>Tambah/Hapus Favorit</div>
   <div class="ctx-divider"></div>
-  <div class="ctx-item danger" data-action="ctx-delete"><i class="ti ti-trash"></i>Hapus Permanen</div>
+  <div class="ctx-item danger" data-action="ctx-delete"><i class="ti ti-trash"></i>Pindahkan ke Sampah</div>
+  <div class="ctx-item" data-action="ctx-restore" style="display:none"><i class="ti ti-restore"></i>Pulihkan File</div>
+  <div class="ctx-item danger" data-action="ctx-delete-permanent" style="display:none"><i class="ti ti-trash-x"></i>Hapus Permanen</div>
 </div>
 
 <!-- Custom Confirm Dialog -->
