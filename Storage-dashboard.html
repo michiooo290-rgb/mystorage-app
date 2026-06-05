@@ -206,6 +206,54 @@
       }
     }
 
+
+
+    /* ── Notification panel scroll fix ──
+       Panel tidak akan memanjang terus saat aktivitas/notifikasi banyak.
+       Header tetap rapi, isi panel yang scroll. */
+    #notificationPanel {
+      max-height: min(560px, calc(100vh - 96px)) !important;
+      overflow: hidden !important;
+    }
+    #notificationList {
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    #activityList {
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+    #notificationList::-webkit-scrollbar,
+    #activityList::-webkit-scrollbar {
+      width: 4px;
+    }
+    #notificationList::-webkit-scrollbar-track,
+    #activityList::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #notificationList::-webkit-scrollbar-thumb,
+    #activityList::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.14);
+      border-radius: 99px;
+    }
+    #notificationList::-webkit-scrollbar-thumb:hover,
+    #activityList::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.22);
+    }
+    @media (max-width: 768px) {
+      #notificationPanel {
+        left: 10px !important;
+        right: 10px !important;
+        top: 76px !important;
+        width: auto !important;
+        max-height: calc(100vh - 96px) !important;
+      }
+      #notificationList { max-height: 190px; }
+      #activityList { max-height: 230px; }
+    }
+
   </style>
 </head>
 <body>

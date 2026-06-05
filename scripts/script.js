@@ -2646,7 +2646,7 @@ function ensureNotificationPanel() {
   if (document.getElementById('notificationPanel')) return;
   const panel = document.createElement('div');
   panel.id = 'notificationPanel';
-  panel.style.cssText = 'position:fixed;right:72px;top:62px;z-index:9999;width:min(420px,calc(100vw - 28px));max-height:calc(100vh - 84px);overflow:auto;background:var(--white);border:1px solid var(--border-2);border-radius:18px;box-shadow:var(--shadow-lg);padding:12px;display:none;color:var(--ink-2);';
+  panel.style.cssText = 'position:fixed;right:72px;top:62px;z-index:9999;width:min(420px,calc(100vw - 28px));max-height:min(560px,calc(100vh - 96px));overflow:hidden;background:var(--white);border:1px solid var(--border-2);border-radius:18px;box-shadow:var(--shadow-lg);padding:12px;display:none;color:var(--ink-2);';
   panel.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:14px">Notifikasi & Aktivitas</strong><button type="button" data-action="close-notifications" style="border:0;background:transparent;color:var(--ink-4);cursor:pointer;font-size:18px;line-height:1">&times;</button></div><div id="notificationList"></div><div style="height:1px;background:var(--border);margin:10px 0"></div><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><strong style="font-family:Outfit,sans-serif;font-size:13px">Aktivitas terbaru</strong><button type="button" data-action="refresh-activity" style="border:0;background:transparent;color:var(--accent);cursor:pointer;font-size:12px;font-weight:600">Refresh</button></div><div id="activityList"></div>';
   document.body.appendChild(panel);
 }
@@ -2685,7 +2685,7 @@ function renderActivityList() {
     list.innerHTML = '<div style="padding:14px 10px;text-align:center;color:var(--ink-4);font-size:12px"><i class="ti ti-activity" style="font-size:24px;display:block;margin-bottom:6px;color:var(--ink-5)"></i>Belum ada aktivitas.</div>';
     return;
   }
-  list.innerHTML = logs.slice(0, 8).map(function(log) {
+  list.innerHTML = logs.slice(0, 20).map(function(log) {
     var meta = getActivityMeta(log.action);
     var name = log.file_name || (log.details && log.details.folder_name) || 'Item';
     return '<div style="display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--border)">' +
