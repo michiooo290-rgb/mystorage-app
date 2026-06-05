@@ -1001,12 +1001,10 @@ function renderFolders() {
       '<i class="ti ' + (isPinned ? 'ti-pin-filled' : 'ti-pin') + '"></i></button>' +
 
       '<button class="folder-action-btn folder-rename-btn" title="Rename folder" ' +
-      'style="position:absolute;right:70px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" ' +
       'data-action="folder-rename" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-edit" style="font-size:14px"></i></button>' +
 
       '<button class="folder-action-btn folder-move-btn" title="Pindah folder" ' +
-      'style="position:absolute;right:39px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" ' +
       'data-action="folder-move" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-folder-symlink" style="font-size:14px"></i></button>' +
 
@@ -1786,8 +1784,8 @@ function renderFoldersFiltered(search) {
     const safeId = escapeAttr(f.id);    const subLabel = subCount > 0 ? subCount + ' folder · ' + fileCount + ' file' : fileCount + ' file';
     return (
       '<div class="folder-wrap" style="animation-delay:' + (i * 0.06) + 's; position:relative;" data-folder-card="1" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
-      '<button class="folder-action-btn folder-rename-btn" title="Rename folder" style="position:absolute;right:70px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" data-action="folder-rename" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-edit" style="font-size:14px"></i></button>' +
-      '<button class="folder-action-btn folder-move-btn" title="Pindah folder" style="position:absolute;right:39px;top:8px;z-index:6;width:26px;height:26px;border:0;border-radius:8px;background:rgba(255,255,255,0.82);color:#0f0e0d;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.12)" data-action="folder-move" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-folder-symlink" style="font-size:14px"></i></button>' +
+      '<button class="folder-action-btn folder-rename-btn" title="Rename folder" data-action="folder-rename" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-edit" style="font-size:14px"></i></button>' +
+      '<button class="folder-action-btn folder-move-btn" title="Pindah folder" data-action="folder-move" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '"><i class="ti ti-folder-symlink" style="font-size:14px"></i></button>' +
       '<button class="folder-delete-btn" title="Hapus folder" data-action="folder-delete" data-folder-id="' + safeId + '" data-folder-name="' + escapeAttr(f.name) + '">' +
       '<i class="ti ti-trash"></i></button>' +
       '<svg viewBox="0 0 140 90" xmlns="http://www.w3.org/2000/svg">' +

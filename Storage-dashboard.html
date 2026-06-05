@@ -139,15 +139,46 @@
     }
 
 
-    /* ── Folder action buttons: hide until hover (desktop) ── */
-    .folder-action-btn {
+    /* ── Unified folder action buttons ──
+       Rename, move, and delete now share the same base style.
+       Delete keeps only its danger icon color/hover state. */
+    .folder-action-btn,
+    .folder-delete-btn {
+      position: absolute !important;
+      top: 8px !important;
+      z-index: 10 !important;
+      width: 26px !important;
+      height: 26px !important;
+      border: 0 !important;
+      border-radius: 8px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      background: rgba(255,255,255,0.88) !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+      backdrop-filter: blur(4px) !important;
+      -webkit-backdrop-filter: blur(4px) !important;
       opacity: 0;
       transform: translateY(-4px) scale(0.96);
       pointer-events: none;
-      transition: opacity .15s ease, transform .15s ease, background .15s ease, color .15s ease;
+      transition: opacity .15s ease, transform .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+      font-size: 14px !important;
+      line-height: 1 !important;
     }
+    .folder-action-btn i,
+    .folder-delete-btn i {
+      font-size: 14px !important;
+      line-height: 1 !important;
+    }
+    .folder-rename-btn { right: 70px !important; color: #0f0e0d !important; }
+    .folder-move-btn { right: 39px !important; color: #0f0e0d !important; }
+    .folder-delete-btn { right: 8px !important; color: var(--red) !important; }
+
     .folder-wrap:hover .folder-action-btn,
-    .folder-wrap:focus-within .folder-action-btn {
+    .folder-wrap:focus-within .folder-action-btn,
+    .folder-wrap:hover .folder-delete-btn,
+    .folder-wrap:focus-within .folder-delete-btn {
       opacity: 1;
       transform: translateY(0) scale(1);
       pointer-events: auto;
@@ -155,9 +186,16 @@
     .folder-action-btn:hover {
       background: rgba(200,96,42,0.16) !important;
       color: var(--accent) !important;
+      box-shadow: 0 6px 16px rgba(200,96,42,0.18) !important;
+    }
+    .folder-delete-btn:hover {
+      background: rgba(192,57,43,0.16) !important;
+      color: var(--red) !important;
+      box-shadow: 0 6px 16px rgba(192,57,43,0.18) !important;
     }
     @media (hover: none), (max-width: 768px) {
-      .folder-action-btn {
+      .folder-action-btn,
+      .folder-delete-btn {
         opacity: 1;
         transform: none;
         pointer-events: auto;
