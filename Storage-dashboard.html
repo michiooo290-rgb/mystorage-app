@@ -138,6 +138,32 @@
       .view-toggle { display: none !important; }
     }
 
+
+    /* ── Folder action buttons: hide until hover (desktop) ── */
+    .folder-action-btn {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.96);
+      pointer-events: none;
+      transition: opacity .15s ease, transform .15s ease, background .15s ease, color .15s ease;
+    }
+    .folder-wrap:hover .folder-action-btn,
+    .folder-wrap:focus-within .folder-action-btn {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .folder-action-btn:hover {
+      background: rgba(200,96,42,0.16) !important;
+      color: var(--accent) !important;
+    }
+    @media (hover: none), (max-width: 768px) {
+      .folder-action-btn {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+      }
+    }
+
   </style>
 </head>
 <body>
