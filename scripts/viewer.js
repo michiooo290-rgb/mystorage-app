@@ -1,14 +1,18 @@
 /* MyStorage viewer page logic
-   CSP-safe: no inline JavaScript. PDF preview uses PDF.js canvas renderer so it does not rely on the browser native PDF plugin. */
-(function () {
-  const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+   Versi hybrid PDF:
+   - PDF dicoba tampil pakai viewer bawaan browser lewat iframe
+   - Kalau gagal/lambat, fallback Download tetap muncul
+   - Share link public tetap dipertahankan
+   - Cocok dengan CSP ketat tanpa inline script
+*/
 
-  const BUCKET = 'user-files';
-  const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
-  const PDFJS_WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+(function () {
+  const sb = window.supabase.createClient(
+    window.SUPABASE_URL,
+    window.SUPABASE_ANON_KEY
+  );
 
   let signedUrl = null;
-  let activeObjectUrl = null;
 
   const params = new URLSearchParams(window.location.search);
   const fileId = params.get('id');
@@ -18,12 +22,36 @@
   const fileSize = params.get('size');
 
   const FILE_ICONS = {
-    pdf: { icon: 'ti-file-type-pdf', color: '#c0392b', bg: 'rgba(192,57,43,0.08)' },
-    doc: { icon: 'ti-file-text', color: '#1d4ed8', bg: 'rgba(29,78,216,0.08)' },
-    foto: { icon: 'ti-photo', color: '#2d6a4f', bg: 'rgba(45,106,79,0.08)' },
-    video: { icon: 'ti-video', color: '#c8602a', bg: 'rgba(200,96,42,0.08)' },
-    spreadsheet: { icon: 'ti-table', color: '#0369a1', bg: 'rgba(3,105,161,0.08)' },
-    audio: { icon: 'ti-music', color: '#7e22ce', bg: 'rgba(126,34,206,0.08)' },
+    pdf: {
+      icon: 'ti-file-type-pdf',
+      color: '#c0392b',
+      bg: 'rgba(192,57,43,0.08)'
+    },
+    doc: {
+      icon: 'ti-file-text',
+      color: '#1d4ed8',
+      bg: 'rgba(29,78,216,0.08)'
+    },
+    foto: {
+      icon: 'ti-photo',
+      color: '#2d6a4f',
+      bg: 'rgba(45,106,79,0.08)'
+    },
+    video: {
+      icon: 'ti-video',
+      color: '#c8602a',
+      bg: 'rgba(200,96,42,0.08)'
+    },
+    spreadsheet: {
+      icon: 'ti-table',
+      color: '#0369a1',
+      bg: 'rgba(3,105,161,0.08)'
+    },
+    audio: {
+      icon: 'ti-music',
+      color: '#7e22ce',
+      bg: 'rgba(126,34,206,0.08)'
+    }
   };
 
   const OFFICE_EXTS = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
@@ -34,33 +62,30 @@
     return d.innerHTML;
   }
 
-  function cleanupObjectUrl() {
-    if (activeObjectUrl) {
-      URL.revokeObjectURL(activeObjectUrl);
-      activeObjectUrl = null;
-    }
-  }
-
   function showToast(msg, isError) {
     const t = document.getElementById('toast');
     const icon = document.getElementById('toastIcon');
     const msgEl = document.getElementById('toastMsg');
+
     if (!t || !icon || !msgEl) return;
 
     msgEl.textContent = msg;
     icon.className = isError ? 'ti ti-alert-circle' : 'ti ti-check';
     icon.style.color = isError ? '#f87171' : '#4ade80';
+
     t.classList.add('show');
 
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+    t._timer = setTimeout(function () {
+      t.classList.remove('show');
+    }, 3000);
   }
 
   function showError(msg, detail) {
     const loading = document.getElementById('loadingState');
-    if (loading) loading.remove();
-
     const wrap = document.getElementById('viewerWrap');
+
+    if (loading) loading.remove();
     if (!wrap) return;
 
     wrap.innerHTML = `
@@ -71,173 +96,128 @@
         <a href="../Storage-dashboard.html" class="btn-action" style="margin-top:8px">
           <i class="ti ti-arrow-left"></i> Kembali ke Dashboard
         </a>
-      </div>`;
+      </div>
+    `;
   }
 
-  function showPreviewFallback(title, message) {
+  function generateShareToken() {
+    try {
+      const bytes = new Uint8Array(24);
+      crypto.getRandomValues(bytes);
+
+      return Array.from(bytes)
+        .map(function (b) {
+          return b.toString(16).padStart(2, '0');
+        })
+        .join('');
+    } catch (e) {
+      return String(Date.now()) + '_' + Math.random().toString(36).slice(2);
+    }
+  }
+
+  function buildPublicShareUrl(token) {
+    return (
+      window.location.origin +
+      '/pages/share.html?token=' +
+      encodeURIComponent(token)
+    );
+  }
+
+  function showPdfFallback(name) {
+    const frame = document.getElementById('pdfFrame');
+    const fallback = document.getElementById('pdfFallback');
+
+    if (frame) frame.style.display = 'none';
+    if (fallback) fallback.style.display = 'flex';
+  }
+
+  function renderPdfViewer(url, name) {
     const wrap = document.getElementById('viewerWrap');
     if (!wrap) return;
 
     wrap.innerHTML = `
-      <div class="generic-viewer">
+      <iframe
+        id="pdfFrame"
+        class="pdf-viewer"
+        src="${escapeHtml(url)}"
+        title="${escapeHtml(name)}">
+      </iframe>
+
+      <div id="pdfFallback" class="generic-viewer" style="display:none">
         <div class="generic-icon-box" style="background:rgba(192,57,43,0.08)">
           <i class="ti ti-file-type-pdf" style="color:#c0392b"></i>
         </div>
+
         <span class="ext-badge">PDF</span>
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(message)}</p>
+
+        <h3>${escapeHtml(name)}</h3>
+
+        <p>
+          Preview PDF gagal dimuat di browser, tetapi file masih bisa didownload.
+        </p>
+
         <div class="btn-group">
           <button class="btn-action primary" data-action="download-file">
             <i class="ti ti-download"></i> Download File
           </button>
-          ${signedUrl ? `<button class="btn-action" data-action="open-signed-url">
+
+          <button class="btn-action" data-action="open-pdf-new-tab">
             <i class="ti ti-external-link"></i> Buka di Tab Baru
-          </button>` : ''}
+          </button>
         </div>
-      </div>`;
-  }
+      </div>
+    `;
 
-  function loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[data-pdfjs="true"]');
-      if (existing) {
-        if (window.pdfjsLib) resolve(window.pdfjsLib);
-        else existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
-        return;
-      }
+    const frame = document.getElementById('pdfFrame');
+    let loaded = false;
 
-      const s = document.createElement('script');
-      s.src = src;
-      s.async = true;
-      s.defer = true;
-      s.dataset.pdfjs = 'true';
-      s.onload = () => resolve(window.pdfjsLib);
-      s.onerror = () => reject(new Error('Gagal memuat PDF.js'));
-      document.head.appendChild(s);
-    });
-  }
+    if (frame) {
+      frame.addEventListener('load', function () {
+        loaded = true;
+      });
 
-  async function ensurePdfJs() {
-    if (!window.pdfjsLib) await loadScript(PDFJS_URL);
-    if (!window.pdfjsLib) throw new Error('PDF.js tidak tersedia');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
-    return window.pdfjsLib;
-  }
-
-  async function renderPdfPage(pdf, pageNumber, container) {
-    const page = await pdf.getPage(pageNumber);
-    const baseViewport = page.getViewport({ scale: 1 });
-    const maxWidth = Math.min(container.clientWidth || 900, 980) - 28;
-    const scale = Math.max(0.7, Math.min(1.8, maxWidth / baseViewport.width));
-    const viewport = page.getViewport({ scale });
-    const ratio = window.devicePixelRatio || 1;
-
-    const pageWrap = document.createElement('div');
-    pageWrap.style.cssText = [
-      'display:flex',
-      'justify-content:center',
-      'padding:14px 0',
-      'border-bottom:1px solid rgba(255,255,255,0.06)'
-    ].join(';');
-
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-    canvas.width = Math.floor(viewport.width * ratio);
-    canvas.height = Math.floor(viewport.height * ratio);
-    canvas.style.width = Math.floor(viewport.width) + 'px';
-    canvas.style.height = Math.floor(viewport.height) + 'px';
-    canvas.style.maxWidth = '100%';
-    canvas.style.borderRadius = '8px';
-    canvas.style.boxShadow = '0 18px 50px rgba(0,0,0,0.28)';
-    canvas.style.background = '#fff';
-
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    pageWrap.appendChild(canvas);
-    container.appendChild(pageWrap);
-
-    await page.render({ canvasContext: ctx, viewport }).promise;
-  }
-
-  async function renderPdf(url, name) {
-    const wrap = document.getElementById('viewerWrap');
-    if (!wrap) return;
-
-    try {
-      wrap.innerHTML = `
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Memuat preview PDF...</p>
-        </div>`;
-
-      const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-
-      const blob = await response.blob();
-      if (!blob || blob.size === 0) throw new Error('File kosong');
-
-      cleanupObjectUrl();
-      const pdfBlob = blob.type === 'application/pdf'
-        ? blob
-        : new Blob([blob], { type: 'application/pdf' });
-
-      activeObjectUrl = URL.createObjectURL(pdfBlob);
-      const pdfjsLib = await ensurePdfJs();
-      const pdf = await pdfjsLib.getDocument({ url: activeObjectUrl }).promise;
-
-      wrap.innerHTML = `
-        <div class="pdf-js-shell" style="width:100%;height:100%;overflow:auto;background:var(--paper, #111);">
-          <div style="position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:rgba(15,14,13,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);">
-            <div style="font-size:12px;color:var(--text-muted,#aaa);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Preview PDF · ${escapeHtml(pdf.numPages)} halaman</div>
-            <button class="btn-action" data-action="download-file" style="padding:7px 12px;font-size:12px">
-              <i class="ti ti-download"></i> Download
-            </button>
-          </div>
-          <div id="pdfPages" style="max-width:1040px;margin:0 auto;padding:12px;"></div>
-        </div>`;
-
-      const pagesEl = document.getElementById('pdfPages');
-      const maxAutoPages = 40;
-      const pagesToRender = Math.min(pdf.numPages, maxAutoPages);
-
-      for (let i = 1; i <= pagesToRender; i++) {
-        await renderPdfPage(pdf, i, pagesEl);
-      }
-
-      if (pdf.numPages > maxAutoPages) {
-        const notice = document.createElement('div');
-        notice.style.cssText = 'text-align:center;color:var(--text-muted,#aaa);font-size:13px;padding:18px 0 28px;';
-        notice.textContent = 'Preview dibatasi ' + maxAutoPages + ' halaman. Download file untuk melihat semua halaman.';
-        pagesEl.appendChild(notice);
-      }
-    } catch (err) {
-      console.warn('PDF preview failed:', err);
-      showPreviewFallback(
-        name || 'File PDF',
-        'Preview PDF gagal dimuat di browser, tetapi file masih bisa didownload.'
-      );
+      frame.addEventListener('error', function () {
+        showPdfFallback(name);
+      });
     }
+
+    setTimeout(function () {
+      if (!loaded) {
+        showPdfFallback(name);
+      }
+    }, 6000);
   }
 
-  async function renderViewer(url, type, name) {
+  function renderViewer(url, type, name) {
     const wrap = document.getElementById('viewerWrap');
     if (!wrap) return;
 
-    cleanupObjectUrl();
-
-    const ext = (name || '').split('.').pop().toLowerCase();
+    const ext = String(name || '').split('.').pop().toLowerCase();
 
     if (type === 'pdf' || ext === 'pdf') {
-      await renderPdf(url, name);
+      renderPdfViewer(url, name);
       return;
     }
 
     if (type === 'foto' || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
       wrap.innerHTML = `
         <div class="img-viewer-wrap">
-          <img id="viewerImage" src="${escapeHtml(url)}" alt="${escapeHtml(name)}" style="opacity:0;transition:opacity 0.4s ease"/>
-        </div>`;
+          <img
+            id="viewerImage"
+            src="${escapeHtml(url)}"
+            alt="${escapeHtml(name)}"
+            style="opacity:0;transition:opacity 0.4s ease"
+          />
+        </div>
+      `;
+
       const img = document.getElementById('viewerImage');
-      if (img) img.addEventListener('load', function () { this.style.opacity = '1'; });
+      if (img) {
+        img.addEventListener('load', function () {
+          this.style.opacity = '1';
+        });
+      }
+
       return;
     }
 
@@ -248,26 +228,34 @@
             <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran video.
           </video>
-        </div>`;
+        </div>
+      `;
+
       return;
     }
 
     if (type === 'audio' || ['mp3', 'wav', 'flac', 'aac', 'ogg'].includes(ext)) {
       wrap.innerHTML = `
         <div class="audio-viewer-wrap">
-          <div class="audio-icon-big"><i class="ti ti-music"></i></div>
+          <div class="audio-icon-big">
+            <i class="ti ti-music"></i>
+          </div>
+
           <div class="audio-name">${escapeHtml(name)}</div>
+
           <audio controls autoplay>
             <source src="${escapeHtml(url)}">
             Browser Anda tidak mendukung pemutaran audio.
           </audio>
-        </div>`;
+        </div>
+      `;
+
       return;
     }
 
     const iconInfo = FILE_ICONS[type] || FILE_ICONS.doc;
     const isOffice = OFFICE_EXTS.includes(ext);
-    const extLabel = ext ? ext.toUpperCase() : (type || 'FILE').toUpperCase();
+    const extLabel = ext ? ext.toUpperCase() : String(type || 'FILE').toUpperCase();
 
     const officeNote = isOffice
       ? `File <strong>${escapeHtml(extLabel)}</strong> tidak bisa ditampilkan langsung di browser karena keterbatasan keamanan browser.<br>Silakan download untuk membuka dengan aplikasi yang sesuai.`
@@ -278,15 +266,20 @@
         <div class="generic-icon-box" style="background:${iconInfo.bg}">
           <i class="ti ${iconInfo.icon}" style="color:${iconInfo.color}"></i>
         </div>
+
         <span class="ext-badge">${escapeHtml(extLabel)}</span>
+
         <h3>${escapeHtml(name)}</h3>
+
         <p>${officeNote}</p>
+
         <div class="btn-group">
           <button class="btn-action primary" data-action="download-file">
             <i class="ti ti-download"></i> Download File
           </button>
         </div>
-      </div>`;
+      </div>
+    `;
   }
 
   async function downloadFile() {
@@ -294,7 +287,10 @@
 
     showToast('Menyiapkan download...');
 
-    const { data, error } = await sb.storage.from(BUCKET).download(storagePath);
+    const { data, error } = await sb.storage
+      .from('user-files')
+      .download(storagePath);
+
     if (error) {
       showToast('Gagal download: ' + error.message, true);
       return;
@@ -302,28 +298,16 @@
 
     const url = URL.createObjectURL(data);
     const a = document.createElement('a');
+
     a.href = url;
     a.download = fileName || 'file';
     document.body.appendChild(a);
     a.click();
     a.remove();
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    URL.revokeObjectURL(url);
+
     showToast('Download dimulai!');
-  }
-
-  function generateShareToken() {
-    try {
-      const bytes = new Uint8Array(24);
-      crypto.getRandomValues(bytes);
-      return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-    } catch (e) {
-      return String(Date.now()) + '_' + Math.random().toString(36).slice(2);
-    }
-  }
-
-  function buildPublicShareUrl(token) {
-    return window.location.origin + '/pages/share.html?token=' + encodeURIComponent(token);
   }
 
   async function shareFile() {
@@ -358,7 +342,7 @@
       const { data: row, error } = await sb
         .from('shared_links')
         .insert({
-          token,
+          token: token,
           file_id: fileId,
           user_id: user.id,
           expires_at: expiresAt,
@@ -376,18 +360,26 @@
         action: 'share_file',
         file_id: fileId,
         file_name: fileName || 'File',
-        details: { shared_id: row && row.id, token, source: 'viewer' }
+        details: {
+          shared_id: row && row.id,
+          token: token,
+          source: 'viewer'
+        }
       });
 
       const publicUrl = buildPublicShareUrl(token);
 
       try {
         let saved = JSON.parse(localStorage.getItem('myStorageShared') || '[]');
-        saved = saved.filter(s => s.fileId !== String(fileId));
+
+        saved = saved.filter(function (s) {
+          return s.fileId !== String(fileId);
+        });
+
         saved.unshift({
           fileId: String(fileId),
           sharedId: row && row.id,
-          token,
+          token: token,
           name: fileName || 'File',
           url: publicUrl,
           type: fileType || 'doc',
@@ -395,7 +387,9 @@
           createdAt: Date.now(),
           expiresAt: new Date(expiresAt).getTime()
         });
+
         if (saved.length > 50) saved = saved.slice(0, 50);
+
         localStorage.setItem('myStorageShared', JSON.stringify(saved));
       } catch (cacheErr) {
         console.warn('Gagal simpan cache shared link:', cacheErr);
@@ -416,54 +410,75 @@
     const btnShare = document.getElementById('btnShare');
     const btnDownload = document.getElementById('btnDownload');
 
-    if (btnShare) btnShare.addEventListener('click', shareFile);
-    if (btnDownload) btnDownload.addEventListener('click', downloadFile);
+    if (btnShare) {
+      btnShare.addEventListener('click', shareFile);
+    }
+
+    if (btnDownload) {
+      btnDownload.addEventListener('click', downloadFile);
+    }
 
     document.addEventListener('click', function (e) {
       const actionEl = e.target.closest('[data-action]');
       if (!actionEl) return;
 
       const action = actionEl.getAttribute('data-action');
-      if (action === 'download-file') downloadFile();
-      if (action === 'open-signed-url' && signedUrl) window.open(signedUrl, '_blank', 'noopener,noreferrer');
-    });
 
-    window.addEventListener('beforeunload', cleanupObjectUrl);
+      if (action === 'download-file') {
+        downloadFile();
+      }
+
+      if (action === 'open-pdf-new-tab' && signedUrl) {
+        window.open(signedUrl, '_blank', 'noopener,noreferrer');
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', async function () {
     bindEvents();
 
     const { data: sessionData } = await sb.auth.getSession();
+
     if (!sessionData || !sessionData.session) {
       window.location.href = '../pages/login.html';
       return;
     }
 
     if (!storagePath || !fileName) {
-      showError('File tidak ditemukan', 'Parameter file tidak valid. Silakan kembali ke dashboard dan pilih file lagi.');
+      showError(
+        'File tidak ditemukan',
+        'Parameter file tidak valid. Silakan kembali ke dashboard dan pilih file lagi.'
+      );
       return;
     }
 
     document.title = 'MyStorage — ' + fileName;
 
-    const titleEl = document.getElementById('fileTitle');
-    const metaEl = document.getElementById('fileMeta');
+    const fileTitle = document.getElementById('fileTitle');
+    const fileMeta = document.getElementById('fileMeta');
 
-    if (titleEl) titleEl.textContent = fileName;
-    if (metaEl) {
-      metaEl.textContent = fileSize
-        ? fileSize + ' · ' + (fileType || '').toUpperCase()
-        : (fileType || '').toUpperCase();
+    if (fileTitle) fileTitle.textContent = fileName;
+
+    if (fileMeta) {
+      fileMeta.textContent = fileSize
+        ? fileSize + ' · ' + String(fileType || '').toUpperCase()
+        : String(fileType || '').toUpperCase();
     }
 
-    const { data, error } = await sb.storage.from(BUCKET).createSignedUrl(storagePath, 3600);
+    const { data, error } = await sb.storage
+      .from('user-files')
+      .createSignedUrl(storagePath, 3600);
+
     if (error) {
-      showError('Gagal membuka file', 'Tidak dapat membuat link akses: ' + error.message);
+      showError(
+        'Gagal membuka file',
+        'Tidak dapat membuat link akses: ' + error.message
+      );
       return;
     }
 
     signedUrl = data.signedUrl;
-    await renderViewer(signedUrl, fileType, fileName);
+
+    renderViewer(signedUrl, fileType, fileName);
   });
 })();
