@@ -1,9 +1,12 @@
 /* MyStorage viewer page logic
-   CSP-safe: no inline JavaScript. PDF preview uses Blob URL for better browser compatibility. */
+   CSP-safe: no inline JavaScript. PDF preview uses PDF.js canvas renderer so it does not rely on the browser native PDF plugin. */
 (function () {
   const sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
   const BUCKET = 'user-files';
+  const PDFJS_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';
+  const PDFJS_WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
   let signedUrl = null;
   let activeObjectUrl = null;
 
@@ -94,6 +97,67 @@
       </div>`;
   }
 
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector('script[data-pdfjs="true"]');
+      if (existing) {
+        if (window.pdfjsLib) resolve(window.pdfjsLib);
+        else existing.addEventListener('load', () => resolve(window.pdfjsLib), { once: true });
+        return;
+      }
+
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = true;
+      s.defer = true;
+      s.dataset.pdfjs = 'true';
+      s.onload = () => resolve(window.pdfjsLib);
+      s.onerror = () => reject(new Error('Gagal memuat PDF.js'));
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensurePdfJs() {
+    if (!window.pdfjsLib) await loadScript(PDFJS_URL);
+    if (!window.pdfjsLib) throw new Error('PDF.js tidak tersedia');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
+    return window.pdfjsLib;
+  }
+
+  async function renderPdfPage(pdf, pageNumber, container) {
+    const page = await pdf.getPage(pageNumber);
+    const baseViewport = page.getViewport({ scale: 1 });
+    const maxWidth = Math.min(container.clientWidth || 900, 980) - 28;
+    const scale = Math.max(0.7, Math.min(1.8, maxWidth / baseViewport.width));
+    const viewport = page.getViewport({ scale });
+    const ratio = window.devicePixelRatio || 1;
+
+    const pageWrap = document.createElement('div');
+    pageWrap.style.cssText = [
+      'display:flex',
+      'justify-content:center',
+      'padding:14px 0',
+      'border-bottom:1px solid rgba(255,255,255,0.06)'
+    ].join(';');
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    canvas.width = Math.floor(viewport.width * ratio);
+    canvas.height = Math.floor(viewport.height * ratio);
+    canvas.style.width = Math.floor(viewport.width) + 'px';
+    canvas.style.height = Math.floor(viewport.height) + 'px';
+    canvas.style.maxWidth = '100%';
+    canvas.style.borderRadius = '8px';
+    canvas.style.boxShadow = '0 18px 50px rgba(0,0,0,0.28)';
+    canvas.style.background = '#fff';
+
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    pageWrap.appendChild(canvas);
+    container.appendChild(pageWrap);
+
+    await page.render({ canvasContext: ctx, viewport }).promise;
+  }
+
   async function renderPdf(url, name) {
     const wrap = document.getElementById('viewerWrap');
     if (!wrap) return;
@@ -106,14 +170,10 @@
         </div>`;
 
       const response = await fetch(url, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
-      }
+      if (!response.ok) throw new Error('HTTP ' + response.status);
 
       const blob = await response.blob();
-      if (!blob || blob.size === 0) {
-        throw new Error('File kosong');
-      }
+      if (!blob || blob.size === 0) throw new Error('File kosong');
 
       cleanupObjectUrl();
       const pdfBlob = blob.type === 'application/pdf'
@@ -121,13 +181,34 @@
         : new Blob([blob], { type: 'application/pdf' });
 
       activeObjectUrl = URL.createObjectURL(pdfBlob);
+      const pdfjsLib = await ensurePdfJs();
+      const pdf = await pdfjsLib.getDocument({ url: activeObjectUrl }).promise;
 
       wrap.innerHTML = `
-        <iframe
-          class="pdf-viewer"
-          src="${activeObjectUrl}#toolbar=1&navpanes=0"
-          title="${escapeHtml(name)}">
-        </iframe>`;
+        <div class="pdf-js-shell" style="width:100%;height:100%;overflow:auto;background:var(--paper, #111);">
+          <div style="position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:rgba(15,14,13,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:12px;color:var(--text-muted,#aaa);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Preview PDF · ${escapeHtml(pdf.numPages)} halaman</div>
+            <button class="btn-action" data-action="download-file" style="padding:7px 12px;font-size:12px">
+              <i class="ti ti-download"></i> Download
+            </button>
+          </div>
+          <div id="pdfPages" style="max-width:1040px;margin:0 auto;padding:12px;"></div>
+        </div>`;
+
+      const pagesEl = document.getElementById('pdfPages');
+      const maxAutoPages = 40;
+      const pagesToRender = Math.min(pdf.numPages, maxAutoPages);
+
+      for (let i = 1; i <= pagesToRender; i++) {
+        await renderPdfPage(pdf, i, pagesEl);
+      }
+
+      if (pdf.numPages > maxAutoPages) {
+        const notice = document.createElement('div');
+        notice.style.cssText = 'text-align:center;color:var(--text-muted,#aaa);font-size:13px;padding:18px 0 28px;';
+        notice.textContent = 'Preview dibatasi ' + maxAutoPages + ' halaman. Download file untuk melihat semua halaman.';
+        pagesEl.appendChild(notice);
+      }
     } catch (err) {
       console.warn('PDF preview failed:', err);
       showPreviewFallback(
