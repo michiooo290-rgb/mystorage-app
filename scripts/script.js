@@ -313,6 +313,35 @@ async function buildStoragePath(folderId, fileName) {
   return buildStoragePathForUser(await getCurrentUserId(), folderId, fileName);
 }
 
+/* ── HYBRID STORAGE: R2 untuk file >= 5MB, Supabase untuk file kecil ── */
+const R2_THRESHOLD_BYTES = 5 * 1024 * 1024; // 5 MB
+
+async function uploadFileToStorage(file, filePath, userId, fileName) {
+  var useR2 = window.R2_ENABLED &&
+              window.R2_WORKER_URL &&
+              window.R2_WORKER_URL !== 'GANTI_DENGAN_URL_WORKER_KAMU' &&
+              file.size >= R2_THRESHOLD_BYTES;
+
+  if (useR2) {
+    var result = await window.uploadToR2(file, userId, fileName);
+    return { storagePath: result.key, storageProvider: 'r2' };
+  } else {
+    var uploadResult = await sb.storage.from('user-files').upload(filePath, file);
+    if (uploadResult.error) throw new Error(uploadResult.error.message);
+    return { storagePath: filePath, storageProvider: 'supabase' };
+  }
+}
+
+async function deleteFileFromStorage(storagePath, storageProvider) {
+  try {
+    if (storageProvider === 'r2') {
+      await window.deleteFromR2(storagePath);
+    } else {
+      await sb.storage.from('user-files').remove([storagePath]);
+    }
+  } catch(e) { console.warn('Gagal hapus file dari storage:', e); }
+}
+
 function getFileStoragePath(file) {
   return file.storage_path || (file.folder_name ? (file.folder_name + '/' + file.name) : file.name);
 }
@@ -2823,8 +2852,7 @@ async function uploadFile() {
     const filePath = buildStoragePathForUser(uid, folderId, file.name);
 
     try {
-      const { error: uploadError } = await sb.storage.from('user-files').upload(filePath, file);
-      if (uploadError) throw new Error(uploadError.message);
+      const { storagePath, storageProvider } = await uploadFileToStorage(file, filePath, uid, file.name);
 
       const { error: insertError } = await sb.from('files').insert({
         name: file.name,
@@ -2836,11 +2864,12 @@ async function uploadFile() {
         icon: iconInfo.icon,
         icon_color: iconInfo.iconColor,
         icon_bg: iconInfo.iconBg,
-        storage_path: filePath,
+        storage_path: storagePath,
+        storage_provider: storageProvider,
         user_id: uid
       });
       if (insertError) {
-        await sb.storage.from('user-files').remove([filePath]);
+        await deleteFileFromStorage(storagePath, storageProvider);
         throw new Error(insertError.message);
       }
 
@@ -3153,9 +3182,10 @@ async function uploadFolderFiles() {
         targetFolderName = folderParts[folderParts.length - 1];
       }
 
-      var storagePath = buildStoragePathForUser(userId, targetFolderId || null, fileName);
-      var { error: upErr } = await sb.storage.from('user-files').upload(storagePath, file, { upsert: true });
-      if (upErr) throw new Error(upErr.message);
+      var basePath = buildStoragePathForUser(userId, targetFolderId || null, fileName);
+      var uploadResult = await uploadFileToStorage(file, basePath, userId, fileName);
+      var storagePath = uploadResult.storagePath;
+      var storageProvider = uploadResult.storageProvider;
 
       var ext = fileName.split('.').pop().toLowerCase();
       var type = 'doc';
@@ -3178,10 +3208,11 @@ async function uploadFolderFiles() {
         icon_color: iconInfo.iconColor,
         icon_bg: iconInfo.iconBg,
         storage_path: storagePath,
+        storage_provider: storageProvider,
         user_id: userId
       });
       if (insertErr) {
-        await sb.storage.from('user-files').remove([storagePath]);
+        await deleteFileFromStorage(storagePath, storageProvider);
         throw new Error(insertErr.message);
       }
 
