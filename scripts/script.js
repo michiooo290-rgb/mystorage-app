@@ -126,7 +126,7 @@ let currentSort = 'newest';
 let currentViewMode = localStorage.getItem('myStorageViewMode') || 'grid';
 const MAX_FOLDERS_SHOWN = 4;      // Jumlah folder yang ditampilkan sebelum "Lihat Semua"
 const MAX_UPLOAD_FILE_BYTES = 100 * 1024 * 1024;      // 100 MB per file
-const MAX_STORAGE_BYTES = 1024 * 1024 * 1024;         // 1 GB per akun
+const MAX_STORAGE_BYTES = 11 * 1024 * 1024 * 1024; 
 let isFolderExpanded = false;
 let folderSearchQuery = '';
 
