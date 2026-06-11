@@ -2912,32 +2912,84 @@ async function uploadFile() {
   renderStats();
 }
 
+function renderSelectedFilesUI(filesArr, el) {
+  if (!filesArr || filesArr.length === 0) { el.textContent = ''; return; }
+
+  const totalSize = filesArr.reduce(function(sum, f) { return sum + f.size; }, 0);
+  const totalStr = totalSize > 1024 * 1024
+    ? (totalSize / (1024 * 1024)).toFixed(1) + ' MB'
+    : (totalSize / 1024).toFixed(0) + ' KB';
+
+  var iconMap = {
+    jpg:'ti-file-type-jpg',jpeg:'ti-file-type-jpg',png:'ti-file-type-png',gif:'ti-file-type-bmp',
+    webp:'ti-photo',svg:'ti-file-type-svg',mp4:'ti-file-type-mp4',mov:'ti-video',avi:'ti-video',
+    mkv:'ti-video',webm:'ti-video',mp3:'ti-file-type-mp3',wav:'ti-music',ogg:'ti-music',flac:'ti-music',
+    pdf:'ti-file-type-pdf',doc:'ti-file-type-doc',docx:'ti-file-type-docx',
+    xls:'ti-file-type-xls',xlsx:'ti-file-type-xls',csv:'ti-file-type-csv',
+    zip:'ti-file-type-zip',rar:'ti-file-zip',txt:'ti-file-type-txt',
+    js:'ti-file-type-js',html:'ti-file-type-html',css:'ti-file-type-css',py:'ti-file-type-py'
+  };
+  var colorMap = {
+    jpg:'#2d6a4f',jpeg:'#2d6a4f',png:'#2d6a4f',gif:'#2d6a4f',webp:'#2d6a4f',svg:'#2d6a4f',
+    mp4:'#c8602a',mov:'#c8602a',avi:'#c8602a',mkv:'#c8602a',webm:'#c8602a',
+    mp3:'#7e22ce',wav:'#7e22ce',ogg:'#7e22ce',flac:'#7e22ce',
+    pdf:'#c0392b',doc:'#1d4ed8',docx:'#1d4ed8',
+    xls:'#0369a1',xlsx:'#0369a1',csv:'#0369a1',
+    zip:'#b45309',rar:'#b45309'
+  };
+
+  function fileRow(f) {
+    var ext = (f.name || '').split('.').pop().toLowerCase();
+    var icon = iconMap[ext] || 'ti-file';
+    var color = colorMap[ext] || '#5a5754';
+    var size = f.size > 1024 * 1024
+      ? (f.size / (1024 * 1024)).toFixed(1) + ' MB'
+      : (f.size / 1024).toFixed(0) + ' KB';
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;background:rgba(15,14,13,0.04);border-radius:7px">' +
+      '<i class="ti ' + icon + '" style="font-size:14px;color:' + color + ';flex-shrink:0"></i>' +
+      '<span style="font-size:12px;color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escapeHtml(f.name) + '</span>' +
+      '<span style="font-size:11px;color:var(--ink-4);flex-shrink:0">' + size + '</span>' +
+      '</div>';
+  }
+
+  if (filesArr.length === 1) {
+    el.innerHTML = '📎 ' + escapeHtml(filesArr[0].name) + ' <span style="color:#9a9693">(' + totalStr + ')</span>';
+  } else if (filesArr.length <= 5) {
+    el.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:4px;margin-top:4px">' +
+        filesArr.map(fileRow).join('') +
+      '</div>' +
+      '<div style="font-size:11.5px;color:#9a9693;margin-top:6px;text-align:right">' + filesArr.length + ' file · ' + totalStr + '</div>';
+  } else if (filesArr.length <= 20) {
+    el.innerHTML =
+      '<div style="font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px">📎 ' + filesArr.length + ' file dipilih <span style="font-weight:400;color:#9a9693">(' + totalStr + ')</span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:3px;max-height:130px;overflow-y:auto;padding-right:2px">' +
+        filesArr.map(fileRow).join('') +
+      '</div>' +
+      '<div style="font-size:11px;color:#9a9693;margin-top:5px;text-align:center">↕ scroll untuk lihat semua</div>';
+  } else {
+    el.innerHTML =
+      '<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(15,14,13,0.04);border-radius:9px">' +
+        '<i class="ti ti-files" style="font-size:20px;color:#c8602a;flex-shrink:0"></i>' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:600;color:var(--ink-2)">' + filesArr.length + ' file dipilih</div>' +
+          '<div style="font-size:11.5px;color:#9a9693">' + totalStr + ' total</div>' +
+        '</div>' +
+      '</div>';
+  }
+}
+
 function handleFileSelect(input) {
   droppedFiles = null;
   const filesArr = Array.from(input.files);
-  const MAX_FILE_SIZE = MAX_UPLOAD_FILE_BYTES;
   const el = document.getElementById('selectedFiles');
 
-  const warnings = filesArr.filter(function(f) { return f.size > MAX_FILE_SIZE; });
-  const totalSize = filesArr.reduce(function(sum, f) { return sum + f.size; }, 0);
-  const totalStr = totalSize > 1024*1024
-    ? (totalSize/(1024*1024)).toFixed(1) + ' MB'
-    : (totalSize/1024).toFixed(0) + ' KB';
-
+  const warnings = filesArr.filter(function(f) { return f.size > MAX_UPLOAD_FILE_BYTES; });
   if (warnings.length > 0) {
     el.innerHTML = '<span style="color:#f87171">⚠️ ' + escapeHtml(warnings[0].name) + ' melebihi batas 100 MB!</span>';
-  } else if (filesArr.length > 0) {
-    if (filesArr.length === 1) {
-      el.innerHTML = '📎 ' + escapeHtml(filesArr[0].name) + ' <span style="color:#9a9693">(' + totalStr + ')</span>';
-    } else if (filesArr.length <= 5) {
-      const names = filesArr.map(function(f) { return escapeHtml(f.name); }).join(', ');
-      el.innerHTML = '📎 ' + names + ' <span style="color:#9a9693">(' + filesArr.length + ' file · ' + totalStr + ')</span>';
-    } else {
-      el.innerHTML = '📎 <strong>' + filesArr.length + ' file dipilih</strong> <span style="color:#9a9693">(' + totalStr + ')</span>';
-    }
-  } else {
-    el.textContent = '';
+    return;
   }
+  renderSelectedFilesUI(filesArr, el);
 }
 
 function handleFolderSelect(input) {
@@ -4030,16 +4082,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     dz.style.borderColor = '';
     dz.style.background = '';
     droppedFiles = Array.from(e.dataTransfer.files);
-    const el = document.getElementById('selectedFiles');
-    if (droppedFiles.length === 0) {
-      el.textContent = '';
-    } else if (droppedFiles.length === 1) {
-      el.textContent = '📎 ' + droppedFiles[0].name;
-    } else if (droppedFiles.length <= 5) {
-      el.textContent = '📎 ' + droppedFiles.map(function(f) { return f.name; }).join(', ');
-    } else {
-      el.innerHTML = '📎 <strong>' + droppedFiles.length + ' file dipilih</strong>';
-    }
+    renderSelectedFilesUI(droppedFiles, document.getElementById('selectedFiles'));
   });
 
   document.addEventListener('keydown', function(e) {
