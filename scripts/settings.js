@@ -186,7 +186,7 @@ async function loadAll() {
 ──────────────────────── */
 function updateSidebarStorage() {
   let usedBytes = calcUsedBytes();
-  const totalMB = 1024;
+  const totalMB = 11 * 1024;
   const usedMB = usedBytes / (1024 * 1024);
   const pct = Math.min(Math.round((usedMB / totalMB) * 100), 100);
   const usedStr = formatBytes(usedBytes);
@@ -499,7 +499,7 @@ function closeColorPicker() {
 ──────────────────────── */
 function renderAnalitik() {
   const usedBytes = calcUsedBytes();
-  const totalBytes = 1024 * 1024 * 1024;
+  const totalBytes = 11 * 1024 * 1024 * 1024;
   const freeBytes = Math.max(0, totalBytes - usedBytes);
   const pct = Math.min((usedBytes / totalBytes) * 100, 100);
 
@@ -715,7 +715,7 @@ function updateThreshold(val) {
 
 function checkStorageWarning() {
   const usedBytes = calcUsedBytes();
-  const totalBytes = 1024 * 1024 * 1024;
+  const totalBytes = 11 * 1024 * 1024 * 1024;
   const pct = (usedBytes / totalBytes) * 100;
 
   const s = JSON.parse(localStorage.getItem('myStorageNotifSettings') || '{}');

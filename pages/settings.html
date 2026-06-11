@@ -1,753 +1,754 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MyStorage — Pengaturan</title>
-  <link rel="icon" type="image/png" href="../assets/logo.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-  <link rel="stylesheet" href="../styles/style.css"/>
-  <link rel="stylesheet" href="../styles/settings.css"/>
-  <link rel="stylesheet" href="../styles/nightmode.css"/>
-  <!-- Terapkan dark mode SEBELUM browser render, cegah FOUC -->
-  <script src="../scripts/theme-boot.js"></script>
-  <script src="../scripts/nightmode.js" defer></script>
-  <style>
-    .avatar-wrapper {
-      position: relative;
-      width: 80px;
-      height: 80px;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-    .avatar-wrapper .avatar-preview {
-      width: 80px !important;
-      height: 80px !important;
-      font-size: 28px !important;
-      border-radius: 50% !important;
-      object-fit: cover;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .avatar-photo-overlay {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: rgba(0,0,0,0.48);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      cursor: pointer;
-    }
-    .avatar-wrapper:hover .avatar-photo-overlay { opacity: 1; }
-    .btn-avatar-remove {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      font-family: 'Outfit', sans-serif;
-      cursor: pointer;
-      border: 1px solid rgba(239,68,68,0.35);
-      background: rgba(239,68,68,0.08);
-      color: #f87171;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .btn-avatar-remove:hover {
-      background: rgba(239,68,68,0.16);
-      border-color: rgba(239,68,68,0.6);
-    }
-    /* Crop dialog */
-    .crop-container { margin: 16px 0; }
-    .crop-viewport {
-      position: relative;
-      width: 220px;
-      height: 220px;
-      margin: 0 auto 16px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: #111;
-      cursor: grab;
-      user-select: none;
-      box-shadow: 0 0 0 3px var(--accent, #c8602a);
-    }
-    .crop-viewport:active { cursor: grabbing; }
-    .crop-viewport img {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform-origin: center center;
-      pointer-events: none;
-      max-width: none;
-    }
-    .crop-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 8px;
-    }
-    .crop-controls input[type=range] {
-      flex: 1;
-      accent-color: var(--accent, #c8602a);
-    }
+  <!DOCTYPE html>
+  <html lang="id">
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MyStorage — Pengaturan</title>
+    <link rel="icon" type="image/png" href="../assets/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+    <link rel="stylesheet" href="../styles/style.css"/>
+    <link rel="stylesheet" href="../styles/settings.css"/>
+    <link rel="stylesheet" href="../styles/nightmode.css"/>
+    <!-- Terapkan dark mode SEBELUM browser render, cegah FOUC -->
+    <script src="../scripts/theme-boot.js"></script>
+    <script src="../scripts/nightmode.js" defer></script>
+    <style>
+      .avatar-wrapper {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .avatar-wrapper .avatar-preview {
+        width: 80px !important;
+        height: 80px !important;
+        font-size: 28px !important;
+        border-radius: 50% !important;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .avatar-photo-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.48);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        cursor: pointer;
+      }
+      .avatar-wrapper:hover .avatar-photo-overlay { opacity: 1; }
+      .btn-avatar-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        font-family: 'Outfit', sans-serif;
+        cursor: pointer;
+        border: 1px solid rgba(239,68,68,0.35);
+        background: rgba(239,68,68,0.08);
+        color: #f87171;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      .btn-avatar-remove:hover {
+        background: rgba(239,68,68,0.16);
+        border-color: rgba(239,68,68,0.6);
+      }
+      /* Crop dialog */
+      .crop-container { margin: 16px 0; }
+      .crop-viewport {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #111;
+        cursor: grab;
+        user-select: none;
+        box-shadow: 0 0 0 3px var(--accent, #c8602a);
+      }
+      .crop-viewport:active { cursor: grabbing; }
+      .crop-viewport img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform-origin: center center;
+        pointer-events: none;
+        max-width: none;
+      }
+      .crop-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 8px;
+      }
+      .crop-controls input[type=range] {
+        flex: 1;
+        accent-color: var(--accent, #c8602a);
+      }
 
-    /* ═══════════════════════════════════════
-       ICON ANIMATION SYSTEM — sama seperti dashboard
-    ═══════════════════════════════════════ */
+      /* ═══════════════════════════════════════
+        ICON ANIMATION SYSTEM — sama seperti dashboard
+      ═══════════════════════════════════════ */
 
-    /* Nav sidebar */
-    .nav-item i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), color 0.2s;
-    }
-    .nav-item:hover i {
-      transform: translateY(-3px) scale(1.18);
-    }
-    .nav-item.active i {
-      animation: navIconPulse 2.5s ease-in-out infinite;
-    }
-    @keyframes navIconPulse {
-      0%, 100% { transform: scale(1); }
-      50%       { transform: scale(1.15); }
-    }
+      /* Nav sidebar */
+      .nav-item i {
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), color 0.2s;
+      }
+      .nav-item:hover i {
+        transform: translateY(-3px) scale(1.18);
+      }
+      .nav-item.active i {
+        animation: navIconPulse 2.5s ease-in-out infinite;
+      }
+      @keyframes navIconPulse {
+        0%, 100% { transform: scale(1); }
+        50%       { transform: scale(1.15); }
+      }
 
-    /* Settings nav items (kiri konten) */
-    .settings-nav-item i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .settings-nav-item:hover i {
-      transform: translateY(-2px) scale(1.2);
-    }
-    .settings-nav-item.active i {
-      animation: navIconPulse 2.5s ease-in-out infinite;
-    }
+      /* Settings nav items (kiri konten) */
+      .settings-nav-item i {
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .settings-nav-item:hover i {
+        transform: translateY(-2px) scale(1.2);
+      }
+      .settings-nav-item.active i {
+        animation: navIconPulse 2.5s ease-in-out infinite;
+      }
 
-    /* Section title icons */
-    .settings-section-title i {
-      display: inline-block;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .settings-section:hover .settings-section-title i {
-      transform: scale(1.2) rotate(-8deg);
-    }
+      /* Section title icons */
+      .settings-section-title i {
+        display: inline-block;
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .settings-section:hover .settings-section-title i {
+        transform: scale(1.2) rotate(-8deg);
+      }
 
-    /* Logo icon */
-    .logo-icon i {
-      display: inline-block;
-      animation: logoFloat 3s ease-in-out infinite;
-    }
-    @keyframes logoFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50%       { transform: translateY(-3px) rotate(-8deg); }
-    }
+      /* Logo icon */
+      .logo-icon i {
+        display: inline-block;
+        animation: logoFloat 3s ease-in-out infinite;
+      }
+      @keyframes logoFloat {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50%       { transform: translateY(-3px) rotate(-8deg); }
+      }
 
-    /* Tombol simpan icon */
-    .btn-settings-save i {
-      display: inline-block;
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-settings-save:hover i {
-      transform: scale(1.3) rotate(-10deg);
-    }
+      /* Tombol simpan icon */
+      .btn-settings-save i {
+        display: inline-block;
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .btn-settings-save:hover i {
+        transform: scale(1.3) rotate(-10deg);
+      }
 
-    /* Back button */
-    .btn-icon i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-icon:hover i {
-      transform: translateX(-4px) scale(1.15);
-    }
+      /* Back button */
+      .btn-icon i {
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .btn-icon:hover i {
+        transform: translateX(-4px) scale(1.15);
+      }
 
-    /* Upload foto & warna avatar buttons */
-    .btn-avatar-change i {
-      display: inline-block;
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-avatar-change:hover i {
-      transform: scale(1.25) rotate(-8deg);
-    }
+      /* Upload foto & warna avatar buttons */
+      .btn-avatar-change i {
+        display: inline-block;
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .btn-avatar-change:hover i {
+        transform: scale(1.25) rotate(-8deg);
+      }
 
-    /* Hapus foto button */
-    .btn-avatar-remove i {
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .btn-avatar-remove:hover i {
-      animation: trashShake 0.4s ease;
-    }
-    @keyframes trashShake {
-      0%, 100% { transform: scale(1.2) rotate(0deg); }
-      25%       { transform: scale(1.2) rotate(-8deg); }
-      75%       { transform: scale(1.2) rotate(8deg); }
-    }
+      /* Hapus foto button */
+      .btn-avatar-remove i {
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .btn-avatar-remove:hover i {
+        animation: trashShake 0.4s ease;
+      }
+      @keyframes trashShake {
+        0%, 100% { transform: scale(1.2) rotate(0deg); }
+        25%       { transform: scale(1.2) rotate(-8deg); }
+        75%       { transform: scale(1.2) rotate(8deg); }
+      }
 
-    /* Folder toggle button */
-    .btn-folder-toggle {
-      width: 100%;
-      margin-top: 10px;
-      padding: 7px 0;
-      background: transparent;
-      border: 1px solid rgba(15,14,13,0.12);
-      border-radius: 8px;
-      font-size: 12px;
-      color: var(--ink-4);
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .btn-folder-toggle:hover {
-      background: rgba(15,14,13,0.05);
-      color: var(--ink-2);
-    }
-    [data-theme="dark"] .btn-folder-toggle {
-      border-color: rgba(255,255,255,0.1);
-    }
-    [data-theme="dark"] .btn-folder-toggle:hover {
-      background: rgba(255,255,255,0.06);
-      color: var(--ink-2);
-    }
+      /* Folder toggle button */
+      .btn-folder-toggle {
+        width: 100%;
+        margin-top: 10px;
+        padding: 7px 0;
+        background: transparent;
+        border: 1px solid rgba(15,14,13,0.12);
+        border-radius: 8px;
+        font-size: 12px;
+        color: var(--ink-4);
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .btn-folder-toggle:hover {
+        background: rgba(15,14,13,0.05);
+        color: var(--ink-2);
+      }
+      [data-theme="dark"] .btn-folder-toggle {
+        border-color: rgba(255,255,255,0.1);
+      }
+      [data-theme="dark"] .btn-folder-toggle:hover {
+        background: rgba(255,255,255,0.06);
+        color: var(--ink-2);
+      }
 
-    /* Settings gear di nav active: spin */
-    .nav-item.active .ti-settings {
-      animation: settingsSpin 8s linear infinite;
-    }
-    .nav-item:hover .ti-settings {
-      animation: settingsSpinFast 0.6s ease forwards;
-    }
-    @keyframes settingsSpin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @keyframes settingsSpinFast {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(90deg); }
-    }
+      /* Settings gear di nav active: spin */
+      .nav-item.active .ti-settings {
+        animation: settingsSpin 8s linear infinite;
+      }
+      .nav-item:hover .ti-settings {
+        animation: settingsSpinFast 0.6s ease forwards;
+      }
+      @keyframes settingsSpin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+      @keyframes settingsSpinFast {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(90deg); }
+      }
 
-    /* Chart icon di section Analitik */
-    .ti-chart-pie {
-      display: inline-block;
-      animation: chartSpin 6s linear infinite;
-    }
-    @keyframes chartSpin {
-      0%, 80%, 100% { transform: rotate(0deg); }
-      90%           { transform: rotate(20deg); }
-    }
+      /* Chart icon di section Analitik */
+      .ti-chart-pie {
+        display: inline-block;
+        animation: chartSpin 6s linear infinite;
+      }
+      @keyframes chartSpin {
+        0%, 80%, 100% { transform: rotate(0deg); }
+        90%           { transform: rotate(20deg); }
+      }
 
-    /* Bell icon di section Notifikasi */
-    .ti-bell-ringing {
-      display: inline-block;
-      animation: bellRingLoop 4s ease-in-out infinite;
-    }
-    @keyframes bellRingLoop {
-      0%, 80%, 100% { transform: rotate(0deg); }
-      85%           { transform: rotate(-15deg); }
-      90%           { transform: rotate(15deg); }
-      95%           { transform: rotate(-8deg); }
-    }
+      /* Bell icon di section Notifikasi */
+      .ti-bell-ringing {
+        display: inline-block;
+        animation: bellRingLoop 4s ease-in-out infinite;
+      }
+      @keyframes bellRingLoop {
+        0%, 80%, 100% { transform: rotate(0deg); }
+        85%           { transform: rotate(-15deg); }
+        90%           { transform: rotate(15deg); }
+        95%           { transform: rotate(-8deg); }
+      }
 
-    /* Palette icon di section Tampilan */
-    .ti-palette {
-      display: inline-block;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .settings-section:hover .ti-palette {
-      transform: rotate(-15deg) scale(1.15);
-    }
+      /* Palette icon di section Tampilan */
+      .ti-palette {
+        display: inline-block;
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      }
+      .settings-section:hover .ti-palette {
+        transform: rotate(-15deg) scale(1.15);
+      }
 
-  </style>
-</head>
-<body>
+    </style>
+  </head>
+  <body>
 
-<div class="bg-mesh"></div>
-<div class="bg-grid"></div>
-<div class="bg-noise"></div>
-<div class="bg-scanlines"></div>
+  <div class="bg-mesh"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-scanlines"></div>
 
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-icon" style="background:transparent;border:none;box-shadow:none;">
-      <img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
-    </div>
-    <span class="logo-text">MyStorage</span>
-  </div>
-
-  <span class="nav-label">Menu</span>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-layout-dashboard"></i>Dashboard
-  </div>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-share"></i>Dibagikan
-  </div>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-star"></i>Favorit
-  </div>
-
-  <div class="divider"></div>
-  <span class="nav-label">Tipe File</span>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-file-type-pdf"></i>Dokumen
-  </div>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-photo"></i>Foto
-  </div>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-video"></i>Video
-  </div>
-  <div class="nav-item" data-action="go-dashboard">
-    <i class="ti ti-music"></i>Audio
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="nav-item active">
-    <i class="ti ti-settings"></i>Pengaturan
-  </div>
-  <div class="nav-item nav-logout" data-action="logout">
-    <i class="ti ti-logout"></i>Keluar
-  </div>
-
-  <div class="user-chip" id="userChip">
-    <div class="user-av" id="sidebarAv">??</div>
-    <div class="user-info">
-      <div class="user-name" id="sidebarName">Memuat...</div>
-      <div class="user-role" id="sidebarEmail">—</div>
-    </div>
-    <i class="ti ti-chevron-right" style="color:var(--text-faint);font-size:14px;margin-left:auto"></i>
-  </div>
-
-  <div class="storage-box">
-    <div class="storage-header">
-      <div class="storage-label">Penyimpanan</div>
-      <div class="storage-pct" id="storagePct">0%</div>
-    </div>
-    <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
-    <div class="storage-info">
-      <span id="storageUsed">0 KB terpakai</span>
-      <span>1 GB</span>
-    </div>
-  </div>
-</aside>
-
-<!-- SIDEBAR OVERLAY (mobile) -->
-<div class="sidebar-overlay" id="sidebarOverlay" data-action="close-sidebar"></div>
-
-<div class="main">
-
-  <header class="topbar">
-    <button class="hamburger-btn" id="hamburgerBtn" data-action="toggle-sidebar" aria-label="Buka menu">
-      <i class="ti ti-menu-2"></i>
-    </button>
-    <div class="breadcrumb" style="margin-right:16px">
-      <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
-      <i class="ti ti-chevron-right" style="font-size:12px"></i>
-      <a href="../Storage-dashboard.html" style="color:var(--ink-4);text-decoration:none;font-size:12.5px">Dashboard</a>
-      <i class="ti ti-chevron-right" style="font-size:12px"></i>
-      <span>Pengaturan</span>
-    </div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <div class="btn-icon" title="Kembali ke Dashboard" data-action="go-dashboard">
-        <i class="ti ti-arrow-left"></i>
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon" style="background:transparent;border:none;box-shadow:none;">
+        <img src="../assets/logo.png" alt="MyStorage" style="width:36px;height:36px;object-fit:contain;">
       </div>
-      <div class="topbar-av" id="topbarAv">??</div>
+      <span class="logo-text">MyStorage</span>
     </div>
-  </header>
 
-  <div class="content">
+    <span class="nav-label">Menu</span>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-layout-dashboard"></i>Dashboard
+    </div>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-share"></i>Dibagikan
+    </div>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-star"></i>Favorit
+    </div>
 
-    <div class="settings-layout">
+    <div class="divider"></div>
+    <span class="nav-label">Tipe File</span>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-file-type-pdf"></i>Dokumen
+    </div>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-photo"></i>Foto
+    </div>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-video"></i>Video
+    </div>
+    <div class="nav-item" data-action="go-dashboard">
+      <i class="ti ti-music"></i>Audio
+    </div>
 
-      <!-- LEFT NAV -->
-      <nav class="settings-nav">
-        <div class="settings-nav-title">Pengaturan</div>
-        <div class="settings-nav-item active" data-action="scroll-section" data-section="sec-profil">
-          <i class="ti ti-user-circle"></i>Edit Profil
+    <div class="divider"></div>
+
+    <div class="nav-item active">
+      <i class="ti ti-settings"></i>Pengaturan
+    </div>
+    <div class="nav-item nav-logout" data-action="logout">
+      <i class="ti ti-logout"></i>Keluar
+    </div>
+
+    <div class="user-chip" id="userChip">
+      <div class="user-av" id="sidebarAv">??</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Memuat...</div>
+        <div class="user-role" id="sidebarEmail">—</div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:var(--text-faint);font-size:14px;margin-left:auto"></i>
+    </div>
+
+    <div class="storage-box">
+      <div class="storage-header">
+        <div class="storage-label">Penyimpanan</div>
+        <div class="storage-pct" id="storagePct">0%</div>
+      </div>
+      <div class="storage-bar"><div class="storage-fill" id="storageFill"></div></div>
+      <div class="storage-info">
+        <span id="storageUsed">0 KB terpakai</span>
+        <span>11 GB</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- SIDEBAR OVERLAY (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay" data-action="close-sidebar"></div>
+
+  <div class="main">
+
+    <header class="topbar">
+      <button class="hamburger-btn" id="hamburgerBtn" data-action="toggle-sidebar" aria-label="Buka menu">
+        <i class="ti ti-menu-2"></i>
+      </button>
+      <div class="breadcrumb" style="margin-right:16px">
+        <i class="ti ti-home" style="font-size:15px;color:var(--text-faint)"></i>
+        <i class="ti ti-chevron-right" style="font-size:12px"></i>
+        <a href="../Storage-dashboard.html" style="color:var(--ink-4);text-decoration:none;font-size:12.5px">Dashboard</a>
+        <i class="ti ti-chevron-right" style="font-size:12px"></i>
+        <span>Pengaturan</span>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div class="btn-icon" title="Kembali ke Dashboard" data-action="go-dashboard">
+          <i class="ti ti-arrow-left"></i>
         </div>
-        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-analitik">
-          <i class="ti ti-chart-pie"></i>Analitik Storage
-        </div>
-        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-notif">
-          <i class="ti ti-bell-ringing"></i>Notifikasi
-        </div>
-        <div class="settings-nav-item" data-action="scroll-section" data-section="sec-tampilan">
-          <i class="ti ti-palette"></i>Tampilan
-        </div>
-      </nav>
+        <div class="topbar-av" id="topbarAv">??</div>
+      </div>
+    </header>
 
-      <!-- RIGHT CONTENT -->
-      <div class="settings-content">
+    <div class="content">
 
-        <!-- ════════════════════════
-             1. EDIT PROFIL
-             ════════════════════════ -->
-        <div class="settings-card" id="sec-profil">
-          <div class="settings-card-header">
-            <div class="settings-card-icon" style="background:rgba(200,96,42,0.08)">
-              <i class="ti ti-user-circle" style="color:var(--accent)"></i>
-            </div>
-            <div class="settings-card-head-text">
-              <div class="settings-card-title">Edit Profil</div>
-              <div class="settings-card-desc">Ubah nama tampilan dan informasi akun kamu</div>
-            </div>
+      <div class="settings-layout">
+
+        <!-- LEFT NAV -->
+        <nav class="settings-nav">
+          <div class="settings-nav-title">Pengaturan</div>
+          <div class="settings-nav-item active" data-action="scroll-section" data-section="sec-profil">
+            <i class="ti ti-user-circle"></i>Edit Profil
           </div>
-          <div class="settings-card-body">
+          <div class="settings-nav-item" data-action="scroll-section" data-section="sec-analitik">
+            <i class="ti ti-chart-pie"></i>Analitik Storage
+          </div>
+          <div class="settings-nav-item" data-action="scroll-section" data-section="sec-notif">
+            <i class="ti ti-bell-ringing"></i>Notifikasi
+          </div>
+          <div class="settings-nav-item" data-action="scroll-section" data-section="sec-tampilan">
+            <i class="ti ti-palette"></i>Tampilan
+          </div>
+        </nav>
 
-            <!-- Avatar Section -->
-            <div class="avatar-section">
-              <div class="avatar-wrapper" id="avatarWrapper">
-                <div class="avatar-preview" id="avatarPreview">??</div>
-                <div class="avatar-photo-overlay" data-action="trigger-photo" title="Ganti foto profil">
-                  <i class="ti ti-camera" style="font-size:16px"></i>
-                </div>
-                <input type="file" id="photoInput" accept="image/*" style="display:none" data-action="photo-select"/>
+        <!-- RIGHT CONTENT -->
+        <div class="settings-content">
+
+          <!-- ════════════════════════
+              1. EDIT PROFIL
+              ════════════════════════ -->
+          <div class="settings-card" id="sec-profil">
+            <div class="settings-card-header">
+              <div class="settings-card-icon" style="background:rgba(200,96,42,0.08)">
+                <i class="ti ti-user-circle" style="color:var(--accent)"></i>
               </div>
-              <div class="avatar-info">
-                <div class="avatar-name-preview" id="avatarNamePreview">Memuat...</div>
-                <div class="avatar-email-preview" id="avatarEmailPreview">—</div>
-                <div class="avatar-actions">
-                  <button class="btn-avatar-change" data-action="trigger-photo">
-                    <i class="ti ti-upload" style="font-size:13px"></i>Upload Foto
-                  </button>
-                  <button class="btn-avatar-change" data-action="trigger-color" id="btnColorAvatar">
-                    <i class="ti ti-palette" style="font-size:13px"></i>Warna Avatar
-                  </button>
-                  <button class="btn-avatar-remove" id="btnRemovePhoto" data-action="remove-photo" style="display:none">
-                    <i class="ti ti-trash" style="font-size:13px"></i>Hapus Foto
-                  </button>
-                </div>
+              <div class="settings-card-head-text">
+                <div class="settings-card-title">Edit Profil</div>
+                <div class="settings-card-desc">Ubah nama tampilan dan informasi akun kamu</div>
               </div>
             </div>
+            <div class="settings-card-body">
 
-            <!-- Photo Crop Modal -->
-            <div class="custom-dialog-overlay" id="photoCropDialog">
-              <div class="custom-dialog" style="max-width:400px;width:90%">
-                <div class="custom-dialog-icon prompt"><i class="ti ti-crop"></i></div>
-                <div class="custom-dialog-title">Sesuaikan Foto</div>
-                <div class="custom-dialog-msg">Geser dan perbesar untuk mengatur foto profil kamu</div>
-                <div class="crop-container">
-                  <div class="crop-viewport">
-                    <div class="crop-circle-mask"></div>
-                    <img id="cropImage" src="" alt="preview" draggable="false"/>
+              <!-- Avatar Section -->
+              <div class="avatar-section">
+                <div class="avatar-wrapper" id="avatarWrapper">
+                  <div class="avatar-preview" id="avatarPreview">??</div>
+                  <div class="avatar-photo-overlay" data-action="trigger-photo" title="Ganti foto profil">
+                    <i class="ti ti-camera" style="font-size:16px"></i>
                   </div>
-                  <div class="crop-controls">
-                    <i class="ti ti-zoom-out" style="font-size:15px;color:var(--text-muted)"></i>
-                    <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" data-action="update-crop"/>
-                    <i class="ti ti-zoom-in" style="font-size:15px;color:var(--text-muted)"></i>
-                  </div>
+                  <input type="file" id="photoInput" accept="image/*" style="display:none" data-action="photo-select"/>
                 </div>
-                <div class="custom-dialog-footer">
-                  <button class="custom-dialog-btn cancel" data-action="close-crop">Batal</button>
-                  <button class="custom-dialog-btn confirm" data-action="apply-crop">Simpan Foto</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Form Fields -->
-            <div class="field-row">
-              <div class="settings-field">
-                <label class="settings-label">Nama Depan</label>
-                <input type="text" class="settings-input" id="inputFirstName" placeholder="Nama depan"/>
-              </div>
-              <div class="settings-field">
-                <label class="settings-label">Nama Belakang</label>
-                <input type="text" class="settings-input" id="inputLastName" placeholder="Nama belakang"/>
-              </div>
-            </div>
-
-            <div class="field-row full">
-              <div class="settings-field">
-                <label class="settings-label">Email</label>
-                <input type="email" class="settings-input" id="inputEmail" disabled/>
-                <div class="settings-input-hint">Email tidak dapat diubah dari sini</div>
-              </div>
-            </div>
-
-            <div class="field-row full">
-              <div class="settings-field">
-                <label class="settings-label">Nama Tampilan</label>
-                <input type="text" class="settings-input" id="inputDisplayName" placeholder="Nama yang muncul di aplikasi"/>
-                <div class="settings-input-hint">Ini yang muncul di sidebar dan topbar</div>
-              </div>
-            </div>
-
-            <div class="settings-footer">
-              <button class="btn-settings-cancel" data-action="reset-profile">Reset</button>
-              <button class="btn-settings-save" id="btnSaveProfile" data-action="save-profile">
-                <i class="ti ti-check" style="font-size:14px"></i>Simpan Perubahan
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ════════════════════════
-             2. ANALITIK STORAGE
-             ════════════════════════ -->
-        <div class="settings-card" id="sec-analitik">
-          <div class="settings-card-header">
-            <div class="settings-card-icon" style="background:rgba(29,78,216,0.08)">
-              <i class="ti ti-chart-pie" style="color:#1d4ed8"></i>
-            </div>
-            <div class="settings-card-head-text">
-              <div class="settings-card-title">Analitik Storage</div>
-              <div class="settings-card-desc">Ringkasan penggunaan penyimpanan kamu</div>
-            </div>
-          </div>
-          <div class="settings-card-body">
-
-            <!-- Mini Stats -->
-            <div class="analitik-grid" id="analitikGrid">
-              <div class="analitik-mini-card">
-                <div class="analitik-mini-label">TOTAL FILE</div>
-                <div class="analitik-mini-val" id="aStatFiles">—</div>
-                <div class="analitik-mini-sub">file tersimpan</div>
-              </div>
-              <div class="analitik-mini-card">
-                <div class="analitik-mini-label">TERPAKAI</div>
-                <div class="analitik-mini-val" id="aStatUsed">—</div>
-                <div class="analitik-mini-sub">dari 1 GB</div>
-              </div>
-              <div class="analitik-mini-card">
-                <div class="analitik-mini-label">TERSISA</div>
-                <div class="analitik-mini-val" id="aStatFree">—</div>
-                <div class="analitik-mini-sub">tersedia</div>
-              </div>
-              <div class="analitik-mini-card">
-                <div class="analitik-mini-label">FOLDER</div>
-                <div class="analitik-mini-val" id="aStatFolders">—</div>
-                <div class="analitik-mini-sub">folder aktif</div>
-              </div>
-            </div>
-
-            <!-- Main Progress Bar -->
-            <div class="storage-progress-main">
-              <div class="storage-progress-head">
-                <span class="storage-progress-label">Kapasitas Penyimpanan</span>
-                <span class="storage-progress-vals"><span id="aProgUsed">0 B</span> / 1 GB</span>
-              </div>
-              <div class="storage-progress-track">
-                <div class="storage-progress-fill" id="aProgFill" style="width:0%"></div>
-              </div>
-            </div>
-
-            <!-- Donut + Folder Bars -->
-            <div class="analitik-main">
-
-              <!-- Donut: per tipe -->
-              <div class="analitik-donut-wrap">
-                <div style="font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:16px;width:100%;font-family:'Outfit',sans-serif">Distribusi per Tipe</div>
-                <div class="donut-svg-wrap">
-                  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" id="donutSvg">
-                    <!-- Placeholder ring -->
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="var(--paper-3)" stroke-width="14"/>
-                  </svg>
-                  <div class="donut-center">
-                    <div class="donut-center-val" id="donutCenterVal">0</div>
-                    <div class="donut-center-label">total file</div>
+                <div class="avatar-info">
+                  <div class="avatar-name-preview" id="avatarNamePreview">Memuat...</div>
+                  <div class="avatar-email-preview" id="avatarEmailPreview">—</div>
+                  <div class="avatar-actions">
+                    <button class="btn-avatar-change" data-action="trigger-photo">
+                      <i class="ti ti-upload" style="font-size:13px"></i>Upload Foto
+                    </button>
+                    <button class="btn-avatar-change" data-action="trigger-color" id="btnColorAvatar">
+                      <i class="ti ti-palette" style="font-size:13px"></i>Warna Avatar
+                    </button>
+                    <button class="btn-avatar-remove" id="btnRemovePhoto" data-action="remove-photo" style="display:none">
+                      <i class="ti ti-trash" style="font-size:13px"></i>Hapus Foto
+                    </button>
                   </div>
                 </div>
-                <div class="donut-legend" id="donutLegend"></div>
               </div>
 
-              <!-- Bar: per folder -->
-              <div class="analitik-folder-wrap">
-                <div class="analitik-sub-title">Penggunaan per Folder</div>
-                <div class="folder-bar-list" id="folderBarList">
-                  <div style="font-size:12px;color:var(--ink-5);text-align:center;padding:20px 0">Memuat data...</div>
+              <!-- Photo Crop Modal -->
+              <div class="custom-dialog-overlay" id="photoCropDialog">
+                <div class="custom-dialog" style="max-width:400px;width:90%">
+                  <div class="custom-dialog-icon prompt"><i class="ti ti-crop"></i></div>
+                  <div class="custom-dialog-title">Sesuaikan Foto</div>
+                  <div class="custom-dialog-msg">Geser dan perbesar untuk mengatur foto profil kamu</div>
+                  <div class="crop-container">
+                    <div class="crop-viewport">
+                      <div class="crop-circle-mask"></div>
+                      <img id="cropImage" src="" alt="preview" draggable="false"/>
+                    </div>
+                    <div class="crop-controls">
+                      <i class="ti ti-zoom-out" style="font-size:15px;color:var(--text-muted)"></i>
+                      <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" data-action="update-crop"/>
+                      <i class="ti ti-zoom-in" style="font-size:15px;color:var(--text-muted)"></i>
+                    </div>
+                  </div>
+                  <div class="custom-dialog-footer">
+                    <button class="custom-dialog-btn cancel" data-action="close-crop">Batal</button>
+                    <button class="custom-dialog-btn confirm" data-action="apply-crop">Simpan Foto</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Fields -->
+              <div class="field-row">
+                <div class="settings-field">
+                  <label class="settings-label">Nama Depan</label>
+                  <input type="text" class="settings-input" id="inputFirstName" placeholder="Nama depan"/>
+                </div>
+                <div class="settings-field">
+                  <label class="settings-label">Nama Belakang</label>
+                  <input type="text" class="settings-input" id="inputLastName" placeholder="Nama belakang"/>
+                </div>
+              </div>
+
+              <div class="field-row full">
+                <div class="settings-field">
+                  <label class="settings-label">Email</label>
+                  <input type="email" class="settings-input" id="inputEmail" disabled/>
+                  <div class="settings-input-hint">Email tidak dapat diubah dari sini</div>
+                </div>
+              </div>
+
+              <div class="field-row full">
+                <div class="settings-field">
+                  <label class="settings-label">Nama Tampilan</label>
+                  <input type="text" class="settings-input" id="inputDisplayName" placeholder="Nama yang muncul di aplikasi"/>
+                  <div class="settings-input-hint">Ini yang muncul di sidebar dan topbar</div>
+                </div>
+              </div>
+
+              <div class="settings-footer">
+                <button class="btn-settings-cancel" data-action="reset-profile">Reset</button>
+                <button class="btn-settings-save" id="btnSaveProfile" data-action="save-profile">
+                  <i class="ti ti-check" style="font-size:14px"></i>Simpan Perubahan
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ════════════════════════
+              2. ANALITIK STORAGE
+              ════════════════════════ -->
+          <div class="settings-card" id="sec-analitik">
+            <div class="settings-card-header">
+              <div class="settings-card-icon" style="background:rgba(29,78,216,0.08)">
+                <i class="ti ti-chart-pie" style="color:#1d4ed8"></i>
+              </div>
+              <div class="settings-card-head-text">
+                <div class="settings-card-title">Analitik Storage</div>
+                <div class="settings-card-desc">Ringkasan penggunaan penyimpanan kamu</div>
+              </div>
+            </div>
+            <div class="settings-card-body">
+
+              <!-- Mini Stats -->
+              <div class="analitik-grid" id="analitikGrid">
+                <div class="analitik-mini-card">
+                  <div class="analitik-mini-label">TOTAL FILE</div>
+                  <div class="analitik-mini-val" id="aStatFiles">—</div>
+                  <div class="analitik-mini-sub">file tersimpan</div>
+                </div>
+                <div class="analitik-mini-card">
+                  <div class="analitik-mini-label">TERPAKAI</div>
+                  <div class="analitik-mini-val" id="aStatUsed">—</div>
+                  <div class="analitik-mini-sub">dari 11 GB</div>
+                </div>
+                
+                <div class="analitik-mini-card">
+                  <div class="analitik-mini-label">TERSISA</div>
+                  <div class="analitik-mini-val" id="aStatFree">—</div>
+                  <div class="analitik-mini-sub">tersedia</div>
+                </div>
+                <div class="analitik-mini-card">
+                  <div class="analitik-mini-label">FOLDER</div>
+                  <div class="analitik-mini-val" id="aStatFolders">—</div>
+                  <div class="analitik-mini-sub">folder aktif</div>
+                </div>
+              </div>
+
+              <!-- Main Progress Bar -->
+              <div class="storage-progress-main">
+                <div class="storage-progress-head">
+                  <span class="storage-progress-label">Kapasitas Penyimpanan</span>
+                  <span class="storage-progress-vals"><span id="aProgUsed">0 B</span> / 11 GB</span>
+                </div>
+                <div class="storage-progress-track">
+                  <div class="storage-progress-fill" id="aProgFill" style="width:0%"></div>
+                </div>
+              </div>
+
+              <!-- Donut + Folder Bars -->
+              <div class="analitik-main">
+
+                <!-- Donut: per tipe -->
+                <div class="analitik-donut-wrap">
+                  <div style="font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:16px;width:100%;font-family:'Outfit',sans-serif">Distribusi per Tipe</div>
+                  <div class="donut-svg-wrap">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" id="donutSvg">
+                      <!-- Placeholder ring -->
+                      <circle cx="50" cy="50" r="38" fill="none" stroke="var(--paper-3)" stroke-width="14"/>
+                    </svg>
+                    <div class="donut-center">
+                      <div class="donut-center-val" id="donutCenterVal">0</div>
+                      <div class="donut-center-label">total file</div>
+                    </div>
+                  </div>
+                  <div class="donut-legend" id="donutLegend"></div>
+                </div>
+
+                <!-- Bar: per folder -->
+                <div class="analitik-folder-wrap">
+                  <div class="analitik-sub-title">Penggunaan per Folder</div>
+                  <div class="folder-bar-list" id="folderBarList">
+                    <div style="font-size:12px;color:var(--ink-5);text-align:center;padding:20px 0">Memuat data...</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Upload Timeline (7 hari terakhir) -->
+              <div class="analitik-folder-wrap timeline-wrap">
+                <div class="analitik-sub-title">Upload 7 Hari Terakhir</div>
+                <div class="timeline-bars" id="timelineBars"></div>
+                <div class="timeline-labels" id="timelineLabels"></div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ════════════════════════
+              3. NOTIFIKASI STORAGE
+              ════════════════════════ -->
+          <div class="settings-card" id="sec-notif">
+            <div class="settings-card-header">
+              <div class="settings-card-icon" style="background:rgba(45,106,79,0.08)">
+                <i class="ti ti-bell-ringing" style="color:var(--green)"></i>
+              </div>
+              <div class="settings-card-head-text">
+                <div class="settings-card-title">Notifikasi Storage</div>
+                <div class="settings-card-desc">Atur kapan dan bagaimana kamu diperingatkan soal penyimpanan</div>
+              </div>
+            </div>
+            <div class="settings-card-body">
+
+              <!-- Warning Banner (real-time) -->
+              <div class="storage-warning-banner" id="storageWarnBanner">
+                <i class="ti ti-alert-triangle"></i>
+                <div class="warning-text">
+                  <strong id="warnBannerTitle">Peringatan Storage</strong>
+                  <span id="warnBannerDesc">—</span>
+                </div>
+              </div>
+
+              <!-- Toggle Rows -->
+              <div class="notif-row">
+                <div class="notif-left">
+                  <div class="notif-title">Notifikasi Dalam App</div>
+                  <div class="notif-desc">Tampilkan peringatan (toast) otomatis di dalam dashboard saat storage mendekati batas yang ditentukan.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleInApp" checked data-action="save-notif"/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="notif-row">
+                <div class="notif-left">
+                  <div class="notif-title">Peringatan Mendesak</div>
+                  <div class="notif-desc">Tampilkan banner merah saat storage melampaui 90% kapasitas — bahkan jika notif dalam app dimatikan.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleCritical" checked data-action="save-notif"/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div class="notif-row">
+                <div class="notif-left">
+                  <div class="notif-title">Peringatan Saat Upload</div>
+                  <div class="notif-desc">Tampilkan peringatan sebelum upload jika file baru akan membuat storage melebihi batas threshold.</div>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggleUploadWarn" checked data-action="save-notif"/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <!-- Threshold Slider -->
+              <div class="threshold-group">
+                <div class="threshold-head">
+                  <span class="threshold-label">Batas Peringatan</span>
+                  <span class="threshold-val-display" id="thresholdDisplay">80%</span>
+                </div>
+                <div class="threshold-desc">
+                  Kirimkan peringatan pertama saat penggunaan storage mencapai persentase ini.
+                </div>
+                <input type="range" class="threshold-slider" id="thresholdSlider"
+                  min="50" max="95" step="5" value="80"
+                  data-action="update-threshold"/>
+                <div class="threshold-marks">
+                  <span>50%</span>
+                  <span>60%</span>
+                  <span>70%</span>
+                  <span>80%</span>
+                  <span>90%</span>
+                  <span>95%</span>
+                </div>
+              </div>
+
+              <div class="settings-footer">
+                <button class="btn-settings-cancel" data-action="reset-notif">Reset Default</button>
+                <button class="btn-settings-save" data-action="save-notif">
+                  <i class="ti ti-check" style="font-size:14px"></i>Simpan
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ════════════════════════
+              4. TAMPILAN
+              ════════════════════════ -->
+          <div class="settings-card" id="sec-tampilan">
+            <div class="settings-card-header">
+              <div class="settings-card-icon" style="background:rgba(92,70,12,0.08)">
+                <i class="ti ti-palette" style="color:#92400e"></i>
+              </div>
+              <div class="settings-card-head-text">
+                <div class="settings-card-title">Tampilan</div>
+                <div class="settings-card-desc">Sesuaikan tampilan antarmuka MyStorage</div>
+              </div>
+            </div>
+            <div class="settings-card-body">
+
+              <div class="notif-row">
+                <div class="notif-left">
+                  <div class="notif-title">Mode Malam</div>
+                  <div class="notif-desc">Aktifkan tema gelap di seluruh halaman MyStorage. Preferensi ini tersimpan otomatis di perangkat ini.</div>
+                </div>
+                <!-- Static toggle wired to NightMode API -->
+                <label class="toggle-switch" style="cursor:pointer" data-action="toggle-night-mode">
+                  <input type="checkbox" id="nightModeCheck" style="pointer-events:none"/>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:12px 0 0;border-top:1px solid var(--border)">
+                <span style="font-size:12px;color:var(--ink-4)">Preview tema:</span>
+                <div style="display:flex;gap:8px">
+                  <div style="width:28px;height:28px;border-radius:8px;background:#f7f5f2;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Terang" data-action="set-light-mode">☀️</div>
+                  <div style="width:28px;height:28px;border-radius:8px;background:#141210;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Malam" data-action="set-dark-mode">🌙</div>
                 </div>
               </div>
 
             </div>
-
-            <!-- Upload Timeline (7 hari terakhir) -->
-            <div class="analitik-folder-wrap timeline-wrap">
-              <div class="analitik-sub-title">Upload 7 Hari Terakhir</div>
-              <div class="timeline-bars" id="timelineBars"></div>
-              <div class="timeline-labels" id="timelineLabels"></div>
-            </div>
-
           </div>
-        </div>
 
-        <!-- ════════════════════════
-             3. NOTIFIKASI STORAGE
-             ════════════════════════ -->
-        <div class="settings-card" id="sec-notif">
-          <div class="settings-card-header">
-            <div class="settings-card-icon" style="background:rgba(45,106,79,0.08)">
-              <i class="ti ti-bell-ringing" style="color:var(--green)"></i>
-            </div>
-            <div class="settings-card-head-text">
-              <div class="settings-card-title">Notifikasi Storage</div>
-              <div class="settings-card-desc">Atur kapan dan bagaimana kamu diperingatkan soal penyimpanan</div>
-            </div>
-          </div>
-          <div class="settings-card-body">
+        </div><!-- end settings-content -->
+      </div><!-- end settings-layout -->
 
-            <!-- Warning Banner (real-time) -->
-            <div class="storage-warning-banner" id="storageWarnBanner">
-              <i class="ti ti-alert-triangle"></i>
-              <div class="warning-text">
-                <strong id="warnBannerTitle">Peringatan Storage</strong>
-                <span id="warnBannerDesc">—</span>
-              </div>
-            </div>
+    </div><!-- end content -->
+  </div><!-- end main -->
 
-            <!-- Toggle Rows -->
-            <div class="notif-row">
-              <div class="notif-left">
-                <div class="notif-title">Notifikasi Dalam App</div>
-                <div class="notif-desc">Tampilkan peringatan (toast) otomatis di dalam dashboard saat storage mendekati batas yang ditentukan.</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggleInApp" checked data-action="save-notif"/>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-
-            <div class="notif-row">
-              <div class="notif-left">
-                <div class="notif-title">Peringatan Mendesak</div>
-                <div class="notif-desc">Tampilkan banner merah saat storage melampaui 90% kapasitas — bahkan jika notif dalam app dimatikan.</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggleCritical" checked data-action="save-notif"/>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-
-            <div class="notif-row">
-              <div class="notif-left">
-                <div class="notif-title">Peringatan Saat Upload</div>
-                <div class="notif-desc">Tampilkan peringatan sebelum upload jika file baru akan membuat storage melebihi batas threshold.</div>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="toggleUploadWarn" checked data-action="save-notif"/>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-
-            <!-- Threshold Slider -->
-            <div class="threshold-group">
-              <div class="threshold-head">
-                <span class="threshold-label">Batas Peringatan</span>
-                <span class="threshold-val-display" id="thresholdDisplay">80%</span>
-              </div>
-              <div class="threshold-desc">
-                Kirimkan peringatan pertama saat penggunaan storage mencapai persentase ini.
-              </div>
-              <input type="range" class="threshold-slider" id="thresholdSlider"
-                min="50" max="95" step="5" value="80"
-                data-action="update-threshold"/>
-              <div class="threshold-marks">
-                <span>50%</span>
-                <span>60%</span>
-                <span>70%</span>
-                <span>80%</span>
-                <span>90%</span>
-                <span>95%</span>
-              </div>
-            </div>
-
-            <div class="settings-footer">
-              <button class="btn-settings-cancel" data-action="reset-notif">Reset Default</button>
-              <button class="btn-settings-save" data-action="save-notif">
-                <i class="ti ti-check" style="font-size:14px"></i>Simpan
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- ════════════════════════
-             4. TAMPILAN
-             ════════════════════════ -->
-        <div class="settings-card" id="sec-tampilan">
-          <div class="settings-card-header">
-            <div class="settings-card-icon" style="background:rgba(92,70,12,0.08)">
-              <i class="ti ti-palette" style="color:#92400e"></i>
-            </div>
-            <div class="settings-card-head-text">
-              <div class="settings-card-title">Tampilan</div>
-              <div class="settings-card-desc">Sesuaikan tampilan antarmuka MyStorage</div>
-            </div>
-          </div>
-          <div class="settings-card-body">
-
-            <div class="notif-row">
-              <div class="notif-left">
-                <div class="notif-title">Mode Malam</div>
-                <div class="notif-desc">Aktifkan tema gelap di seluruh halaman MyStorage. Preferensi ini tersimpan otomatis di perangkat ini.</div>
-              </div>
-              <!-- Static toggle wired to NightMode API -->
-              <label class="toggle-switch" style="cursor:pointer" data-action="toggle-night-mode">
-                <input type="checkbox" id="nightModeCheck" style="pointer-events:none"/>
-                <span class="toggle-slider"></span>
-              </label>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:12px 0 0;border-top:1px solid var(--border)">
-              <span style="font-size:12px;color:var(--ink-4)">Preview tema:</span>
-              <div style="display:flex;gap:8px">
-                <div style="width:28px;height:28px;border-radius:8px;background:#f7f5f2;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Terang" data-action="set-light-mode">☀️</div>
-                <div style="width:28px;height:28px;border-radius:8px;background:#141210;border:2px solid var(--border-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px" title="Mode Malam" data-action="set-dark-mode">🌙</div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-      </div><!-- end settings-content -->
-    </div><!-- end settings-layout -->
-
-  </div><!-- end content -->
-</div><!-- end main -->
-
-<!-- Custom Confirm Dialog (reuse dari dashboard) -->
-<div class="custom-dialog-overlay" id="customConfirm">
-  <div class="custom-dialog">
-    <div class="custom-dialog-icon" id="confirmIcon"><i class="ti ti-alert-triangle"></i></div>
-    <div class="custom-dialog-title" id="confirmTitle">Konfirmasi</div>
-    <div class="custom-dialog-msg" id="confirmMsg">Apakah Anda yakin?</div>
-    <div class="custom-dialog-footer">
-      <button class="custom-dialog-btn cancel" id="confirmCancel">Batal</button>
-      <button class="custom-dialog-btn confirm" id="confirmOk">Ya, Lanjutkan</button>
+  <!-- Custom Confirm Dialog (reuse dari dashboard) -->
+  <div class="custom-dialog-overlay" id="customConfirm">
+    <div class="custom-dialog">
+      <div class="custom-dialog-icon" id="confirmIcon"><i class="ti ti-alert-triangle"></i></div>
+      <div class="custom-dialog-title" id="confirmTitle">Konfirmasi</div>
+      <div class="custom-dialog-msg" id="confirmMsg">Apakah Anda yakin?</div>
+      <div class="custom-dialog-footer">
+        <button class="custom-dialog-btn cancel" id="confirmCancel">Batal</button>
+        <button class="custom-dialog-btn confirm" id="confirmOk">Ya, Lanjutkan</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Avatar Color Picker Dialog -->
-<div class="custom-dialog-overlay" id="colorPickerDialog">
-  <div class="custom-dialog" style="max-width:340px">
-    <div class="custom-dialog-icon prompt"><i class="ti ti-palette"></i></div>
-    <div class="custom-dialog-title">Warna Avatar</div>
-    <div class="custom-dialog-msg">Pilih warna untuk avatar kamu</div>
-    <div id="avatarColorOptions" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:24px"></div>
-    <div class="custom-dialog-footer">
-      <button class="custom-dialog-btn cancel" data-action="close-color-picker">Batal</button>
+  <!-- Avatar Color Picker Dialog -->
+  <div class="custom-dialog-overlay" id="colorPickerDialog">
+    <div class="custom-dialog" style="max-width:340px">
+      <div class="custom-dialog-icon prompt"><i class="ti ti-palette"></i></div>
+      <div class="custom-dialog-title">Warna Avatar</div>
+      <div class="custom-dialog-msg">Pilih warna untuk avatar kamu</div>
+      <div id="avatarColorOptions" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:24px"></div>
+      <div class="custom-dialog-footer">
+        <button class="custom-dialog-btn cancel" data-action="close-color-picker">Batal</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Toast -->
-<div class="toast" id="settingsToast">
-  <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
-  <span id="settingsToastMsg">Berhasil!</span>
-</div>
+  <!-- Toast -->
+  <div class="toast" id="settingsToast">
+    <i class="ti ti-check" style="font-size:16px;color:#4ade80;flex-shrink:0"></i>
+    <span id="settingsToastMsg">Berhasil!</span>
+  </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="../scripts/supabase-config.js"></script>
-<script src="../scripts/settings.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../scripts/supabase-config.js"></script>
+  <script src="../scripts/settings.js"></script>
 
 
-</body>
-</html>
+  </body>
+  </html>
