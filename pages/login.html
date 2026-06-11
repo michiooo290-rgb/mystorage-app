@@ -1069,7 +1069,7 @@
     const btn = document.getElementById('btnForgot');
     btn.innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;width:13px;height:13px;border-width:2px;border-style:solid;border-radius:50%;animation:spin 0.7s linear infinite"></span> Mengirim...';
     btn.style.pointerEvents = 'none';
-    const RESET_REDIRECT = 'https://michio-vault.vercel.app/Storage-dashboard.html';
+    const RESET_REDIRECT = 'https://michiovault.my.id/Storage-dashboard.html';
     const { error } = await sb.auth.resetPasswordForEmail(email, {
       redirectTo: RESET_REDIRECT
     });
