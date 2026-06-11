@@ -2925,10 +2925,16 @@ function handleFileSelect(input) {
     : (totalSize/1024).toFixed(0) + ' KB';
 
   if (warnings.length > 0) {
-    el.innerHTML = '<span style="color:#f87171">⚠️ ' + warnings[0].name + ' melebihi batas 100 MB!</span>';
+    el.innerHTML = '<span style="color:#f87171">⚠️ ' + escapeHtml(warnings[0].name) + ' melebihi batas 100 MB!</span>';
   } else if (filesArr.length > 0) {
-    const names = filesArr.map(function(f) { return f.name; }).join(', ');
-    el.innerHTML = '📎 ' + escapeHtml(names) + ' <span style="color:#9a9693">(' + totalStr + ')</span>';
+    if (filesArr.length === 1) {
+      el.innerHTML = '📎 ' + escapeHtml(filesArr[0].name) + ' <span style="color:#9a9693">(' + totalStr + ')</span>';
+    } else if (filesArr.length <= 5) {
+      const names = filesArr.map(function(f) { return escapeHtml(f.name); }).join(', ');
+      el.innerHTML = '📎 ' + names + ' <span style="color:#9a9693">(' + filesArr.length + ' file · ' + totalStr + ')</span>';
+    } else {
+      el.innerHTML = '📎 <strong>' + filesArr.length + ' file dipilih</strong> <span style="color:#9a9693">(' + totalStr + ')</span>';
+    }
   } else {
     el.textContent = '';
   }
@@ -4024,8 +4030,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     dz.style.borderColor = '';
     dz.style.background = '';
     droppedFiles = Array.from(e.dataTransfer.files);
-    const names = droppedFiles.map(function(f) { return f.name; }).join(', ');
-    document.getElementById('selectedFiles').textContent = names ? '📎 ' + names : '';
+    const el = document.getElementById('selectedFiles');
+    if (droppedFiles.length === 0) {
+      el.textContent = '';
+    } else if (droppedFiles.length === 1) {
+      el.textContent = '📎 ' + droppedFiles[0].name;
+    } else if (droppedFiles.length <= 5) {
+      el.textContent = '📎 ' + droppedFiles.map(function(f) { return f.name; }).join(', ');
+    } else {
+      el.innerHTML = '📎 <strong>' + droppedFiles.length + ' file dipilih</strong>';
+    }
   });
 
   document.addEventListener('keydown', function(e) {
