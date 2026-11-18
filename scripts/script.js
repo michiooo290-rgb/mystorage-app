@@ -396,9 +396,14 @@ function calcTotalUsedBytes() {
 async function fetchFreshUsedBytes() {
   // Ambil ulang usage dari Supabase sebelum upload supaya validasi quota tidak bergantung
   // pada state lama di browser. RLS memastikan query ini hanya membaca file user sendiri.
-  const { data, error } = await sb.from('files').select('size_bytes,size');
-  if (error) throw error;
-  return (data || []).reduce(function(total, file) {
+  let rows = [];
+  for (let from = 0; ; from += 1000) {
+    const res = await sb.from('files').select('id,size_bytes,size').order('id').range(from, from + 999);
+    if (res.error) throw res.error;
+    rows = rows.concat(res.data || []);
+    if (!res.data || res.data.length < 1000) break;
+  }
+  return rows.reduce(function(total, file) {
     return total + getFileSizeBytes(file);
   }, 0);
 }
@@ -794,7 +799,16 @@ async function loadFolders() {
 }
 
 async function loadFiles() {
-  const { data, error } = await sb.from('files').select('*').order('created_at', { ascending: false });
+  // Ambil semua baris per halaman (Supabase membatasi 1000 baris per query)
+  let data = [], error = null;
+  for (let from = 0; ; from += 1000) {
+    const res = await sb.from('files').select('*')
+      .order('created_at', { ascending: false }).order('id')
+      .range(from, from + 999);
+    if (res.error) { error = res.error; break; }
+    data = data.concat(res.data || []);
+    if (!res.data || res.data.length < 1000) break;
+  }
   if (error) {
     isInitialDataLoading = false;
     showAppError('Gagal load file', error.message);
@@ -1474,7 +1488,7 @@ function renderFiles() {
 
   const IMG_EXTS = ['jpg','jpeg','png','gif','webp','svg'];
 
-  grid.innerHTML = filtered.map(function(f, i) {
+  const buildCard = function(f, i) {
     const badge = FOLDER_BADGE[f.folder_name] || { bg: '#f3f4f6', color: '#6b7280' };
     const iconInfo = getFileIconInfo(f.name, f.type);
     const icon = iconInfo.icon;
@@ -1535,7 +1549,7 @@ function renderFiles() {
     }
 
     return (
-      '<div class="file-card" draggable="true" style="animation-delay:' + (i * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-card="1" data-file-id="' + safeId + '">' +
+      '<div class="file-card" draggable="true" style="animation-delay:' + (Math.min(i, 12) * 0.04) + 's; cursor:pointer; position:relative;' + selectedStyle + '" data-file-card="1" data-file-id="' + safeId + '">' +
       '<div class="file-select-cb" style="display:' + (isSelectMode ? 'flex' : 'none') + ';position:absolute;top:8px;left:8px;z-index:2;align-items:center;justify-content:center;">' +
       '<input type="checkbox" ' + (isSelected ? 'checked' : '') + ' style="width:16px;height:16px;cursor:pointer;accent-color:#c8602a;" data-action="toggle-file-select" data-file-id="' + safeId + '"></div>' +
       '<div class="file-top">' +
@@ -1551,13 +1565,67 @@ function renderFiles() {
       '<div class="file-info"><span>' + escapeHtml(f.size || '-') + '</span><span>' + date + '</span></div>' +
       '</div>'
     );
-  }).join('');
+  };
+
+  // ── Render bertahap (anti-lag): hanya FILE_PAGE_SIZE kartu pertama, sisanya dimuat saat scroll ──
+  const renderSig = [search, currentFilter, currentFolderId, showOnlyFavorites, showTrashMode, currentSort, currentViewMode].join('|');
+  if (renderSig !== lastRenderSig) { fileRenderLimit = FILE_PAGE_SIZE; lastRenderSig = renderSig; }
+  const visibleFiles = filtered.slice(0, fileRenderLimit);
+  grid.innerHTML = visibleFiles.map(buildCard).join('');
+  setupLoadMore(grid, filtered, buildCard);
 
   document.getElementById('fileCount').textContent = filtered.length;
   updateFileSectionTitle();
 
-  // Load thumbnail untuk file gambar
-  if (currentViewMode !== 'list') loadThumbnails(filtered);
+  // Load thumbnail hanya untuk kartu yang sudah dirender
+  if (currentViewMode !== 'list') loadThumbnails(visibleFiles);
+}
+
+/* ── RENDER BERTAHAP ── */
+var FILE_PAGE_SIZE = 60;
+var fileRenderLimit = FILE_PAGE_SIZE;
+var lastRenderSig = '';
+var loadMoreObserver = null;
+
+function setupLoadMore(grid, filtered, buildCard) {
+  if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null; }
+  var old = document.getElementById('loadMoreFilesWrap');
+  if (old) old.remove();
+  if (filtered.length <= fileRenderLimit) return;
+
+  var wrap = document.createElement('div');
+  wrap.id = 'loadMoreFilesWrap';
+  wrap.style.cssText = 'grid-column:1/-1;display:flex;justify-content:center;padding:18px 0;';
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'empty-state__btn-secondary';
+  wrap.appendChild(btn);
+  grid.appendChild(wrap);
+
+  function label() { btn.textContent = 'Tampilkan lebih banyak (' + (filtered.length - fileRenderLimit) + ' lagi)'; }
+  label();
+
+  function loadMore() {
+    var from = fileRenderLimit;
+    fileRenderLimit = Math.min(filtered.length, fileRenderLimit + FILE_PAGE_SIZE);
+    var chunk = filtered.slice(from, fileRenderLimit);
+    wrap.insertAdjacentHTML('beforebegin', chunk.map(function(f, j) { return buildCard(f, j); }).join(''));
+    if (currentViewMode !== 'list') loadThumbnails(chunk);
+    if (fileRenderLimit >= filtered.length) {
+      wrap.remove();
+      if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null; }
+    } else {
+      label();
+    }
+  }
+
+  btn.addEventListener('click', loadMore);
+  if ('IntersectionObserver' in window) {
+    loadMoreObserver = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) loadMore();
+    }, { rootMargin: '600px 0px' });
+    loadMoreObserver.observe(wrap);
+  }
 }
 
 /* ── THUMBNAIL LOADER ── */
@@ -1582,6 +1650,8 @@ async function loadThumbnails(files) {
         if (result.error || !result.data) return;
         var img = box.querySelector('.file-thumb-img');
         if (!img) return;
+        img.loading = 'lazy';
+        img.decoding = 'async';
         img.onload = function() { this.style.opacity = '1'; };
         img.src = result.data.signedUrl;
       } catch(e) {}
@@ -3707,6 +3777,10 @@ function initScrollProgress() {
    Pakai window.scrollY — tidak perlu ubah CSS
 ════════════════════════════════════════ */
 function setupSmoothScroll() {
+  // Smooth scroll buatan. Default AKTIF.
+  // Matikan dengan:  window.MYSTORAGE_SMOOTH_SCROLL = false;
+  if (window.MYSTORAGE_SMOOTH_SCROLL === false) return;
+
   // Skip di mobile/touch — native scroll lebih baik
   if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return;
 
@@ -3725,8 +3799,16 @@ function setupSmoothScroll() {
 
   function lerp(a, b, t) { return a + (b - a) * t; }
 
+  var maxScrollCache = null;
   function getMaxScroll() {
-    return document.documentElement.scrollHeight - window.innerHeight;
+    if (maxScrollCache === null) {
+      maxScrollCache = document.documentElement.scrollHeight - window.innerHeight;
+    }
+    return maxScrollCache;
+  }
+  window.addEventListener('resize', function() { maxScrollCache = null; });
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(function() { maxScrollCache = null; }).observe(document.body);
   }
 
   function clamp(val) {
@@ -3812,10 +3894,12 @@ function setupSmoothScroll() {
   var topbar = document.querySelector('.topbar');
   if (topbar) {
     topbar.style.transition = (topbar.style.transition || '') + ', box-shadow 0.28s ease';
+    var topbarScrolled = false;
     window.addEventListener('scroll', function() {
-      topbar.style.boxShadow = window.scrollY > 10
-        ? '0 4px 24px rgba(15,14,13,0.08)'
-        : 'none';
+      var now = window.scrollY > 10;
+      if (now === topbarScrolled) return;
+      topbarScrolled = now;
+      topbar.style.boxShadow = now ? '0 4px 24px rgba(15,14,13,0.08)' : 'none';
     }, { passive: true });
   }
 }
@@ -4003,7 +4087,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   // ── STAGGER REVEAL: kartu-kartu muncul berurutan ──
   setTimeout(function() {
-    const revealEls = document.querySelectorAll('.stat, .folder-wrap, .file-card, .section-header');
+    const revealEls = Array.prototype.slice.call(document.querySelectorAll('.stat, .folder-wrap, .file-card, .section-header'), 0, 40);
     revealEls.forEach(function(el, i) {
       el.style.opacity = '0';
       el.style.transform = 'translateY(16px)';
