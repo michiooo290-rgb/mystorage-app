@@ -109,7 +109,16 @@ body::before {
   z-index: 20;
   background: var(--ink);
   border-right: none;
+  /* Fix: sidebar bisa di-scroll saat layar pendek, item tidak terpotong */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
 }
+.sidebar::-webkit-scrollbar { display: none; }
+
+/* Fix: cegah item/grup menyusut & terpotong di flex kolom */
+.sidebar > * { flex-shrink: 0; }
 
 /* Subtle left-panel grid overlay — same as login */
 .sidebar::before {
