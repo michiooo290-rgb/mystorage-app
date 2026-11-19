@@ -140,4 +140,216 @@ $('cancel').addEventListener('click', () => $('dlg').close());
 $('fJenis').addEventListener('change', syncForm);
 $('form').addEventListener('submit', save);
 $('out').addEventListener('click', async () => { await sb.auth.signOut(); location.replace('login.html'); });
+
+/* ── Impor banyak: data surat dibaca dari nama file ── */
+/* PARSER-START */
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, may: 5, jun: 6, jul: 7, agu: 8, agt: 8, aug: 8, sep: 9, okt: 10, oct: 10, nov: 11, des: 12, dec: 12 };
+const pad2 = n => String(n).padStart(2, '0');
+const clean = s => s.replace(/_+/g, ' ').replace(/\s+/g, ' ').replace(/^[\s.,:;()\-–—]+|[\s.,:;()\-–—]+$/g, '');
+
+function validDate(y, m, d) {
+  y = +y; m = +m; d = +d;
+  if (!(y >= 2000 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31)) return '';
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  return dt.getUTCMonth() === m - 1 ? y + '-' + pad2(m) + '-' + pad2(d) : '';
+}
+
+function takeDate(s) {
+  const mon = 'januari|februari|maret|april|mei|juni|juli|agustus|september|sept|oktober|november|desember|jan|feb|mar|apr|jun|jul|agu|agt|sep|okt|nov|des|may|aug|oct|dec';
+  const pats = [
+    [/(?<!\d)(\d{4})[-_.](\d{1,2})[-_.](\d{1,2})(?!\d)/, a => validDate(a[1], a[2], a[3])],
+    [/(?<!\d)(\d{1,2})[-_.](\d{1,2})[-_.](\d{4})(?!\d)/, a => validDate(a[3], a[2], a[1])],
+    [new RegExp('(?<!\\d)(\\d{1,2})[\\s._-]*(' + mon + ')(?![a-z])[\\s._,-]*(\\d{4})(?!\\d)', 'i'), a => validDate(a[3], MONTHS[a[2].slice(0, 3).toLowerCase()], a[1])],
+    [/(?<!\d)(20\d{2})(\d{2})(\d{2})(?!\d)/, a => validDate(a[1], a[2], a[3])]
+  ];
+  for (const [re, f] of pats) {
+    const m = s.match(re), tgl = m && f(m);
+    if (tgl) return { tgl, rest: s.replace(m[0], ' ') };
+  }
+  return { tgl: '', rest: s };
+}
+
+function takeJenis(s) {
+  const masuk = /(^|[^a-z])(surat[\s_-]*)?masuk(?![a-z])/i, keluar = /(^|[^a-z])(surat[\s_-]*)?keluar(?![a-z])/i;
+  const m = masuk.test(s), k = keluar.test(s);
+  if (m === k) return { jenis: '', rest: s };
+  return { jenis: m ? 'masuk' : 'keluar', rest: s.replace(m ? masuk : keluar, ' ') };
+}
+
+function takeNomor(s) {
+  const pats = [
+    /(?:^|[^a-z])(?:no|nomor)\.?[\s:_-]*([0-9][A-Za-z0-9._-]*)/i,
+    /^\s*([0-9]{1,5}(?:[._-][A-Za-z0-9.]+)*)/,
+    /(?<![A-Za-z0-9])([0-9]{2,5}(?:[._-][A-Za-z0-9.]+)*)(?![A-Za-z0-9])/
+  ];
+  for (const re of pats) {
+    const m = s.match(re);
+    if (!m) continue;
+    const nomor = trimNomor(m[1]);
+    return { nomor, rest: s.replace(m[0].replace(m[1], nomor), ' ') };
+  }
+  return { nomor: '', rest: s };
+}
+
+/* Nomor hanya terdiri dari bagian berbentuk kode (ada angka atau huruf besar semua);
+   kata biasa seperti "Peminjaman" atau "Aula" yang terhubung garis bawah dibuang dari nomor. */
+function trimNomor(raw) {
+  const parts = raw.split(/([._-])/);
+  let out = parts[0];
+  for (let i = 1; i < parts.length; i += 2) {
+    const seg = parts[i + 1] || '';
+    if (!seg || !(/\d/.test(seg) || /^[A-Z]+$/.test(seg))) break;
+    out += parts[i] + seg;
+  }
+  return out;
+}
+
+function parseName(name) {
+  let s = name.replace(/\.[A-Za-z0-9]{2,5}$/, '');
+  const base = s;
+  const d = takeDate(s); s = d.rest;
+  const j = takeJenis(s); s = j.rest;
+  const n = takeNomor(s); s = n.rest;
+  let pihak = '';
+  const pm = s.match(/(?:^|[\s_-])(?:dari|kepada)[\s_]+(.+)$/i);
+  if (pm && s.slice(0, pm.index).replace(/[\s_.,:;()-]+/g, '').length >= 3) {
+    pihak = clean(pm[1]).slice(0, 200);
+    s = s.slice(0, pm.index);
+  }
+  return { jenis: j.jenis, nomor: n.nomor.slice(0, 120), tgl: d.tgl, pihak, perihal: (clean(s) || clean(base)).slice(0, 300) };
+}
+/* PARSER-END */
+
+const EXT = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
+const typeOf = f => TYPES.includes(f.type) ? f.type : (EXT[(f.name.split('.').pop() || '').toLowerCase()] || '');
+const fileDate = f => { const d = new Date(f.lastModified || Date.now()); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+const MAXBULK = 200;
+let bulk = [], skipped = [], saving = false, bulkOk = 0;
+
+function bulkItem(f) {
+  const p = parseName(f.name);
+  return { file: f, include: true, jenis: p.jenis, nomor: p.nomor, tgl: p.tgl || fileDate(f), tglGuess: !p.tgl, pihak: p.pihak, perihal: p.perihal, done: false, msg: '' };
+}
+
+const issues = it => [!it.jenis && 'jenis', !it.nomor.trim() && 'nomor', !it.tgl && 'tgl'].filter(Boolean);
+const bulkRow = i => $('bgrid').querySelector('.brow[data-i="' + i + '"]');
+
+function openBulk(files) {
+  skipped = []; bulk = []; bulkOk = 0;
+  if (files.length > MAXBULK) { toast('Maksimal ' + MAXBULK + ' file sekali impor. Sisanya diabaikan.', true); files = files.slice(0, MAXBULK); }
+  files.forEach(f => {
+    if (!typeOf(f)) skipped.push(f.name + ' (tipe tidak didukung)');
+    else if (f.size > MAX) skipped.push(f.name + ' (lebih dari 10 MB)');
+    else bulk.push(bulkItem(f));
+  });
+  if (!bulk.length) { toast('Tidak ada file yang bisa diimpor (PDF, JPG, PNG, DOCX, maks 10 MB).', true); return; }
+  bulk.sort((a, b) => a.file.name.localeCompare(b.file.name, 'id', { numeric: true }));
+  $('bJenisAll').value = ''; $('bSlash').checked = false; $('bStatus').value = 'selesai';
+  renderBulk(); $('bdlg').showModal();
+}
+
+function renderBulk() {
+  const opt = (v, t, cur) => '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + t + '</option>';
+  $('bgrid').innerHTML = '<div class="bcol"><span></span><span>File</span><span>Jenis</span><span>Nomor surat</span><span>Tanggal</span><span>Pengirim / tujuan</span><span>Perihal</span><span></span></div>' +
+    bulk.map((it, i) => {
+      const d = it.done ? ' disabled' : '';
+      return '<div class="brow' + (it.done ? ' done' : '') + '" data-i="' + i + '">' +
+        '<input type="checkbox" data-f="include" aria-label="Sertakan"' + (it.include ? ' checked' : '') + d + '>' +
+        '<div class="bname" title="' + esc(it.file.name) + '">' + esc(it.file.name) + '</div>' +
+        '<select class="field" data-f="jenis" aria-label="Jenis"' + d + '>' + opt('', 'Pilih…', it.jenis) + opt('masuk', 'Masuk', it.jenis) + opt('keluar', 'Keluar', it.jenis) + '</select>' +
+        '<input class="field" data-f="nomor" maxlength="120" placeholder="Nomor surat" value="' + esc(it.nomor) + '"' + d + '>' +
+        '<input class="field" type="date" data-f="tgl" value="' + esc(it.tgl) + '"' + d + '>' +
+        '<input class="field" data-f="pihak" maxlength="200" placeholder="Pengirim / tujuan (kosong = -)" value="' + esc(it.pihak) + '"' + d + '>' +
+        '<input class="field" data-f="perihal" maxlength="300" placeholder="Perihal" value="' + esc(it.perihal) + '"' + d + '>' +
+        '<div class="bstate"></div></div>';
+    }).join('');
+  bulk.forEach((it, i) => markRow(bulkRow(i), it));
+  updateBulkSum();
+}
+
+function markRow(row, it) {
+  const bad = it.include && !it.done ? issues(it) : [];
+  row.querySelectorAll('[data-f]').forEach(el => el.classList.toggle('bad', bad.includes(el.dataset.f)));
+  row.classList.toggle('off', !it.include);
+}
+
+function updateBulkSum() {
+  const live = bulk.filter(it => it.include && !it.done), seen = {};
+  live.forEach(it => { if (it.jenis === 'keluar' && it.nomor.trim()) { const k = it.nomor.trim().toLowerCase(); seen[k] = (seen[k] || 0) + 1; } });
+  let bad = 0;
+  bulk.forEach((it, i) => {
+    const st = bulkRow(i).querySelector('.bstate');
+    if (it.include && !it.done && issues(it).length) bad++;
+    let txt = it.msg, cls = it.done ? 'ok' : (it.msg ? 'bad' : '');
+    if (!txt && it.include && !it.done) {
+      if (it.jenis === 'keluar' && seen[it.nomor.trim().toLowerCase()] > 1) { txt = 'Nomor ganda di daftar ini'; cls = 'bad'; }
+      else if (it.tglGuess) txt = 'Tanggal diambil dari tanggal file';
+    }
+    st.textContent = txt; st.className = 'bstate ' + cls;
+  });
+  $('bsum').textContent = live.length + ' surat akan diimpor' + (bad ? ' · ' + bad + ' baris perlu dilengkapi (kolom merah)' : '');
+  $('bskip').textContent = skipped.length ? 'Dilewati: ' + skipped.slice(0, 5).join('; ') + (skipped.length > 5 ? ' dan ' + (skipped.length - 5) + ' lainnya' : '') : '';
+  $('bsave').disabled = saving || !live.length || bad > 0;
+}
+
+function onBulkEdit(e) {
+  const el = e.target, f = el.dataset.f, row = el.closest('.brow');
+  if (!f || !row) return;
+  const it = bulk[+row.dataset.i];
+  it[f] = el.type === 'checkbox' ? el.checked : el.value;
+  if (f === 'tgl') it.tglGuess = false;
+  if (!it.done) it.msg = '';
+  markRow(row, it); updateBulkSum();
+}
+
+async function saveBulk() {
+  const todo = bulk.filter(it => it.include && !it.done), status = $('bStatus').value;
+  if (!todo.length || saving) return;
+  saving = true; $('bgrid').inert = true; updateBulkSum();
+  let ok = 0, fail = 0, idx = 0, fin = 0;
+  const label = () => { $('bsave').textContent = 'Menyimpan ' + fin + '/' + todo.length + '…'; };
+  const setState = (it, txt, cls) => { const st = bulkRow(bulk.indexOf(it)).querySelector('.bstate'); st.textContent = txt; st.className = 'bstate ' + (cls || ''); };
+  label();
+  const run = async () => {
+    while (idx < todo.length) {
+      const it = todo[idx++]; let path = null;
+      setState(it, 'Mengunggah…');
+      try {
+        path = user.id + '/' + crypto.randomUUID() + '-' + safeName(it.file.name);
+        const up = await sb.storage.from(BUCKET).upload(path, it.file, { contentType: typeOf(it.file) });
+        if (up.error) { path = null; throw up.error; }
+        const res = await sb.from('surat').insert({
+          jenis: it.jenis, status, nomor_surat: it.nomor.trim(), tanggal_surat: it.tgl, tanggal_diterima: null,
+          pihak: it.pihak.trim() || '-', perihal: it.perihal.trim() || it.nomor.trim(), keterangan: null,
+          file_path: path, file_name: it.file.name
+        });
+        if (res.error) throw res.error;
+        it.done = true; it.msg = '✓ Tersimpan'; ok++; bulkOk++;
+        const row = bulkRow(bulk.indexOf(it)); row.classList.add('done');
+        row.querySelectorAll('input,select').forEach(x => { x.disabled = true; });
+      } catch (err) {
+        if (path) await sb.storage.from(BUCKET).remove([path]);
+        it.msg = err.code === '23505' ? 'Nomor surat keluar sudah dipakai' : 'Gagal: ' + (err.message || 'error');
+        fail++;
+      }
+      fin++; label(); setState(it, it.msg, it.done ? 'ok' : 'bad');
+    }
+  };
+  await Promise.all([run(), run(), run()]);
+  saving = false; $('bgrid').inert = false; $('bsave').textContent = 'Simpan semua'; updateBulkSum();
+  if (fail) toast(ok + ' tersimpan, ' + fail + ' gagal. Periksa baris bertanda merah.', true);
+  else { toast(ok + ' surat diimpor.'); $('bdlg').close(); }
+}
+
+$('bulk').addEventListener('click', () => $('bulkFile').click());
+$('bulkFile').addEventListener('change', e => { const fl = Array.from(e.target.files); e.target.value = ''; if (fl.length) openBulk(fl); });
+$('bgrid').addEventListener('input', onBulkEdit);
+$('bgrid').addEventListener('change', onBulkEdit);
+$('bJenisAll').addEventListener('change', e => { if (!e.target.value) return; bulk.forEach(it => { if (!it.jenis && !it.done) it.jenis = e.target.value; }); renderBulk(); });
+$('bSlash').addEventListener('change', e => { bulk.forEach(it => { if (!it.done) it.nomor = e.target.checked ? it.nomor.replace(/_/g, '/') : it.nomor.replace(/\//g, '_'); }); renderBulk(); });
+$('bsave').addEventListener('click', saveBulk);
+$('bclose').addEventListener('click', () => { if (!saving) $('bdlg').close(); });
+$('bdlg').addEventListener('cancel', e => { if (saving) e.preventDefault(); });
+$('bdlg').addEventListener('close', () => { if (bulkOk) { bulkOk = 0; load(true); } });
+
 init();

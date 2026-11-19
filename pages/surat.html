@@ -37,6 +37,8 @@
         <option value="diproses">Diproses</option>
         <option value="selesai">Selesai</option>
       </select>
+      <button class="btn" id="bulk" type="button"><i class="ti ti-files"></i> Impor banyak</button>
+      <input type="file" id="bulkFile" multiple accept=".pdf,.jpg,.jpeg,.png,.docx" hidden>
       <button class="btn btn-primary" id="add" type="button"><i class="ti ti-plus"></i> Catat surat</button>
     </div>
 
@@ -84,6 +86,37 @@
         <button class="btn btn-primary" id="save" type="submit">Simpan</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="bdlg" class="wide">
+    <div class="bform">
+      <strong>Impor banyak surat</strong>
+      <p class="muted">Nomor, tanggal, jenis, dan perihal dibaca dari nama file. Periksa dan lengkapi tabel di bawah sebelum menyimpan.</p>
+      <div class="bhead">
+        <label>Jenis untuk yang belum terdeteksi
+          <select class="field" id="bJenisAll">
+            <option value="">Pilih…</option>
+            <option value="masuk">Masuk</option>
+            <option value="keluar">Keluar</option>
+          </select>
+        </label>
+        <label>Status semua surat
+          <select class="field" id="bStatus">
+            <option value="baru">Baru</option>
+            <option value="diproses">Diproses</option>
+            <option value="selesai" selected>Selesai</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="bSlash"> Ubah “_” pada nomor menjadi “/”</label>
+      </div>
+      <div class="bgrid" id="bgrid"></div>
+      <p class="muted" id="bsum"></p>
+      <p class="muted" id="bskip"></p>
+      <div class="foot">
+        <button class="btn" type="button" id="bclose">Tutup</button>
+        <button class="btn btn-primary" type="button" id="bsave">Simpan semua</button>
+      </div>
+    </div>
   </dialog>
 
   <div id="toast" role="status" aria-live="polite"></div>
