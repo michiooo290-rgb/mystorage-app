@@ -3919,6 +3919,7 @@ function initStaticActionBindings() {
     if (action === 'nav-file-type') { setNav(el); setFilter(document.querySelector('.filter-chip[data-filter="' + el.dataset.filter + '"]'), el.dataset.filter); return; }
     if (action === 'toggle-nav-group') { toggleNavGroup(el); return; }
     if (action === 'go-settings') { window.location.href = 'pages/settings.html'; return; }
+    if (action === 'go-surat') { window.location.href = 'pages/surat.html'; return; }
     if (action === 'logout') { await doLogout(); return; }
     if (action === 'close-sidebar') { closeSidebar(); return; }
     if (action === 'toggle-sidebar') { toggleSidebar(); return; }
