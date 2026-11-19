@@ -1,71 +1,78 @@
 /**
  * r2-config.js — Konfigurasi Cloudflare R2 untuk MyStorage
- * ─────────────────────────────────────────────────────────
- * CARA PENGGUNAAN:
- * 1. Ganti R2_WORKER_URL dengan URL Cloudflare Worker kamu
- *    (didapat setelah deploy worker.js ke Cloudflare Workers)
- * 2. Tambahkan script ini di Storage-dashboard.html SEBELUM script.js
- *    <script src="scripts/r2-config.js"></script>
- *
- * JANGAN commit file ini jika berisi data sensitif.
- * Worker URL aman untuk di-expose ke frontend.
- * ─────────────────────────────────────────────────────────
+ * Versi aman: semua request ke Worker membawa token login Supabase.
+ * Identitas pengguna ditentukan Worker dari token, bukan dari header yang dikirim klien.
+ * Tambahkan script ini di Storage-dashboard.html SEBELUM script.js
  */
 
-// Ganti dengan URL Worker kamu setelah deploy
-// Contoh: https://mystorage-worker.namakamu.workers.dev
 window.R2_WORKER_URL = 'https://mystorage-worker.michiooo290.workers.dev';
-
 window.R2_ENABLED = true; // set false untuk fallback ke Supabase
 
-/**
- * Upload file ke Cloudflare R2 via Worker
- * @param {File} file - File object dari input
- * @param {string} userId - ID user dari Supabase Auth
- * @param {string} fileName - Nama file yang sudah disanitize
- * @returns {Promise<{key: string, url: string}>}
- */
-window.uploadToR2 = async function(file, userId, fileName) {
+// Cari client Supabase yang sudah dibuat di supabase-config.js
+function r2GetSupabase() {
+  if (window.supabaseClient && window.supabaseClient.auth) return window.supabaseClient;
+  if (typeof supabase !== 'undefined' && supabase && supabase.auth) return supabase;
+  if (window.supabase && window.supabase.auth) return window.supabase;
+  return null;
+}
+
+// Header Authorization dari sesi login saat ini
+async function r2AuthHeaders(extra) {
+  const sb = r2GetSupabase();
+  if (!sb) throw new Error('Client Supabase tidak ditemukan. Pastikan supabase-config.js dimuat lebih dulu.');
+  const { data } = await sb.auth.getSession();
+  const session = data && data.session;
+  if (!session) throw new Error('Sesi login habis. Silakan login lagi.');
+  return Object.assign({}, extra, { Authorization: 'Bearer ' + session.access_token });
+}
+
+function r2Ready() {
   if (!window.R2_ENABLED || !window.R2_WORKER_URL || window.R2_WORKER_URL === 'GANTI_DENGAN_URL_WORKER_KAMU') {
     throw new Error('R2 belum dikonfigurasi. Isi R2_WORKER_URL di r2-config.js');
   }
+}
 
+/**
+ * Upload file ke R2 via Worker.
+ * Parameter userId dipertahankan agar kode lama tetap jalan, tetapi diabaikan:
+ * Worker memakai id dari token.
+ * @returns {Promise<{key: string, url: string}>}
+ */
+window.uploadToR2 = async function (file, userId, fileName) {
+  r2Ready();
   const response = await fetch(window.R2_WORKER_URL + '/upload', {
     method: 'PUT',
-    headers: {
+    headers: await r2AuthHeaders({
       'Content-Type': file.type || 'application/octet-stream',
-      'X-User-Id': userId,
       'X-File-Name': encodeURIComponent(fileName),
-    },
-    body: file
+    }),
+    body: file,
   });
-
   if (!response.ok) {
     const err = await response.json().catch(() => ({ error: 'Upload gagal' }));
     throw new Error(err.error || 'Upload ke R2 gagal');
   }
-
   return await response.json(); // { success, key, url }
 };
 
-/**
- * Download file dari Cloudflare R2 via Worker
- * @param {string} r2Key - Key/path file di R2
- * @returns {Promise<Blob>}
- */
-window.downloadFromR2 = async function(r2Key) {
-  const response = await fetch(window.R2_WORKER_URL + '/file/' + encodeURIComponent(r2Key));
+/** Download file dari R2 via Worker (hasilnya Blob; <img src> langsung tidak bisa, pakai URL.createObjectURL) */
+window.downloadFromR2 = async function (r2Key) {
+  r2Ready();
+  const response = await fetch(window.R2_WORKER_URL + '/file/' + encodeURIComponent(r2Key), {
+    headers: await r2AuthHeaders(),
+  });
+  if (response.status === 401 || response.status === 403) throw new Error('Tidak punya akses ke file ini');
   if (!response.ok) throw new Error('File tidak ditemukan di R2');
   return await response.blob();
 };
 
-/**
- * Hapus file dari Cloudflare R2 via Worker
- * @param {string} r2Key - Key/path file di R2
- */
-window.deleteFromR2 = async function(r2Key) {
+/** Hapus file dari R2 via Worker */
+window.deleteFromR2 = async function (r2Key) {
+  r2Ready();
   const response = await fetch(window.R2_WORKER_URL + '/file/' + encodeURIComponent(r2Key), {
-    method: 'DELETE'
+    method: 'DELETE',
+    headers: await r2AuthHeaders(),
   });
+  if (response.status === 401 || response.status === 403) throw new Error('Tidak punya akses untuk menghapus file ini');
   if (!response.ok) throw new Error('Gagal hapus file dari R2');
 };

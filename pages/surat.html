@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Surat TU — MyStorage</title>
+  <link rel="icon" type="image/png" href="../assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="../styles/surat.css">
+  <script src="../scripts/theme-boot.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="../Storage-dashboard.html"><i class="ti ti-arrow-left"></i> MyStorage</a>
+    <h1>Surat TU</h1>
+    <span class="who" id="who"></span>
+    <button class="btn btn-sm" id="out" type="button"><i class="ti ti-logout"></i> Keluar</button>
+  </header>
+
+  <main class="page">
+    <div class="toolbar">
+      <div class="tabs" id="tabs">
+        <button type="button" data-j="semua" aria-pressed="true">Semua</button>
+        <button type="button" data-j="masuk" aria-pressed="false">Masuk</button>
+        <button type="button" data-j="keluar" aria-pressed="false">Keluar</button>
+      </div>
+      <div class="search">
+        <i class="ti ti-search"></i>
+        <input class="field" type="search" id="q" placeholder="Cari nomor, pihak, atau perihal" aria-label="Cari surat">
+      </div>
+      <select class="field" id="status" aria-label="Filter status">
+        <option value="">Semua status</option>
+        <option value="baru">Baru</option>
+        <option value="diproses">Diproses</option>
+        <option value="selesai">Selesai</option>
+      </select>
+      <button class="btn btn-primary" id="add" type="button"><i class="ti ti-plus"></i> Catat surat</button>
+    </div>
+
+    <div class="meta">
+      <label class="check"><input type="checkbox" id="trash"> Tampilkan yang dihapus</label>
+      <span class="muted" id="count"></span>
+    </div>
+
+    <div id="list"></div>
+    <button class="btn" id="more" type="button" hidden>Tampilkan lebih banyak</button>
+  </main>
+
+  <dialog id="dlg">
+    <form id="form">
+      <strong id="dlgTitle">Catat surat</strong>
+      <div class="two">
+        <label>Jenis
+          <select class="field" name="jenis" id="fJenis">
+            <option value="masuk">Surat masuk</option>
+            <option value="keluar">Surat keluar</option>
+          </select>
+        </label>
+        <label>Status
+          <select class="field" name="status">
+            <option value="baru">Baru</option>
+            <option value="diproses">Diproses</option>
+            <option value="selesai">Selesai</option>
+          </select>
+        </label>
+      </div>
+      <label>Nomor surat<input class="field" name="nomor" required maxlength="120"></label>
+      <div class="two">
+        <label>Tanggal surat<input class="field" type="date" name="tgl" required></label>
+        <label id="lblTerima">Tanggal diterima<input class="field" type="date" name="diterima"></label>
+      </div>
+      <label><span id="lblPihak">Pengirim</span><input class="field" name="pihak" required maxlength="200"></label>
+      <label>Perihal<input class="field" name="perihal" required maxlength="300"></label>
+      <label>Keterangan (opsional)<textarea class="field" name="ket" rows="2" maxlength="1000"></textarea></label>
+      <label>Scan surat (PDF, JPG, PNG, atau DOCX, maks 10 MB)
+        <input class="field" type="file" name="berkas" accept=".pdf,.jpg,.jpeg,.png,.docx">
+      </label>
+      <span class="muted" id="curFile"></span>
+      <div class="foot">
+        <button class="btn" type="button" id="cancel">Batal</button>
+        <button class="btn btn-primary" id="save" type="submit">Simpan</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../scripts/supabase-config.js"></script>
+  <script src="../scripts/surat.js"></script>
+</body>
+</html>
